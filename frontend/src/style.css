@@ -1,0 +1,17 @@
+html,
+body,
+#app {
+  height: 100%;
+}
+
+.aq-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aq-monitoring-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 2400;
+}

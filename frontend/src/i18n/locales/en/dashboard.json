@@ -1,0 +1,29 @@
+{
+  "title": "Command Center",
+  "kpi": {
+    "resilienceScore": "Resilience Score",
+    "environmentalRisk": "Environmental Risk",
+    "activeWarnings": "Active Warnings",
+    "monitoredZones": "Monitored Zones",
+    "dataSources": "Data Sources",
+    "aiMonitoring": "AI Monitoring"
+  },
+  "situationBrief": {
+    "title": "AI Situation Brief",
+    "notAvailable": "No AI situation brief has been generated yet."
+  },
+  "timeline": {
+    "title": "Environmental Signals"
+  },
+  "currentWarning": {
+    "title": "Current Warning",
+    "none": "No active warnings"
+  },
+  "factorContribution": {
+    "title": "Risk Factor Contribution"
+  },
+  "sourceHealth": {
+    "title": "Source Freshness"
+  },
+  "placeholderNotice": "Live environmental data, risk scoring and warnings ship in P1/P2. This is the P0 platform foundation."
+}

@@ -1,0 +1,97 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: aquaresilience-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aquaresilience}
+      POSTGRES_USER: ${POSTGRES_USER:-aquaresilience}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-strong-password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - aquaresilience-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aquaresilience} -d ${POSTGRES_DB:-aquaresilience}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # No host port published: database stays private to the compose network.
+
+  redis:
+    image: redis:7-alpine
+    container_name: aquaresilience-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - aquaresilience-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # No host port published: Redis stays private to the compose network.
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aquaresilience-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    networks:
+      - aquaresilience-internal
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/health/live').status==200 else sys.exit(1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    command: >
+      sh -c "alembic upgrade head &&
+             python -m app.seed.seed_data &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    container_name: aquaresilience-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000/api/v1}
+    depends_on:
+      - backend
+    ports:
+      - "8080:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    networks:
+      - aquaresilience-internal
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+
+networks:
+  aquaresilience-internal:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  frontend-node-modules:

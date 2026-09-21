@@ -1,0 +1,10 @@
+{
+  "title": "Sources de données",
+  "table": {
+    "name": "Source",
+    "category": "Catégorie",
+    "status": "Statut",
+    "lastSync": "Dernière synchronisation"
+  },
+  "empty": "Aucune source de données connectée pour le moment. Les connecteurs environnementaux réels arrivent en P1."
+}

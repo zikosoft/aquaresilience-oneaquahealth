@@ -1,0 +1,15 @@
+{
+  "title": "Alertas tempranas",
+  "lifecycle": {
+    "active": "Activa",
+    "acknowledged": "Reconocida",
+    "resolved": "Resuelta"
+  },
+  "empty": "Aún no se han registrado alertas.",
+  "severity": {
+    "low": "Baja",
+    "moderate": "Moderada",
+    "high": "Alta",
+    "critical": "Crítica"
+  }
+}

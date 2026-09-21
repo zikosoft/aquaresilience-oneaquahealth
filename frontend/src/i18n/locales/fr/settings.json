@@ -1,0 +1,58 @@
+{
+  "title": "Paramètres",
+  "tabs": {
+    "general": "Général",
+    "languages": "Langues",
+    "dataSources": "Sources de données",
+    "aiProvider": "Fournisseur IA",
+    "scheduler": "Planificateur",
+    "riskEngine": "Moteur de risque",
+    "alerts": "Alertes",
+    "usersAccess": "Utilisateurs et accès",
+    "system": "Système"
+  },
+  "general": {
+    "city": "Ville",
+    "timezone": "Fuseau horaire",
+    "dateFormat": "Format de date"
+  },
+  "languages": {
+    "defaultLocale": "Langue par défaut",
+    "enabledLocales": "Langues activées"
+  },
+  "aiProvider": {
+    "provider": "Fournisseur",
+    "model": "Modèle",
+    "apiKey": "Clé API",
+    "apiKeyHint": "Écriture seule. Laissez vide pour conserver la clé actuellement enregistrée.",
+    "maxOutputTokens": "Jetons de sortie maximum",
+    "scheduledInterval": "Intervalle d'analyse programmée (minutes)",
+    "dailyCeiling": "Plafond de requêtes quotidien",
+    "eventTriggered": "Analyse déclenchée par événement",
+    "cooldown": "Délai de récupération (secondes)",
+    "testConnection": "Tester la connexion",
+    "save": "Enregistrer la configuration",
+    "configured": "Une clé API est configurée.",
+    "notConfigured": "Aucune clé API configurée.",
+    "testSuccess": "Connexion réussie.",
+    "testFailure": "Échec de la connexion.",
+    "saved": "Configuration du fournisseur IA enregistrée."
+  },
+  "usersAccess": {
+    "users": "Utilisateurs",
+    "roles": "Rôles",
+    "permissionMatrix": "Matrice des permissions",
+    "addUser": "Ajouter un utilisateur",
+    "email": "E-mail",
+    "fullName": "Nom complet",
+    "role": "Rôle",
+    "activeStatus": "Actif",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "matrixHint": "Accordez l'accès module × permission par rôle.",
+    "cannotDeleteSelf": "Vous ne pouvez pas supprimer votre propre compte."
+  },
+  "system": {
+    "maintenanceMode": "Mode maintenance"
+  },
+  "saved": "Paramètres enregistrés."
+}

@@ -1,0 +1,18 @@
+{
+  "title": "Intelligence IA",
+  "status": {
+    "active": "Surveillance IA active",
+    "lastAnalysis": "Dernière analyse",
+    "nextAnalysis": "Prochaine analyse",
+    "countdown": "Prochaine dans",
+    "disabled": "Fournisseur IA non configuré"
+  },
+  "brief": {
+    "drivers": "Facteurs déterminants",
+    "zonesToWatch": "Zones à surveiller",
+    "recommendations": "Recommandations",
+    "confidence": "Confiance",
+    "limitations": "Limites"
+  },
+  "empty": "Aucune synthèse IA pour le moment. Configurez un fournisseur IA dans les Paramètres pour activer l'analyse programmée."
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Early Warnings",
+  "lifecycle": {
+    "active": "Active",
+    "acknowledged": "Acknowledged",
+    "resolved": "Resolved"
+  },
+  "empty": "No warnings recorded yet.",
+  "severity": {
+    "low": "Low",
+    "moderate": "Moderate",
+    "high": "High",
+    "critical": "Critical"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "appName": "AquaResilience",
+  "tagline": "Intelligence de résilience de l'eau douce urbaine",
+  "actions": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "create": "Créer",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "test": "Tester",
+    "refresh": "Actualiser",
+    "back": "Retour",
+    "search": "Rechercher",
+    "apply": "Appliquer",
+    "reset": "Réinitialiser"
+  },
+  "status": {
+    "active": "Actif",
+    "inactive": "Inactif",
+    "loading": "Chargement…",
+    "error": "Une erreur est survenue",
+    "empty": "Aucune donnée disponible",
+    "configured": "Configuré",
+    "notConfigured": "Non configuré",
+    "ok": "OK",
+    "degraded": "Dégradé"
+  },
+  "fullscreen": {
+    "enter": "Passer en plein écran",
+    "exit": "Quitter le plein écran"
+  },
+  "theme": {
+    "light": "Clair",
+    "dark": "Sombre",
+    "toggle": "Changer de thème"
+  },
+  "language": "Langue",
+  "notifications": "Notifications",
+  "profile": "Profil",
+  "logout": "Se déconnecter"
+}

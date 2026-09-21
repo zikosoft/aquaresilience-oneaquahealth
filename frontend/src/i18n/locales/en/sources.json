@@ -1,0 +1,10 @@
+{
+  "title": "Data Sources",
+  "table": {
+    "name": "Source",
+    "category": "Category",
+    "status": "Status",
+    "lastSync": "Last sync"
+  },
+  "empty": "No data sources are connected yet. Real environmental connectors ship in P1."
+}

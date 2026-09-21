@@ -1,0 +1,13 @@
+{
+  "title": "Mapa de resiliencia",
+  "layers": {
+    "boundary": "Límite de Toulouse",
+    "waterways": "Cursos de agua / Garona",
+    "stations": "Estaciones de monitoreo",
+    "riskZones": "Zonas de riesgo",
+    "warnings": "Alertas activas",
+    "scenario": "Proyección de escenario"
+  },
+  "loading": "Cargando mapa…",
+  "styleUnavailable": "Estilo de mapa no disponible. Verifique la fuente de mosaicos configurada en Configuración."
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Carte de résilience",
+  "layers": {
+    "boundary": "Limite de Toulouse",
+    "waterways": "Cours d'eau / Garonne",
+    "stations": "Stations de surveillance",
+    "riskZones": "Zones de risque",
+    "warnings": "Alertes actives",
+    "scenario": "Projection de scénario"
+  },
+  "loading": "Chargement de la carte…",
+  "styleUnavailable": "Style de carte indisponible. Vérifiez la source de tuiles configurée dans les Paramètres."
+}

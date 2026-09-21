@@ -1,0 +1,18 @@
+{
+  "title": "Inteligencia IA",
+  "status": {
+    "active": "Monitoreo IA activo",
+    "lastAnalysis": "Último análisis",
+    "nextAnalysis": "Próximo análisis",
+    "countdown": "Próximo en",
+    "disabled": "Proveedor de IA no configurado"
+  },
+  "brief": {
+    "drivers": "Factores determinantes",
+    "zonesToWatch": "Zonas a vigilar",
+    "recommendations": "Recomendaciones",
+    "confidence": "Confianza",
+    "limitations": "Limitaciones"
+  },
+  "empty": "Aún no hay un resumen de IA. Configure un proveedor de IA en Configuración para habilitar el análisis programado."
+}

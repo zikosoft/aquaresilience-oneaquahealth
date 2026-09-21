@@ -1,0 +1,12 @@
+{
+  "title": "Simulateur de scénarios",
+  "controls": {
+    "rainfall": "Ajustement des précipitations",
+    "riverLevel": "Ajustement du niveau de la rivière",
+    "temperature": "Ajustement de la température"
+  },
+  "run": "Lancer la simulation",
+  "current": "Actuel",
+  "projected": "Projeté",
+  "empty": "Le simulateur de scénarios sera disponible une fois le moteur de risque déterministe livré (P4)."
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Alertes précoces",
+  "lifecycle": {
+    "active": "Active",
+    "acknowledged": "Prise en compte",
+    "resolved": "Résolue"
+  },
+  "empty": "Aucune alerte enregistrée pour le moment.",
+  "severity": {
+    "low": "Faible",
+    "moderate": "Modérée",
+    "high": "Élevée",
+    "critical": "Critique"
+  }
+}

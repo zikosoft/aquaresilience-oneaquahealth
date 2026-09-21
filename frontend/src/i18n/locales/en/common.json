@@ -1,0 +1,43 @@
+{
+  "appName": "AquaResilience",
+  "tagline": "Urban freshwater resilience intelligence",
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "create": "Create",
+    "close": "Close",
+    "confirm": "Confirm",
+    "test": "Test",
+    "refresh": "Refresh",
+    "back": "Back",
+    "search": "Search",
+    "apply": "Apply",
+    "reset": "Reset"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "empty": "No data available",
+    "configured": "Configured",
+    "notConfigured": "Not configured",
+    "ok": "OK",
+    "degraded": "Degraded"
+  },
+  "fullscreen": {
+    "enter": "Enter fullscreen",
+    "exit": "Exit fullscreen"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "toggle": "Toggle theme"
+  },
+  "language": "Language",
+  "notifications": "Notifications",
+  "profile": "Profile",
+  "logout": "Log out"
+}

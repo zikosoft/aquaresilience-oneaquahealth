@@ -1,0 +1,13 @@
+{
+  "dashboard": "Command Center",
+  "map": "Resilience Map",
+  "alerts": "Early Warnings",
+  "aiIntelligence": "AI Intelligence",
+  "scenarios": "Scenario Simulator",
+  "dataSources": "Data Sources",
+  "settings": "Settings",
+  "administration": "Administration",
+  "collapse": "Collapse sidebar",
+  "expand": "Expand sidebar",
+  "monitoringMode": "Monitoring mode"
+}

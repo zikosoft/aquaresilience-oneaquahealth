@@ -1,0 +1,58 @@
+{
+  "title": "Settings",
+  "tabs": {
+    "general": "General",
+    "languages": "Languages",
+    "dataSources": "Data Sources",
+    "aiProvider": "AI Provider",
+    "scheduler": "Scheduler",
+    "riskEngine": "Risk Engine",
+    "alerts": "Alerts",
+    "usersAccess": "Users & Access",
+    "system": "System"
+  },
+  "general": {
+    "city": "City",
+    "timezone": "Timezone",
+    "dateFormat": "Date format"
+  },
+  "languages": {
+    "defaultLocale": "Default language",
+    "enabledLocales": "Enabled languages"
+  },
+  "aiProvider": {
+    "provider": "Provider",
+    "model": "Model",
+    "apiKey": "API key",
+    "apiKeyHint": "Write-only. Leave blank to keep the currently stored key.",
+    "maxOutputTokens": "Max output tokens",
+    "scheduledInterval": "Scheduled analysis interval (minutes)",
+    "dailyCeiling": "Daily request ceiling",
+    "eventTriggered": "Event-triggered analysis",
+    "cooldown": "Cooldown (seconds)",
+    "testConnection": "Test connection",
+    "save": "Save configuration",
+    "configured": "An API key is configured.",
+    "notConfigured": "No API key configured yet.",
+    "testSuccess": "Connection successful.",
+    "testFailure": "Connection failed.",
+    "saved": "AI provider configuration saved."
+  },
+  "usersAccess": {
+    "users": "Users",
+    "roles": "Roles",
+    "permissionMatrix": "Permission Matrix",
+    "addUser": "Add user",
+    "email": "Email",
+    "fullName": "Full name",
+    "role": "Role",
+    "activeStatus": "Active",
+    "resetPassword": "Reset password",
+    "matrixHint": "Grant module × permission access per role.",
+    "cannotDeleteSelf": "You cannot delete your own account."
+  },
+  "system": {
+    "maintenanceMode": "Maintenance mode"
+  },
+  "saved": "Settings saved."
+}

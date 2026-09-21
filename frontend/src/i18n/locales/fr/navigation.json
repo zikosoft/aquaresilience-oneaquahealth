@@ -1,0 +1,13 @@
+{
+  "dashboard": "Centre de contrôle",
+  "map": "Carte de résilience",
+  "alerts": "Alertes précoces",
+  "aiIntelligence": "Intelligence IA",
+  "scenarios": "Simulateur de scénarios",
+  "dataSources": "Sources de données",
+  "settings": "Paramètres",
+  "administration": "Administration",
+  "collapse": "Réduire le menu",
+  "expand": "Développer le menu",
+  "monitoringMode": "Mode surveillance"
+}

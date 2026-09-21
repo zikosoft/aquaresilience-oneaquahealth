@@ -1,0 +1,29 @@
+{
+  "title": "Centro de control",
+  "kpi": {
+    "resilienceScore": "Puntuación de resiliencia",
+    "environmentalRisk": "Riesgo ambiental",
+    "activeWarnings": "Alertas activas",
+    "monitoredZones": "Zonas monitoreadas",
+    "dataSources": "Fuentes de datos",
+    "aiMonitoring": "Monitoreo IA"
+  },
+  "situationBrief": {
+    "title": "Resumen de situación IA",
+    "notAvailable": "Aún no se ha generado ningún resumen de situación IA."
+  },
+  "timeline": {
+    "title": "Señales ambientales"
+  },
+  "currentWarning": {
+    "title": "Alerta actual",
+    "none": "No hay alertas activas"
+  },
+  "factorContribution": {
+    "title": "Contribución de factores de riesgo"
+  },
+  "sourceHealth": {
+    "title": "Frescura de las fuentes"
+  },
+  "placeholderNotice": "Los datos ambientales en vivo, el cálculo de riesgo y las alertas llegan en P1/P2. Esta es la base de la plataforma P0."
+}

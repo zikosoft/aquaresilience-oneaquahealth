@@ -1,0 +1,12 @@
+{
+  "title": "Simulador de escenarios",
+  "controls": {
+    "rainfall": "Ajuste de precipitaciones",
+    "riverLevel": "Ajuste del nivel del río",
+    "temperature": "Ajuste de temperatura"
+  },
+  "run": "Ejecutar simulación",
+  "current": "Actual",
+  "projected": "Proyectado",
+  "empty": "El simulador de escenarios estará disponible una vez que se entregue el motor de riesgo determinista (P4)."
+}

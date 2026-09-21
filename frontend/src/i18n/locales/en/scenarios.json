@@ -1,0 +1,12 @@
+{
+  "title": "Scenario Simulator",
+  "controls": {
+    "rainfall": "Rainfall adjustment",
+    "riverLevel": "River level adjustment",
+    "temperature": "Temperature adjustment"
+  },
+  "run": "Run simulation",
+  "current": "Current",
+  "projected": "Projected",
+  "empty": "The Scenario Simulator becomes available once the deterministic Risk Engine ships (P4)."
+}

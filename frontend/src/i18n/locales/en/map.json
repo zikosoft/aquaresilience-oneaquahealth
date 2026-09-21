@@ -1,0 +1,13 @@
+{
+  "title": "Resilience Map",
+  "layers": {
+    "boundary": "Toulouse boundary",
+    "waterways": "Waterways / Garonne",
+    "stations": "Monitoring stations",
+    "riskZones": "Risk zones",
+    "warnings": "Active warnings",
+    "scenario": "Scenario projection"
+  },
+  "loading": "Loading map…",
+  "styleUnavailable": "Map style unavailable. Check the configured tile source in Settings."
+}

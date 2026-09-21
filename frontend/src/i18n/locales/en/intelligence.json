@@ -1,0 +1,18 @@
+{
+  "title": "AI Intelligence",
+  "status": {
+    "active": "AI Monitoring Active",
+    "lastAnalysis": "Last analysis",
+    "nextAnalysis": "Next analysis",
+    "countdown": "Next in",
+    "disabled": "AI provider not configured"
+  },
+  "brief": {
+    "drivers": "Drivers",
+    "zonesToWatch": "Zones to watch",
+    "recommendations": "Recommendations",
+    "confidence": "Confidence",
+    "limitations": "Limitations"
+  },
+  "empty": "No AI Situation Brief yet. Configure an AI provider in Settings to enable scheduled analysis."
+}
