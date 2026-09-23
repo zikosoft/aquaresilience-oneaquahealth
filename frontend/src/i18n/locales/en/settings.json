@@ -71,7 +71,7 @@
     "customRoleBadge": "Custom"
   },
   "map": {
-    "description": "Choose which free, open tile provider draws the Resilience Map. No account or API key is needed for any of these.",
+    "description": "Choose the default free, open tile provider for the Resilience Map. No account or API key is needed for any of these. Individual users can still pick a different base map for themselves from the map's own layer picker — this only sets what they see before they do.",
     "tileProvider": "Tile provider",
     "providers": {
       "osm": "OpenStreetMap (standard)",

@@ -98,6 +98,42 @@ const envZoom = Number(import.meta.env.VITE_MAP_DEFAULT_ZOOM) || undefined
 const FALLBACK_CENTER: [number, number] = [envCenterLon ?? 1.4442, envCenterLat ?? 43.6047]
 const FALLBACK_ZOOM = envZoom ?? 11
 
+// P2.1 follow-up: Settings > Map's tile provider is the deployment-wide
+// *default* — a viewer can personally switch base map via the on-map layer
+// picker below, without touching Settings (no ADMINISTRATION permission
+// needed for that, it's just their own view). The choice is saved per
+// viewer in localStorage, same "saved and reused across sessions, no
+// server round trip" model as D017's dashboard time-range selector.
+const MAP_PROVIDER_STORAGE_KEY = 'aquaresilience.mapTileProvider'
+const KNOWN_PROVIDERS: MapTileProvider[] = ['osm', 'carto_light', 'carto_dark']
+
+function loadStoredProvider(): MapTileProvider | null {
+  try {
+    const raw = localStorage.getItem(MAP_PROVIDER_STORAGE_KEY)
+    return raw && (KNOWN_PROVIDERS as string[]).includes(raw) ? (raw as MapTileProvider) : null
+  } catch {
+    return null
+  }
+}
+
+function saveStoredProvider(provider: MapTileProvider | null): void {
+  try {
+    if (provider) localStorage.setItem(MAP_PROVIDER_STORAGE_KEY, provider)
+    else localStorage.removeItem(MAP_PROVIDER_STORAGE_KEY)
+  } catch {
+    // per-viewer convenience only — a failed save just means the choice
+    // won't persist to the next session, nothing else depends on it.
+  }
+}
+
+// Hidden entirely when a deployment vector style URL is configured (that
+// escape hatch is a single external style, not one of these 3 raster
+// options, so there is nothing meaningful to switch between).
+const showLayerPicker = !configuredStyleUrl
+const activeProvider = ref<MapTileProvider | null>(null)
+const defaultProvider = ref<MapTileProvider>('osm')
+const layerPickerOpen = ref(false)
+
 async function resolveMapConfig(): Promise<{ style: string | StyleSpecification; center: [number, number]; zoom: number }> {
   if (configuredStyleUrl) {
     // The vector style URL escape hatch also implies its own idea of
@@ -107,7 +143,10 @@ async function resolveMapConfig(): Promise<{ style: string | StyleSpecification;
   }
   try {
     const config = await fetchMapConfig()
-    const style = RASTER_STYLES[config.tile_provider] ?? RASTER_STYLES.osm
+    defaultProvider.value = config.tile_provider
+    const provider = loadStoredProvider() ?? config.tile_provider
+    activeProvider.value = provider
+    const style = RASTER_STYLES[provider] ?? RASTER_STYLES.osm
     const city = config.cities[0]
     const center: [number, number] = [
       envCenterLon ?? city?.default_lon ?? FALLBACK_CENTER[0],
@@ -120,8 +159,27 @@ async function resolveMapConfig(): Promise<{ style: string | StyleSpecification;
     // rendering at all — fall back to the same defaults this component
     // always used before P2.1.
     console.error('Failed to load map configuration, using defaults', e)
-    return { style: RASTER_STYLES.osm, center: FALLBACK_CENTER, zoom: FALLBACK_ZOOM }
+    const provider = loadStoredProvider() ?? 'osm'
+    activeProvider.value = provider
+    return { style: RASTER_STYLES[provider] ?? RASTER_STYLES.osm, center: FALLBACK_CENTER, zoom: FALLBACK_ZOOM }
   }
+}
+
+const PROVIDER_I18N_KEY: Record<MapTileProvider, string> = {
+  osm: 'osm',
+  carto_light: 'cartoLight',
+  carto_dark: 'cartoDark',
+}
+
+function selectProvider(provider: MapTileProvider): void {
+  layerPickerOpen.value = false
+  if (!map || provider === activeProvider.value) return
+  activeProvider.value = provider
+  saveStoredProvider(provider === defaultProvider.value ? null : provider)
+  // Markers/popups are plain DOM overlays positioned via the map's own
+  // projection, not style layers — they survive setStyle() untouched, so
+  // there is no need to re-fetch stations or re-add them here.
+  map.setStyle(RASTER_STYLES[provider] ?? RASTER_STYLES.osm)
 }
 
 const healthColor: Record<SourceHealthStatus, string> = {
@@ -367,6 +425,54 @@ watch(
         />
         <span class="text-body-2">{{ error }}</span>
       </div>
+      <!--
+        On-map base layer picker. Settings > Map still sets the deployment
+        default (shown as "(default)" below); this lets any viewer switch
+        their own view without touching Settings — saved per-browser, not
+        sent anywhere.
+      -->
+      <v-menu
+        v-if="showLayerPicker && !loading"
+        v-model="layerPickerOpen"
+        location="top"
+        :close-on-content-click="false"
+      >
+        <template #activator="{ props: menuProps }">
+          <v-btn
+            v-bind="menuProps"
+            class="aq-layer-picker-btn"
+            icon="mdi-layers-outline"
+            size="small"
+            :aria-label="t('map.baseMap.title')"
+          />
+        </template>
+        <v-list
+          density="compact"
+          min-width="220"
+        >
+          <v-list-subheader>{{ t('map.baseMap.title') }}</v-list-subheader>
+          <v-list-item
+            v-for="provider in (['osm', 'carto_light', 'carto_dark'] as const)"
+            :key="provider"
+            :active="activeProvider === provider"
+            @click="selectProvider(provider)"
+          >
+            <template #prepend>
+              <v-icon
+                :icon="activeProvider === provider ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
+                size="small"
+              />
+            </template>
+            <v-list-item-title>
+              {{ t(`map.baseMap.providers.${PROVIDER_I18N_KEY[provider]}`) }}
+              <span
+                v-if="provider === defaultProvider"
+                class="aq-layer-picker-default"
+              >{{ t('map.baseMap.defaultBadge') }}</span>
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </div>
   </WidgetCard>
 </template>
@@ -385,6 +491,25 @@ watch(
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+/* Bottom-left: clear of MapLibre's own NavigationControl (top-right) and
+   the map's side-panel legend, which sits outside this shell entirely. */
+.aq-layer-picker-btn {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 1;
+  background: white !important;
+  color: rgba(0, 0, 0, 0.75) !important;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.aq-layer-picker-default {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.65;
 }
 
 .aq-map-overlay {

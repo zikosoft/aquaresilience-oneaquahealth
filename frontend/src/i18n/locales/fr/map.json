@@ -20,6 +20,15 @@
     "lastUpdated": "Dernière mise à jour",
     "risk": "Risque actuel"
   },
+  "baseMap": {
+    "title": "Fond de carte",
+    "providers": {
+      "osm": "OpenStreetMap (standard)",
+      "cartoLight": "CARTO Positron (clair)",
+      "cartoDark": "CARTO Dark Matter (sombre)"
+    },
+    "defaultBadge": "(par défaut)"
+  },
   "variable": {
     "water_level_mm": "Niveau d'eau",
     "precipitation_mm": "Précipitations",

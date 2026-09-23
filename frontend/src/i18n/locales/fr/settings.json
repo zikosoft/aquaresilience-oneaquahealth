@@ -71,7 +71,7 @@
     "customRoleBadge": "Personnalisé"
   },
   "map": {
-    "description": "Choisissez le fournisseur de tuiles cartographiques gratuit et ouvert utilisé par la Carte de résilience. Aucun compte ni clé API n'est nécessaire.",
+    "description": "Choisissez le fournisseur de tuiles cartographiques gratuit et ouvert utilisé par défaut sur la Carte de résilience. Aucun compte ni clé API n'est nécessaire. Chaque utilisateur peut ensuite choisir un autre fond de carte pour lui-même depuis le sélecteur de couche de la carte — ce réglage définit seulement ce qu'il voit avant de le faire.",
     "tileProvider": "Fournisseur de tuiles",
     "providers": {
       "osm": "OpenStreetMap (standard)",

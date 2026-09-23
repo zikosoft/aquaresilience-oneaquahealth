@@ -71,7 +71,7 @@
     "customRoleBadge": "Personalizado"
   },
   "map": {
-    "description": "Elija qué proveedor de teselas gratuito y abierto dibuja el Mapa de Resiliencia. No se necesita cuenta ni clave de API para ninguno de ellos.",
+    "description": "Elija el proveedor de teselas gratuito y abierto predeterminado para el Mapa de Resiliencia. No se necesita cuenta ni clave de API para ninguno de ellos. Cada usuario puede elegir un mapa base diferente para sí mismo desde el selector de capas del propio mapa — esta opción solo define lo que ven antes de hacerlo.",
     "tileProvider": "Proveedor de teselas",
     "providers": {
       "osm": "OpenStreetMap (estándar)",
