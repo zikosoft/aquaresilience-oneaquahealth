@@ -39,5 +39,11 @@
   "language": "Language",
   "notifications": "Notifications",
   "profile": "Profile",
-  "logout": "Log out"
+  "logout": "Log out",
+  "riskFactors": {
+    "rainfall": "Rainfall (24h)",
+    "hydrology": "River level",
+    "environmental": "Soil moisture",
+    "trend": "Water level trend"
+  }
 }

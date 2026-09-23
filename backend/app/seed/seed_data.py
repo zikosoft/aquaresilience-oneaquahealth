@@ -68,7 +68,16 @@ DEFAULT_APP_SETTINGS = [
     # already live on the `City` row the GENERAL tab's `city` setting names
     # (D016); duplicating them into a second settings row would just be two
     # places that could drift out of sync for one hackathon-scope city.
-    ("MAP", "map", {"tile_provider": "osm"}, "Map tile provider (default view comes from the configured city)."),
+    # P4.1: risk_layer_opacity (0-100) added for the map's risk-level circle
+    # layer around the river gauge station — user-requested, Settings-only
+    # control (no live-reactive push to already-open maps, same "deployment
+    # default, takes effect on next load" model tile_provider already has).
+    (
+        "MAP",
+        "map",
+        {"tile_provider": "osm", "risk_layer_opacity": 35},
+        "Map tile provider (default view comes from the configured city) and risk layer opacity.",
+    ),
     ("SYSTEM", "system", {"maintenance_mode": False}, "System-level toggles."),
 ]
 

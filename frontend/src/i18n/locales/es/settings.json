@@ -75,8 +75,6 @@
     "tileProvider": "Proveedor de teselas",
     "providers": {
       "osm": "OpenStreetMap (estándar)",
-      "cartoLight": "CARTO Positron (claro)",
-      "cartoDark": "CARTO Dark Matter (oscuro)",
       "cyclosm": "CyclOSM (ciclismo)",
       "humanitarian": "Humanitarian OSM"
     },
@@ -84,7 +82,9 @@
     "defaultViewHint": "El mapa se centra aquí al cargar. Proviene de los datos de referencia de la ciudad configurada — para cambiarla, agregue o edite una ciudad en lugar de escribir coordenadas aquí.",
     "longitude": "Longitud",
     "latitude": "Latitud",
-    "zoom": "Zoom"
+    "zoom": "Zoom",
+    "riskLayerOpacity": "Opacidad de la capa de riesgo",
+    "riskLayerOpacityHint": "Opacidad (0-100) del halo de nivel de riesgo mostrado alrededor de la estación del río en el mapa. Ajuste a 0 para ocultarlo."
   },
   "system": {
     "maintenanceMode": "Modo de mantenimiento"

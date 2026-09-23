@@ -76,7 +76,14 @@ export interface City {
   default_zoom: number
 }
 
-export type MapTileProvider = 'osm' | 'carto_light' | 'carto_dark' | 'cyclosm' | 'humanitarian'
+// P4.1: 'carto_light'/'carto_dark' removed — CARTO's raster basemap tiles
+// (basemaps.cartocdn.com) now require a free API key (confirmed via CARTO's
+// own docs: "CARTO's free raster basemap tiles now require an API key"),
+// which broke D019's "no account or API key needed for any of these"
+// premise; a previously-stored setting value of either string still falls
+// back to 'osm' at render time (see ResilienceMap.vue's RASTER_STYLES
+// lookup), it's just no longer offered anywhere in the UI.
+export type MapTileProvider = 'osm' | 'cyclosm' | 'humanitarian'
 
 export interface MapSettings {
   tile_provider: MapTileProvider

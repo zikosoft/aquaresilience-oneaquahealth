@@ -19,6 +19,8 @@ export interface SettingField {
   readonly?: boolean
   suffix?: string
   tooltip?: string // shown as an info icon next to the field's label
+  min?: number // number fields only
+  max?: number // number fields only
 }
 
 const props = defineProps<{
@@ -187,6 +189,8 @@ defineExpose({ reload: load })
               v-else
               :model-value="getPath(value, field.path)"
               :type="field.type === 'number' ? 'number' : 'text'"
+              :min="field.type === 'number' ? field.min : undefined"
+              :max="field.type === 'number' ? field.max : undefined"
               :suffix="field.suffix"
               :label="field.label"
               :disabled="!canEdit || field.readonly"

@@ -7,6 +7,9 @@ export function fetchCities() {
 
 export interface MapConfig {
   tile_provider: MapTileProvider
+  // P4.1: 0-100, Settings > Map-configurable opacity for the risk-level
+  // circle layer rendered around the river gauge station.
+  risk_layer_opacity: number
   cities: City[]
 }
 

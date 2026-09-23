@@ -88,3 +88,21 @@ def test_map_config_folds_tile_provider_into_a_map_view_gated_endpoint(client, a
     assert body["tile_provider"] == "carto_light"
     assert len(body["cities"]) == 1
     assert body["cities"][0]["label_en"] == "Toulouse"
+
+
+def test_map_config_exposes_risk_layer_opacity_with_a_default(client, admin_token):
+    """P4.1: the risk-level circle layer's opacity is a Settings > Map field
+    — defaults to 35 when never explicitly saved (fresh/seeded install), and
+    round-trips through the same generic settings PUT as tile_provider."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    resp = client.get("/api/v1/geography/map-config", headers=headers)
+    assert resp.status_code == 200
+    assert resp.json()["risk_layer_opacity"] == 35
+
+    client.put(
+        "/api/v1/settings/map/map",
+        headers=headers,
+        json={"value": {"tile_provider": "osm", "risk_layer_opacity": 60}},
+    )
+    resp2 = client.get("/api/v1/geography/map-config", headers=headers)
+    assert resp2.json()["risk_layer_opacity"] == 60

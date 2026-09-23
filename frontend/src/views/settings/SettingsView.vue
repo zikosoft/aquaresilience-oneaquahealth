@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
@@ -13,7 +13,7 @@ import { fetchCities } from '@/services/geographyApi'
 import { useAuthStore } from '@/stores/auth'
 import type { City, SourceHealth } from '@/types'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const authStore = useAuthStore()
 
@@ -63,6 +63,39 @@ async function loadCities(): Promise<void> {
 
 onMounted(loadDataSources)
 onMounted(loadCities)
+
+// P4.1: General > city was free text even though the City reference table
+// (D016) already exists and is seeded — a dropdown communicates that the
+// platform is built for more than one city/country without building any
+// real multi-city switching logic (D016 still applies: one seeded city).
+// The stored value keeps the exact same shape it always had (the lowercase
+// slug "toulouse", see app/seed/seed_data.py) so this is a UI-only change.
+function localizedCityLabel(city: City): string {
+  const key = `label_${locale.value}` as 'label_en' | 'label_fr' | 'label_es'
+  return city[key] || city.label_en
+}
+
+function countryDisplayName(iso2: string): string {
+  try {
+    return new Intl.DisplayNames([locale.value], { type: 'region' }).of(iso2) ?? iso2
+  } catch {
+    return iso2
+  }
+}
+
+const generalFields = computed(() => [
+  {
+    path: 'city',
+    label: t('settings.general.city'),
+    type: 'select' as const,
+    options: cities.value.map((city) => ({
+      value: city.label_en.toLowerCase(),
+      label: `${localizedCityLabel(city)} (${countryDisplayName(city.country_iso2)})`,
+    })),
+  },
+  { path: 'timezone', label: t('settings.general.timezone'), type: 'text' as const },
+  { path: 'date_format', label: t('settings.general.dateFormat'), type: 'text' as const },
+])
 </script>
 
 <template>
@@ -123,11 +156,7 @@ onMounted(loadCities)
           category="general"
           setting-key="general"
           :title="t('settings.tabs.general')"
-          :fields="[
-            { path: 'city', label: t('settings.general.city'), type: 'text' },
-            { path: 'timezone', label: t('settings.general.timezone'), type: 'text' },
-            { path: 'date_format', label: t('settings.general.dateFormat'), type: 'text' },
-          ]"
+          :fields="generalFields"
         />
       </v-window-item>
 
@@ -253,11 +282,18 @@ onMounted(loadCities)
               type: 'select',
               options: [
                 { value: 'osm', label: t('settings.map.providers.osm') },
-                { value: 'carto_light', label: t('settings.map.providers.cartoLight') },
-                { value: 'carto_dark', label: t('settings.map.providers.cartoDark') },
                 { value: 'cyclosm', label: t('settings.map.providers.cyclosm') },
                 { value: 'humanitarian', label: t('settings.map.providers.humanitarian') },
               ],
+            },
+            {
+              path: 'risk_layer_opacity',
+              label: t('settings.map.riskLayerOpacity'),
+              type: 'number',
+              min: 0,
+              max: 100,
+              suffix: '%',
+              tooltip: t('settings.map.riskLayerOpacityHint'),
             },
           ]"
         />
@@ -309,7 +345,7 @@ onMounted(loadCities)
                   v-for="city in cities"
                   :key="city.id"
                 >
-                  <td>{{ city.label_en }}</td>
+                  <td>{{ localizedCityLabel(city) }} ({{ countryDisplayName(city.country_iso2) }})</td>
                   <td>{{ city.default_lon }}</td>
                   <td>{{ city.default_lat }}</td>
                   <td>{{ city.default_zoom }}</td>

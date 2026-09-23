@@ -24,4 +24,7 @@ class MapConfigOut(BaseModel):
     combined so `ResilienceMap.vue` needs only one MAP:VIEW-gated call."""
 
     tile_provider: str
+    # P4.1: 0-100, Settings > Map-configurable opacity for the risk-level
+    # circle layer around the river gauge station.
+    risk_layer_opacity: int
     cities: list[CityOut]

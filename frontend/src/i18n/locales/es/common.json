@@ -39,5 +39,11 @@
   "language": "Idioma",
   "notifications": "Notificaciones",
   "profile": "Perfil",
-  "logout": "Cerrar sesión"
+  "logout": "Cerrar sesión",
+  "riskFactors": {
+    "rainfall": "Precipitación (24h)",
+    "hydrology": "Nivel del río",
+    "environmental": "Humedad del suelo",
+    "trend": "Tendencia del nivel del agua"
+  }
 }

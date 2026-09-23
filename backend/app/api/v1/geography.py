@@ -27,6 +27,7 @@ from app.schemas.geography import CityOut, MapConfigOut
 router = APIRouter()
 
 DEFAULT_TILE_PROVIDER = "osm"
+DEFAULT_RISK_LAYER_OPACITY = 35
 
 
 def _list_cities(db: Session) -> list[CityOut]:
@@ -64,5 +65,7 @@ def get_map_config(
     setting = db.execute(
         select(AppSetting).where(AppSetting.category == SettingCategory.MAP.value, AppSetting.key == "map")
     ).scalar_one_or_none()
-    tile_provider = (setting.value or {}).get("tile_provider", DEFAULT_TILE_PROVIDER) if setting else DEFAULT_TILE_PROVIDER
-    return MapConfigOut(tile_provider=tile_provider, cities=_list_cities(db))
+    value = setting.value or {} if setting else {}
+    tile_provider = value.get("tile_provider", DEFAULT_TILE_PROVIDER)
+    risk_layer_opacity = value.get("risk_layer_opacity", DEFAULT_RISK_LAYER_OPACITY)
+    return MapConfigOut(tile_provider=tile_provider, risk_layer_opacity=risk_layer_opacity, cities=_list_cities(db))

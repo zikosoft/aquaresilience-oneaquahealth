@@ -57,6 +57,5 @@
   },
   "sourceHealth": {
     "title": "Source Freshness"
-  },
-  "placeholderNotice": "Live environmental data is now flowing from Hub'Eau and Open-Meteo. Deterministic risk scoring and early warnings ship in P2; the AI Situation Brief ships in P3."
+  }
 }

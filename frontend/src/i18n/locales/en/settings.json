@@ -75,8 +75,6 @@
     "tileProvider": "Tile provider",
     "providers": {
       "osm": "OpenStreetMap (standard)",
-      "cartoLight": "CARTO Positron (light)",
-      "cartoDark": "CARTO Dark Matter (dark)",
       "cyclosm": "CyclOSM (cycling)",
       "humanitarian": "Humanitarian OSM"
     },
@@ -84,7 +82,9 @@
     "defaultViewHint": "The map centers here on load. Comes from the configured city's own reference data — to change it, add or edit a city rather than typing coordinates here.",
     "longitude": "Longitude",
     "latitude": "Latitude",
-    "zoom": "Zoom"
+    "zoom": "Zoom",
+    "riskLayerOpacity": "Risk layer opacity",
+    "riskLayerOpacityHint": "Opacity (0-100) of the risk-level halo shown around the river gauge station on the map. Set to 0 to hide it."
   },
   "system": {
     "maintenanceMode": "Maintenance mode"

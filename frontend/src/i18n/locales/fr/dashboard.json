@@ -57,6 +57,5 @@
   },
   "sourceHealth": {
     "title": "Fraîcheur des sources"
-  },
-  "placeholderNotice": "Les données environnementales en temps réel de Hub'Eau et Open-Meteo sont maintenant actives. Le calcul de risque déterministe et les alertes précoces arrivent en P2 ; la synthèse IA arrive en P3."
+  }
 }

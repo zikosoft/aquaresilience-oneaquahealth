@@ -10,7 +10,7 @@ import { fetchCurrentRisk } from '@/services/riskApi'
 import { simulateScenario } from '@/services/scenarioApi'
 import { useAuthStore } from '@/stores/auth'
 import type { RiskScore, ScenarioSimulateResponse } from '@/types'
-import { severityColor } from '@/utils/risk'
+import { factorTranslationKey, leadingFactorKey, severityColor } from '@/utils/risk'
 
 const { t, locale } = useI18n()
 const authStore = useAuthStore()
@@ -57,7 +57,25 @@ const projectedGaugeValue = computed(() => (result.value ? Math.round(result.val
 
 const factorItems = computed(() => {
   const source = result.value ? result.value.projected : currentRisk.value
-  return source ? source.factors.map((f) => ({ factor: f.label, contribution: f.contribution })) : null
+  return source
+    ? source.factors.map((f) => ({ factor: t(factorTranslationKey(f.key)), contribution: f.contribution }))
+    : null
+})
+
+// i18n: rebuild the projected-warning sentence client-side from the
+// projected RiskScore's own structured fields (same score/severity/factors
+// the gauge and chart already use) instead of the backend's pre-rendered
+// English message — the non-persisting preview shares the exact same
+// FACTOR_LABELS/_build_message English-only issue the real warning had.
+const projectedWarningMessage = computed(() => {
+  if (!result.value || !result.value.projected_warning.would_trigger) return null
+  const projected = result.value.projected
+  const factorKey = leadingFactorKey(projected.factors)
+  return t('alerts.message', {
+    score: projected.score,
+    severity: t(`alerts.severity.${projected.severity.toLowerCase()}`),
+    factor: factorKey ? t(factorTranslationKey(factorKey)) : '—',
+  })
 })
 
 const waterLevelMax = computed(() => {
@@ -167,10 +185,10 @@ const mapRiskOverride = computed<RiskScore | null>(() => {
             }}
           </v-chip>
           <p
-            v-if="result.projected_warning.message"
+            v-if="projectedWarningMessage"
             class="text-body-2 mb-2"
           >
-            {{ result.projected_warning.message }}
+            {{ projectedWarningMessage }}
           </p>
           <p class="text-caption text-medium-emphasis">
             {{ t('scenarios.warning.note') }}

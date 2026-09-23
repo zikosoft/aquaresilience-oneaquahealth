@@ -27,10 +27,33 @@ const props = withDefaults(
 
 const option = computed<EChartsOption | null>(() => {
   if (!props.values || props.values.length === 0) return null
+  const categories = props.labels ?? props.values.map((_, i) => String(i))
+  // P4.1: real (if compact) X/Y axes so a duration change (24h/48h/72h...)
+  // is visibly reflected, not just present in the underlying data. Only a
+  // handful of x-axis ticks are shown (interval computed from the series
+  // length) to keep the sparkline readable at its small card size.
+  const maxTicks = 4
+  const tickInterval = Math.max(0, Math.ceil(categories.length / maxTicks) - 1)
   return {
-    grid: { left: 4, right: 4, top: 8, bottom: 4 },
-    xAxis: { type: 'category', show: false, data: props.labels ?? props.values.map((_, i) => String(i)) },
-    yAxis: { type: 'value', show: false },
+    grid: { left: 36, right: 8, top: 10, bottom: 20 },
+    xAxis: {
+      type: 'category',
+      show: true,
+      data: categories,
+      boundaryGap: false,
+      axisTick: { show: false },
+      axisLine: { lineStyle: { color: 'rgba(0,0,0,0.12)' } },
+      axisLabel: { show: true, fontSize: 9, interval: tickInterval, color: 'rgba(0,0,0,0.5)' },
+    },
+    yAxis: {
+      type: 'value',
+      show: true,
+      splitNumber: 2,
+      splitLine: { lineStyle: { color: 'rgba(0,0,0,0.06)' } },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { show: true, fontSize: 9, color: 'rgba(0,0,0,0.5)' },
+    },
     tooltip: { trigger: 'axis' },
     series: [
       {
@@ -55,7 +78,7 @@ const option = computed<EChartsOption | null>(() => {
     :loading="loading"
     :error="error"
     :empty-text="emptyText"
-    :min-height="160"
+    :min-height="180"
     :allow-fullscreen="false"
   />
 </template>

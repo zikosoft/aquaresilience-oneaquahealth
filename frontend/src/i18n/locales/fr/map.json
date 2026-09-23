@@ -1,13 +1,5 @@
 {
   "title": "Carte de résilience",
-  "layers": {
-    "boundary": "Limite de Toulouse",
-    "waterways": "Cours d'eau / Garonne",
-    "stations": "Stations de surveillance",
-    "riskZones": "Zones de risque",
-    "warnings": "Alertes actives",
-    "scenario": "Projection de scénario"
-  },
   "loading": "Chargement de la carte…",
   "styleUnavailable": "Style de carte indisponible. Vérifiez la source de tuiles configurée dans les Paramètres.",
   "loadTimeout": "La carte met trop de temps à charger. C'est généralement un problème réseau ou pare-feu vers le serveur de tuiles — vérifiez votre connexion et essayez de rafraîchir.",
@@ -24,12 +16,21 @@
     "title": "Fond de carte",
     "providers": {
       "osm": "OpenStreetMap (standard)",
-      "cartoLight": "CARTO Positron (clair)",
-      "cartoDark": "CARTO Dark Matter (sombre)",
       "cyclosm": "CyclOSM (cyclisme)",
       "humanitarian": "Humanitarian OSM"
     },
     "defaultBadge": "(par défaut)"
+  },
+  "stationKind": {
+    "river_gauge": "Station de mesure du niveau de la rivière",
+    "weather_point": "Station météo"
+  },
+  "legend": {
+    "title": "Légende",
+    "markersTitle": "Marqueurs",
+    "healthTitle": "Fraîcheur des données",
+    "riskLayerTitle": "Couche de risque",
+    "riskLayerHint": "Le halo coloré autour de la station de mesure de la rivière indique le niveau de risque actuel de la plateforme. Son opacité se règle dans Paramètres > Carte."
   },
   "variable": {
     "water_level_mm": "Niveau d'eau",

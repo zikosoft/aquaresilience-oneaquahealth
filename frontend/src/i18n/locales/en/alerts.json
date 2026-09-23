@@ -19,5 +19,6 @@
   "score": "Score: {score}/100",
   "triggeredAt": "Triggered {time}",
   "acknowledgedAt": "Acknowledged {time} by {name}",
-  "resolvedAt": "Resolved {time} by {name}"
+  "resolvedAt": "Resolved {time} by {name}",
+  "message": "Risk score {score}/100 ({severity}) — leading factor: {factor}."
 }

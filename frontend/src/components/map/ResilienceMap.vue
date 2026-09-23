@@ -70,39 +70,20 @@ const RASTER_STYLES: Record<MapTileProvider, StyleSpecification> = {
     },
     layers: [{ id: 'osm-tiles', type: 'raster', source: 'osm' }],
   },
-  carto_light: {
-    version: 8,
-    sources: {
-      carto: {
-        type: 'raster',
-        tiles: ['a', 'b', 'c', 'd'].map((s) => `https://${s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png`),
-        tileSize: 256,
-        attribution: '© OpenStreetMap contributors © CARTO',
-      },
-    },
-    layers: [{ id: 'carto-tiles', type: 'raster', source: 'carto' }],
-  },
-  carto_dark: {
-    version: 8,
-    sources: {
-      carto: {
-        type: 'raster',
-        tiles: ['a', 'b', 'c', 'd'].map((s) => `https://${s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png`),
-        tileSize: 256,
-        attribution: '© OpenStreetMap contributors © CARTO',
-      },
-    },
-    layers: [{ id: 'carto-tiles', type: 'raster', source: 'carto' }],
-  },
-  // Both added per user request (Session 012): free, keyless raster tile
-  // sets hosted by the French OSM chapter (openstreetmap.fr) — verified
-  // against https://wiki.openstreetmap.org/wiki/Raster_tile_providers, no
-  // account/API key needed, same as the 3 providers above. Kept to this set
-  // because it's the whole premise of Settings > Map's own copy ("Aucun
-  // compte ni clé API n'est nécessaire") and D019 — providers that require
-  // a key (Thunderforest Cycle Map/Transport, Tracestrack, MapTiler) or a
-  // vector-tile schema (Shortbread) are a different, larger trade-off, not
-  // added here. No free/keyless satellite imagery provider exists (D019).
+  // CARTO Positron/Dark Matter (basemaps.cartocdn.com) were removed here in
+  // P4.1: CARTO now requires a free API key for its raster basemap tiles
+  // (confirmed on docs.carto.com — "CARTO's free raster basemap tiles now
+  // require an API key", a change made after D019 was written), which broke
+  // the whole premise of this list and of Settings > Map's own copy ("no
+  // account or API key needed"). The user confirmed on their own machine
+  // that only Humanitarian OSM rendered cleanly, matching this. If CARTO is
+  // wanted again later, it needs a real Settings > Map API-key field and a
+  // documented free-tier limit (5M tiles/month), not a silent re-add here.
+  //
+  // The 2 remaining providers below are free, keyless raster tile sets
+  // hosted by the French OSM chapter (openstreetmap.fr) — verified against
+  // https://wiki.openstreetmap.org/wiki/Raster_tile_providers, no
+  // account/API key needed, same as OSM standard above.
   cyclosm: {
     version: 8,
     sources: {
@@ -145,7 +126,7 @@ const FALLBACK_ZOOM = envZoom ?? 11
 // viewer in localStorage, same "saved and reused across sessions, no
 // server round trip" model as D017's dashboard time-range selector.
 const MAP_PROVIDER_STORAGE_KEY = 'aquaresilience.mapTileProvider'
-const KNOWN_PROVIDERS: MapTileProvider[] = ['osm', 'carto_light', 'carto_dark', 'cyclosm', 'humanitarian']
+const KNOWN_PROVIDERS: MapTileProvider[] = ['osm', 'cyclosm', 'humanitarian']
 
 function loadStoredProvider(): MapTileProvider | null {
   try {
@@ -173,6 +154,12 @@ const showLayerPicker = !configuredStyleUrl
 const activeProvider = ref<MapTileProvider | null>(null)
 const defaultProvider = ref<MapTileProvider>('osm')
 const layerPickerOpen = ref(false)
+// P4.1: Settings > Map-configurable opacity (0-100) for the risk-level
+// circle layer — see the RISK LAYER section below. Fetched once at map
+// init alongside the tile provider/city defaults (same "deployment
+// default, takes effect on next load" model tile_provider already has).
+const DEFAULT_RISK_LAYER_OPACITY_PCT = 35
+const riskLayerOpacityPct = ref(DEFAULT_RISK_LAYER_OPACITY_PCT)
 
 async function resolveMapConfig(): Promise<{ style: string | StyleSpecification; center: [number, number]; zoom: number }> {
   if (configuredStyleUrl) {
@@ -184,6 +171,7 @@ async function resolveMapConfig(): Promise<{ style: string | StyleSpecification;
   try {
     const config = await fetchMapConfig()
     defaultProvider.value = config.tile_provider
+    riskLayerOpacityPct.value = config.risk_layer_opacity ?? DEFAULT_RISK_LAYER_OPACITY_PCT
     const provider = loadStoredProvider() ?? config.tile_provider
     activeProvider.value = provider
     const style = RASTER_STYLES[provider] ?? RASTER_STYLES.osm
@@ -207,8 +195,6 @@ async function resolveMapConfig(): Promise<{ style: string | StyleSpecification;
 
 const PROVIDER_I18N_KEY: Record<MapTileProvider, string> = {
   osm: 'osm',
-  carto_light: 'cartoLight',
-  carto_dark: 'cartoDark',
   cyclosm: 'cyclosm',
   humanitarian: 'humanitarian',
 }
@@ -254,6 +240,70 @@ const RISK_TEXT_COLOR: Record<string, string> = {
   MODERATE: '#C4820C',
   HIGH: '#D26918',
   CRITICAL: '#B3261E',
+}
+
+// P4.1: risk level as an actual map LAYER (a real MapLibre source/layer,
+// not just a marker ring) — a soft colored halo centered on the river
+// gauge station, the same single platform-wide score the ring/popup above
+// already anchor there (D008: one score, not per-area, so a soft halo is
+// the honest shape — not a fake multi-zone heatmap implying granularity
+// the risk engine doesn't compute). Opacity is Settings > Map-configurable
+// (riskLayerOpacityPct); setting it to 0 there effectively hides the layer
+// without needing a separate on/off control.
+const RISK_LAYER_SOURCE_ID = 'aq-risk-layer-source'
+const RISK_LAYER_ID = 'aq-risk-layer'
+let lastRiskForLayer: RiskScore | null = null
+let lastGaugeLngLat: [number, number] | null = null
+
+function emptyFeatureCollection(): GeoJSON.FeatureCollection {
+  return { type: 'FeatureCollection', features: [] }
+}
+
+// Re-adds the source/layer if missing (they don't survive setStyle(), see
+// the 'style.load' hook below) and (re)syncs their data/paint to whatever
+// was last computed — safe to call any number of times, in any order,
+// relative to when the risk fetch actually resolves.
+function syncRiskLayer(): void {
+  if (!map) return
+  if (!map.getSource(RISK_LAYER_SOURCE_ID)) {
+    map.addSource(RISK_LAYER_SOURCE_ID, { type: 'geojson', data: emptyFeatureCollection() })
+  }
+  if (!map.getLayer(RISK_LAYER_ID)) {
+    map.addLayer({
+      id: RISK_LAYER_ID,
+      type: 'circle',
+      source: RISK_LAYER_SOURCE_ID,
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 36, 12, 90, 16, 220],
+        'circle-color': RISK_TEXT_COLOR.LOW,
+        'circle-blur': 0.8,
+        'circle-opacity': riskLayerOpacityPct.value / 100,
+        'circle-stroke-width': 0,
+      },
+    })
+  }
+  const source = map.getSource(RISK_LAYER_SOURCE_ID) as import('maplibre-gl').GeoJSONSource
+  if (lastGaugeLngLat && lastRiskForLayer) {
+    source.setData({
+      type: 'FeatureCollection',
+      features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: lastGaugeLngLat }, properties: {} }],
+    })
+    map.setPaintProperty(RISK_LAYER_ID, 'circle-color', RISK_TEXT_COLOR[lastRiskForLayer.severity] ?? RISK_TEXT_COLOR.LOW)
+    map.setPaintProperty(RISK_LAYER_ID, 'circle-opacity', riskLayerOpacityPct.value / 100)
+  } else {
+    source.setData(emptyFeatureCollection())
+  }
+}
+
+// P4.1: distinct icon per station kind (D016's 2 seeded stations — one
+// Hub'Eau river gauge, one Open-Meteo weather point) so the 2 markers on
+// the map are visually self-explanatory instead of both being a plain dot
+// distinguished only by health color — user report: "je vois ... 2 points
+// je ne sais pas à quoi cela correspond". See also the always-visible
+// legend on the full Map page (ResilienceMapView.vue).
+const STATION_KIND_ICON: Record<string, string> = {
+  river_gauge: 'mdi-waves',
+  weather_point: 'mdi-weather-partly-cloudy',
 }
 
 // Defensive timeout: whatever the exact cause (a blocked/slow tile host, a
@@ -347,26 +397,35 @@ async function addStationMarkers(): Promise<void> {
             return null
           }),
     ])
+    lastGaugeLngLat = null
+    lastRiskForLayer = null
     for (const station of stations) {
       const el = document.createElement('div')
       el.className = 'aq-station-marker'
       el.style.backgroundColor = healthColor[station.source_health] ?? healthColor.degraded
       el.setAttribute('role', 'img')
-      el.setAttribute('aria-label', station.name)
+      el.setAttribute('aria-label', `${station.name} — ${t(`map.stationKind.${station.kind}`, station.kind)}`)
+
+      const icon = document.createElement('i')
+      icon.className = `mdi ${STATION_KIND_ICON[station.kind] ?? 'mdi-map-marker'} aq-station-marker__icon`
+      el.appendChild(icon)
 
       if (station.kind === 'river_gauge' && risk) {
         const ringColor = RISK_RING_COLOR[risk.severity] ?? RISK_RING_COLOR.LOW
         el.style.boxShadow = `0 0 0 4px ${ringColor}, 0 0 0 1px rgba(0, 0, 0, 0.25)`
         el.setAttribute(
           'aria-label',
-          `${station.name} — ${t('map.station.risk')}: ${t(`alerts.severity.${risk.severity.toLowerCase()}`)}`,
+          `${station.name} — ${t(`map.stationKind.${station.kind}`, station.kind)} — ${t('map.station.risk')}: ${t(`alerts.severity.${risk.severity.toLowerCase()}`)}`,
         )
+        lastGaugeLngLat = [station.lon, station.lat]
+        lastRiskForLayer = risk
       }
 
       const popup = new Popup({ offset: 14, closeButton: true }).setDOMContent(buildPopupContent(station, risk))
       const marker = new Marker({ element: el }).setLngLat([station.lon, station.lat]).setPopup(popup).addTo(map)
       markers.push(marker)
     }
+    syncRiskLayer()
   } catch (e) {
 
     console.error('Failed to load stations for map', e)
@@ -404,6 +463,13 @@ async function initMap(): Promise<void> {
       initialStyleLoaded = true
       loading.value = false
       void addStationMarkers()
+    })
+    // 'style.load' fires on the initial load AND again after every
+    // setStyle() (the on-map base layer picker) — unlike the DOM marker
+    // overlays, the risk layer is a real style source/layer and does not
+    // survive a style swap, so it must be re-added every time this fires.
+    instance.on('style.load', () => {
+      syncRiskLayer()
     })
     instance.on('error', (e) => {
       console.error('MapLibre error', e?.error)
@@ -527,7 +593,7 @@ watch(
         >
           <v-list-subheader>{{ t('map.baseMap.title') }}</v-list-subheader>
           <v-list-item
-            v-for="provider in (['osm', 'carto_light', 'carto_dark', 'cyclosm', 'humanitarian'] as const)"
+            v-for="provider in (['osm', 'cyclosm', 'humanitarian'] as const)"
             :key="provider"
             :active="activeProvider === provider"
             @click="selectProvider(provider)"
@@ -607,12 +673,21 @@ watch(
 -->
 <style>
 .aq-station-marker {
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: 2px solid white;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aq-station-marker__icon {
+  font-size: 12px;
+  color: white;
+  line-height: 1;
 }
 
 .aq-station-popup {

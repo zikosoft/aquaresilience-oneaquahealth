@@ -57,6 +57,5 @@
   },
   "sourceHealth": {
     "title": "Frescura de las fuentes"
-  },
-  "placeholderNotice": "Los datos ambientales en vivo de Hub'Eau y Open-Meteo ya están activos. El cálculo de riesgo determinista y las alertas tempranas llegan en P2; el resumen de IA llega en P3."
+  }
 }

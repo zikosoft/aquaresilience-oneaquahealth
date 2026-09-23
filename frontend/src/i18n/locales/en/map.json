@@ -1,13 +1,5 @@
 {
   "title": "Resilience Map",
-  "layers": {
-    "boundary": "Toulouse boundary",
-    "waterways": "Waterways / Garonne",
-    "stations": "Monitoring stations",
-    "riskZones": "Risk zones",
-    "warnings": "Active warnings",
-    "scenario": "Scenario projection"
-  },
   "loading": "Loading map…",
   "styleUnavailable": "Map style unavailable. Check the configured tile source in Settings.",
   "loadTimeout": "The map is taking too long to load. This is usually a network or firewall issue reaching the tile server — check your connection and try refreshing.",
@@ -24,12 +16,21 @@
     "title": "Base map",
     "providers": {
       "osm": "OpenStreetMap (standard)",
-      "cartoLight": "CARTO Positron (light)",
-      "cartoDark": "CARTO Dark Matter (dark)",
       "cyclosm": "CyclOSM (cycling)",
       "humanitarian": "Humanitarian OSM"
     },
     "defaultBadge": "(default)"
+  },
+  "stationKind": {
+    "river_gauge": "River gauge station",
+    "weather_point": "Weather station"
+  },
+  "legend": {
+    "title": "Legend",
+    "markersTitle": "Markers",
+    "healthTitle": "Data freshness",
+    "riskLayerTitle": "Risk layer",
+    "riskLayerHint": "The soft colored halo around the river gauge shows the current platform-wide risk level. Its opacity is configurable in Settings > Map."
   },
   "variable": {
     "water_level_mm": "Water level",

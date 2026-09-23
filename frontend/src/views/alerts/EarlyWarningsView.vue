@@ -6,10 +6,21 @@ import { extractApiErrorMessage } from '@/services/api'
 import { acknowledgeWarning, fetchWarnings, resolveWarning } from '@/services/riskApi'
 import { useAuthStore } from '@/stores/auth'
 import type { EarlyWarning } from '@/types'
-import { severityColor } from '@/utils/risk'
+import { factorTranslationKey, leadingFactorKey, severityColor } from '@/utils/risk'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
+
+// i18n: rebuild the warning sentence client-side from structured fields
+// instead of displaying the backend's pre-rendered English message.
+function warningMessage(warning: EarlyWarning): string {
+  const factorKey = leadingFactorKey(warning.factors)
+  return t('alerts.message', {
+    score: warning.risk_score,
+    severity: t(`alerts.severity.${warning.severity.toLowerCase()}`),
+    factor: factorKey ? t(factorTranslationKey(factorKey)) : '—',
+  })
+}
 
 const lifecycleSteps = ['active', 'acknowledged', 'resolved'] as const
 
@@ -188,7 +199,7 @@ async function onResolve(id: string): Promise<void> {
           </div>
 
           <p class="text-body-2 mb-2">
-            {{ warning.message }}
+            {{ warningMessage(warning) }}
           </p>
 
           <div class="d-flex flex-wrap ga-4 text-caption text-medium-emphasis">

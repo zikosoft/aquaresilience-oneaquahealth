@@ -1,13 +1,5 @@
 {
   "title": "Mapa de resiliencia",
-  "layers": {
-    "boundary": "Límite de Toulouse",
-    "waterways": "Cursos de agua / Garona",
-    "stations": "Estaciones de monitoreo",
-    "riskZones": "Zonas de riesgo",
-    "warnings": "Alertas activas",
-    "scenario": "Proyección de escenario"
-  },
   "loading": "Cargando mapa…",
   "styleUnavailable": "Estilo de mapa no disponible. Verifique la fuente de mosaicos configurada en Configuración.",
   "loadTimeout": "El mapa está tardando demasiado en cargar. Esto suele deberse a un problema de red o firewall al acceder al servidor de mosaicos — verifique su conexión e intente actualizar.",
@@ -24,12 +16,21 @@
     "title": "Mapa base",
     "providers": {
       "osm": "OpenStreetMap (estándar)",
-      "cartoLight": "CARTO Positron (claro)",
-      "cartoDark": "CARTO Dark Matter (oscuro)",
       "cyclosm": "CyclOSM (ciclismo)",
       "humanitarian": "Humanitarian OSM"
     },
     "defaultBadge": "(predeterminado)"
+  },
+  "stationKind": {
+    "river_gauge": "Estación de nivel del río",
+    "weather_point": "Estación meteorológica"
+  },
+  "legend": {
+    "title": "Leyenda",
+    "markersTitle": "Marcadores",
+    "healthTitle": "Actualidad de los datos",
+    "riskLayerTitle": "Capa de riesgo",
+    "riskLayerHint": "El halo de color alrededor de la estación del río muestra el nivel de riesgo actual de la plataforma. Su opacidad se configura en Configuración > Mapa."
   },
   "variable": {
     "water_level_mm": "Nivel del agua",

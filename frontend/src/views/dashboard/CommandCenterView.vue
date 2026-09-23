@@ -14,7 +14,7 @@ import { fetchEnvironmentalSummary, fetchSources } from '@/services/environmenta
 import { acknowledgeWarning, fetchCurrentRisk, fetchWarnings, resolveWarning } from '@/services/riskApi'
 import { useAuthStore } from '@/stores/auth'
 import type { EarlyWarning, EnvironmentalSummary, RiskScore, SourceHealth } from '@/types'
-import { severityColor } from '@/utils/risk'
+import { factorTranslationKey, leadingFactorKey, severityColor } from '@/utils/risk'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -235,12 +235,45 @@ const windDirectionSparkValues = computed(() => summary.value?.wind_direction_tr
 const surfacePressureSparkValues = computed(() => summary.value?.surface_pressure_trend ?? null)
 const uvIndexSparkValues = computed(() => summary.value?.uv_index_trend ?? null)
 
+// P4.1: compact HH:mm labels for each KPI sparkline's x-axis, built from
+// the same *_trend_timestamps arrays the API already returns alongside
+// each *_trend series (mirrors the big timeline's timelineTimestamps
+// formatting above) — this is what makes a duration change (24h/48h/72h)
+// visibly move the axis, not just the underlying values.
+function formatSparkLabels(timestamps: string[] | null | undefined): string[] | null {
+  if (!timestamps || timestamps.length === 0) return null
+  return timestamps.map((ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+}
+const waterLevelSparkLabels = computed(() => formatSparkLabels(summary.value?.water_level_trend_timestamps))
+const precipitationSparkLabels = computed(() => formatSparkLabels(summary.value?.precipitation_trend_timestamps))
+const temperatureSparkLabels = computed(() => formatSparkLabels(summary.value?.temperature_trend_timestamps))
+const humiditySparkLabels = computed(() => formatSparkLabels(summary.value?.humidity_trend_timestamps))
+const windSpeedSparkLabels = computed(() => formatSparkLabels(summary.value?.wind_speed_trend_timestamps))
+const windDirectionSparkLabels = computed(() => formatSparkLabels(summary.value?.wind_direction_trend_timestamps))
+const surfacePressureSparkLabels = computed(() => formatSparkLabels(summary.value?.surface_pressure_trend_timestamps))
+const uvIndexSparkLabels = computed(() => formatSparkLabels(summary.value?.uv_index_trend_timestamps))
+
 // --- P2: risk gauges + factor contribution ---
 const resilienceGaugeValue = computed(() => (risk.value ? Math.round(100 - risk.value.score) : null))
 const environmentalRiskGaugeValue = computed(() => (risk.value ? Math.round(risk.value.score) : null))
 const factorContributionItems = computed(() =>
-  risk.value ? risk.value.factors.map((f) => ({ factor: f.label, contribution: f.contribution })) : null,
+  risk.value
+    ? risk.value.factors.map((f) => ({ factor: t(factorTranslationKey(f.key)), contribution: f.contribution }))
+    : null,
 )
+
+// i18n: rebuild the warning sentence client-side from structured fields
+// (score/severity/leading factor) instead of displaying the backend's
+// pre-rendered English message — see utils/risk.ts:leadingFactorKey.
+const openWarningMessage = computed(() => {
+  if (!openWarning.value) return null
+  const factorKey = leadingFactorKey(openWarning.value.factors)
+  return t('alerts.message', {
+    score: openWarning.value.risk_score,
+    severity: t(`alerts.severity.${openWarning.value.severity.toLowerCase()}`),
+    factor: factorKey ? t(factorTranslationKey(factorKey)) : '—',
+  })
+})
 </script>
 
 <template>
@@ -345,6 +378,7 @@ const factorContributionItems = computed(() =>
           widget-id="kpi-water-level"
           :title="t('dashboard.waterLevel.title', { hours: effectiveHours })"
           :values="waterLevelSparkValues"
+          :labels="waterLevelSparkLabels"
           :loading="loading || trendsLoading"
           color="#0B5FA5"
           :empty-text="t('common.status.empty')"
@@ -358,6 +392,7 @@ const factorContributionItems = computed(() =>
           widget-id="kpi-precipitation"
           :title="t('dashboard.precipitation.title', { hours: effectiveHours })"
           :values="precipitationSparkValues"
+          :labels="precipitationSparkLabels"
           :loading="loading || trendsLoading"
           color="#4FA3D1"
           :empty-text="t('common.status.empty')"
@@ -371,6 +406,7 @@ const factorContributionItems = computed(() =>
           widget-id="kpi-temperature"
           :title="t('dashboard.temperature.title', { hours: effectiveHours })"
           :values="temperatureSparkValues"
+          :labels="temperatureSparkLabels"
           :loading="loading || trendsLoading"
           color="#D18E2C"
           :empty-text="t('common.status.empty')"
@@ -384,6 +420,7 @@ const factorContributionItems = computed(() =>
           widget-id="kpi-humidity"
           :title="t('dashboard.humidity.title', { hours: effectiveHours })"
           :values="humiditySparkValues"
+          :labels="humiditySparkLabels"
           :loading="loading || trendsLoading"
           color="#3E8E8E"
           :empty-text="t('common.status.empty')"
@@ -397,6 +434,7 @@ const factorContributionItems = computed(() =>
           widget-id="kpi-wind-speed"
           :title="t('dashboard.windSpeed.title', { hours: effectiveHours })"
           :values="windSpeedSparkValues"
+          :labels="windSpeedSparkLabels"
           :loading="loading || trendsLoading"
           color="#5B8C5A"
           :empty-text="t('common.status.empty')"
@@ -410,6 +448,7 @@ const factorContributionItems = computed(() =>
           widget-id="kpi-wind-direction"
           :title="t('dashboard.windDirection.title', { hours: effectiveHours })"
           :values="windDirectionSparkValues"
+          :labels="windDirectionSparkLabels"
           :loading="loading || trendsLoading"
           color="#B5566B"
           :empty-text="t('common.status.empty')"
@@ -423,6 +462,7 @@ const factorContributionItems = computed(() =>
           widget-id="kpi-surface-pressure"
           :title="t('dashboard.surfacePressure.title', { hours: effectiveHours })"
           :values="surfacePressureSparkValues"
+          :labels="surfacePressureSparkLabels"
           :loading="loading || trendsLoading"
           color="#7B5EA7"
           :empty-text="t('common.status.empty')"
@@ -436,6 +476,7 @@ const factorContributionItems = computed(() =>
           widget-id="kpi-uv-index"
           :title="t('dashboard.uvIndex.title', { hours: effectiveHours })"
           :values="uvIndexSparkValues"
+          :labels="uvIndexSparkLabels"
           :loading="loading || trendsLoading"
           color="#C74B50"
           :empty-text="t('common.status.empty')"
@@ -545,7 +586,7 @@ const factorContributionItems = computed(() =>
               </v-chip>
             </div>
             <p class="text-body-2 mb-2">
-              {{ openWarning.message }}
+              {{ openWarningMessage }}
             </p>
             <p class="text-caption text-medium-emphasis mb-4">
               {{ t('dashboard.currentWarning.triggeredAt', { time: new Date(openWarning.triggered_at).toLocaleString() }) }}

@@ -19,5 +19,6 @@
   "score": "Puntuación: {score}/100",
   "triggeredAt": "Activada {time}",
   "acknowledgedAt": "Reconocida {time} por {name}",
-  "resolvedAt": "Resuelta {time} por {name}"
+  "resolvedAt": "Resuelta {time} por {name}",
+  "message": "Puntuación de riesgo {score}/100 ({severity}) — factor principal: {factor}."
 }
