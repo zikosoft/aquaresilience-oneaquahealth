@@ -11,10 +11,12 @@ from app.api.v1.deps import get_current_user, require_permission
 from app.core.database import get_db
 from app.core.errors import ConflictError, NotFoundError
 from app.core.security import hash_password
-from app.models.rbac import Role, UserRole
+from app.models.rbac import Role, RolePermission, UserRole
 from app.models.user import User
 from app.schemas.common import MessageResponse
+from app.schemas.rbac import RolePermissionCell, RoleOut, UserPermissionsOut, UserPermissionToggle
 from app.schemas.user import UserCreate, UserOut, UserPasswordUpdate, UserUpdate
+from app.services.rbac_service import set_user_permission
 
 router = APIRouter()
 
@@ -99,6 +101,30 @@ def set_user_password(
     user.hashed_password = hash_password(payload.password)
     db.commit()
     return MessageResponse(message="Password updated")
+
+
+@router.patch("/{user_id}/permissions", response_model=UserPermissionsOut)
+def update_user_permission(
+    user_id: uuid.UUID,
+    payload: UserPermissionToggle,
+    db: Session = Depends(get_db),
+    # P2.1 (D015): same "ADMIN" bar as the shared role matrix (`PUT
+    # /rbac/matrix`) — granting/revoking permissions is admin-only either way.
+    _: User = Depends(require_permission("ADMINISTRATION", "ADMIN")),
+) -> UserPermissionsOut:
+    user = db.get(User, user_id)
+    if user is None:
+        raise NotFoundError(message="User not found")
+
+    role = set_user_permission(db, user, payload.module_id, payload.permission_id, payload.granted)
+    grants = db.execute(select(RolePermission).where(RolePermission.role_id == role.id)).scalars().all()
+    return UserPermissionsOut(
+        role=RoleOut.model_validate(role),
+        grants=[
+            RolePermissionCell(role_id=g.role_id, module_id=g.module_id, permission_id=g.permission_id)
+            for g in grants
+        ],
+    )
 
 
 @router.delete("/{user_id}", response_model=MessageResponse)

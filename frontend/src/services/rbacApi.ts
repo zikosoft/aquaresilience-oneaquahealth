@@ -1,5 +1,5 @@
 import { api } from '@/services/api'
-import type { PermissionMatrix, RolePermissionCell, Role, User } from '@/types'
+import type { PermissionMatrix, RolePermissionCell, Role, User, UserPermissionsResult } from '@/types'
 
 export function fetchUsers() {
   return api.get<User[]>('/users').then((r) => r.data)
@@ -39,4 +39,16 @@ export function fetchMatrix() {
 
 export function updateRoleGrants(roleId: string, grants: RolePermissionCell[]) {
   return api.put<PermissionMatrix>('/rbac/matrix', { role_id: roleId, grants }).then((r) => r.data)
+}
+
+// P2.1 (D015): per-user "Custom" permission override — a single cell
+// toggle, live-saved (no separate save step). The backend clones the
+// user's current role into a user-scoped "Custom" role on first edit; the
+// response's `role` is whichever role the user ends up on, so the UI can
+// reflect the switch immediately with no extra round trip.
+export function setUserPermission(
+  userId: string,
+  payload: { module_id: string; permission_id: string; granted: boolean },
+) {
+  return api.patch<UserPermissionsResult>(`/users/${userId}/permissions`, payload).then((r) => r.data)
 }

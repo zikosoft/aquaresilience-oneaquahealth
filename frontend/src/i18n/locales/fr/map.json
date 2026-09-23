@@ -9,5 +9,26 @@
     "scenario": "Projection de scénario"
   },
   "loading": "Chargement de la carte…",
-  "styleUnavailable": "Style de carte indisponible. Vérifiez la source de tuiles configurée dans les Paramètres."
+  "styleUnavailable": "Style de carte indisponible. Vérifiez la source de tuiles configurée dans les Paramètres.",
+  "loadTimeout": "La carte met trop de temps à charger. C'est généralement un problème réseau ou pare-feu vers le serveur de tuiles — vérifiez votre connexion et essayez de rafraîchir.",
+  "health": {
+    "fresh": "À jour",
+    "stale": "Obsolète",
+    "degraded": "Dégradée"
+  },
+  "station": {
+    "lastUpdated": "Dernière mise à jour",
+    "risk": "Risque actuel"
+  },
+  "variable": {
+    "water_level_mm": "Niveau d'eau",
+    "precipitation_mm": "Précipitations",
+    "soil_moisture_ratio": "Humidité du sol",
+    "temperature_c": "Température",
+    "humidity_percent": "Humidité",
+    "wind_speed_kmh": "Vitesse du vent",
+    "wind_direction_deg": "Direction du vent",
+    "surface_pressure_hpa": "Pression atmosphérique",
+    "uv_index": "Indice UV"
+  }
 }

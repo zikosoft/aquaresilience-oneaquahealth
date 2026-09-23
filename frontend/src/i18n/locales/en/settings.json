@@ -8,13 +8,15 @@
     "scheduler": "Scheduler",
     "riskEngine": "Risk Engine",
     "alerts": "Alerts",
+    "map": "Map",
     "usersAccess": "Users & Access",
     "system": "System"
   },
   "general": {
     "city": "City",
     "timezone": "Timezone",
-    "dateFormat": "Date format"
+    "dateFormat": "Date format",
+    "singleCityNotice": "This deployment is configured for Toulouse Métropole only. Multi-city support is not part of this hackathon build."
   },
   "languages": {
     "defaultLocale": "Default language",
@@ -26,7 +28,7 @@
     "apiKey": "API key",
     "apiKeyHint": "Write-only. Leave blank to keep the currently stored key.",
     "maxOutputTokens": "Max output tokens",
-    "scheduledInterval": "Scheduled analysis interval (minutes)",
+    "scheduledInterval": "Scheduled analysis interval (hours)",
     "dailyCeiling": "Daily request ceiling",
     "eventTriggered": "Event-triggered analysis",
     "cooldown": "Cooldown (seconds)",
@@ -37,6 +39,18 @@
     "testSuccess": "Connection successful.",
     "testFailure": "Connection failed.",
     "saved": "AI provider configuration saved."
+  },
+  "riskEngine": {
+    "description": "Deterministic risk engine weights and severity thresholds. The score is a weighted combination of the 4 factors below (weights are renormalized when a factor has no data yet); the score is then bucketed into LOW/MODERATE/HIGH/CRITICAL using the 3 thresholds.",
+    "tooltips": {
+      "weightsRainfall": "Share of the score driven by 24h cumulative precipitation. Normalized against a 40mm/24h reference (documented fallback — official Vigicrues thresholds were not available at build time).",
+      "weightsHydrology": "Share of the score driven by the current Garonne water level, placed on a 0–1 scale using the station's own observed min/max over the last 90 days (relative fallback until official flood thresholds are available).",
+      "weightsEnvironmental": "Share of the score driven by soil moisture (already expressed 0–1 by Open-Meteo).",
+      "weightsTrend": "Share of the score driven by how fast the water level is rising over the trailing 6h, normalized against a 50mm/h reference. A falling or flat level never adds risk.",
+      "thresholdsLow": "Score at or above this value is at least MODERATE (below it, LOW).",
+      "thresholdsModerate": "Score at or above this value is at least HIGH.",
+      "thresholdsHigh": "Score at or above this value is CRITICAL."
+    }
   },
   "usersAccess": {
     "users": "Users",
@@ -49,7 +63,26 @@
     "activeStatus": "Active",
     "resetPassword": "Reset password",
     "matrixHint": "Grant module × permission access per role.",
-    "cannotDeleteSelf": "You cannot delete your own account."
+    "cannotDeleteSelf": "You cannot delete your own account.",
+    "editPermissions": "Edit permissions",
+    "userPermissionsTitle": "Permissions — {name}",
+    "userPermissionsHint": "Editing a checkbox here creates a permission set specific to this user, cloned from their current role — it never changes the shared role itself, so no one else on that role is affected.",
+    "currentRole": "Current role: {role}",
+    "customRoleBadge": "Custom"
+  },
+  "map": {
+    "description": "Choose which free, open tile provider draws the Resilience Map. No account or API key is needed for any of these.",
+    "tileProvider": "Tile provider",
+    "providers": {
+      "osm": "OpenStreetMap (standard)",
+      "cartoLight": "CARTO Positron (light)",
+      "cartoDark": "CARTO Dark Matter (dark)"
+    },
+    "defaultView": "Default view",
+    "defaultViewHint": "The map centers here on load. Comes from the configured city's own reference data — to change it, add or edit a city rather than typing coordinates here.",
+    "longitude": "Longitude",
+    "latitude": "Latitude",
+    "zoom": "Zoom"
   },
   "system": {
     "maintenanceMode": "Maintenance mode"

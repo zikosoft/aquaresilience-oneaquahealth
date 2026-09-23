@@ -5,8 +5,40 @@
     "environmentalRisk": "Environmental Risk",
     "activeWarnings": "Active Warnings",
     "monitoredZones": "Monitored Zones",
+    "monitoredZonesTooltip": "Number of active monitoring stations: {sources}",
     "dataSources": "Data Sources",
-    "aiMonitoring": "AI Monitoring"
+    "aiMonitoring": "AI Monitoring",
+    "comingInP2": "Available from P2",
+    "comingInP3": "Available from P3",
+    "factorsAvailable": "{available}/{total} risk factors available"
+  },
+  "timeRange": {
+    "label": "Time range",
+    "hoursShort": "{hours}h"
+  },
+  "waterLevel": {
+    "title": "Water Level — Garonne ({hours}h)"
+  },
+  "precipitation": {
+    "title": "Precipitation ({hours}h)"
+  },
+  "temperature": {
+    "title": "Temperature ({hours}h)"
+  },
+  "humidity": {
+    "title": "Humidity ({hours}h)"
+  },
+  "windSpeed": {
+    "title": "Wind Speed ({hours}h)"
+  },
+  "windDirection": {
+    "title": "Wind Direction ({hours}h)"
+  },
+  "surfacePressure": {
+    "title": "Surface Pressure ({hours}h)"
+  },
+  "uvIndex": {
+    "title": "UV Index ({hours}h)"
   },
   "situationBrief": {
     "title": "AI Situation Brief",
@@ -17,7 +49,8 @@
   },
   "currentWarning": {
     "title": "Current Warning",
-    "none": "No active warnings"
+    "none": "No active warnings",
+    "triggeredAt": "Triggered {time}"
   },
   "factorContribution": {
     "title": "Risk Factor Contribution"
@@ -25,5 +58,5 @@
   "sourceHealth": {
     "title": "Source Freshness"
   },
-  "placeholderNotice": "Live environmental data, risk scoring and warnings ship in P1/P2. This is the P0 platform foundation."
+  "placeholderNotice": "Live environmental data is now flowing from Hub'Eau and Open-Meteo. Deterministic risk scoring and early warnings ship in P2; the AI Situation Brief ships in P3."
 }

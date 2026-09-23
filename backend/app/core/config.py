@@ -3,11 +3,33 @@
 All configuration is sourced from environment variables (see `.env.example`).
 Nothing here should contain real secrets — defaults are safe-for-dev only.
 """
+import base64
+import binascii
+import logging
 from functools import lru_cache
 from typing import List
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
+
+# A valid urlsafe-base64 32-byte Fernet key, dev-only fallback (NOT for production).
+_DEV_FALLBACK_FERNET_KEY = "PJzn0P3XW_lQjVF2XDv-cXMjkVMXz9KPmqVQVRJbU2E="
+
+
+def _is_valid_fernet_key(value: str) -> bool:
+    """True only if `value` would actually construct a Fernet instance.
+
+    A Fernet key must decode as urlsafe-base64 to exactly 32 bytes. This is
+    checked directly (rather than importing `cryptography.fernet.Fernet`
+    here) to keep this module dependency-light; `security.py` still does the
+    real construction.
+    """
+    try:
+        return len(base64.urlsafe_b64decode(value.encode())) == 32
+    except (binascii.Error, ValueError):
+        return False
 
 
 class Settings(BaseSettings):
@@ -45,6 +67,10 @@ class Settings(BaseSettings):
     login_rate_limit_attempts: int = Field(default=5, alias="LOGIN_RATE_LIMIT_ATTEMPTS")
     login_rate_limit_window_seconds: int = Field(default=300, alias="LOGIN_RATE_LIMIT_WINDOW_SECONDS")
 
+    # --- Environmental data ingestion (P1) ---
+    enable_ingestion_scheduler: bool = Field(default=True, alias="ENABLE_INGESTION_SCHEDULER")
+    ingestion_tick_seconds: int = Field(default=300, alias="INGESTION_TICK_SECONDS")
+
     # --- Demo / seed ---
     seed_demo_user: bool = Field(default=True, alias="SEED_DEMO_USER")
     demo_admin_email: str = Field(default="admin@aquaresilience.demo", alias="DEMO_ADMIN_EMAIL")
@@ -53,8 +79,42 @@ class Settings(BaseSettings):
     @field_validator("secrets_encryption_key")
     @classmethod
     def _default_encryption_key(cls, v: str) -> str:
-        # A valid urlsafe-base64 32-byte Fernet key, dev-only fallback (NOT for production).
-        return v or "PJzn0P3XW_lQjVF2XDv-cXMjkVMXz9KPmqVQVRJbU2E="
+        # Falls back to a known-safe dev key whenever the provided value is
+        # empty, an unedited `.env.example` placeholder (e.g.
+        # "change-me-generate-a-fernet-key"), or otherwise not a valid
+        # Fernet key — instead of crashing the whole app at import time
+        # (`Fernet(...)` raising ValueError/binascii.Error). This is a
+        # dev-only safety net: it never applies in production, where an
+        # invalid key still fails hard (see `_reject_insecure_production_keys`).
+        if v and _is_valid_fernet_key(v):
+            return v
+        logger.warning(
+            "SECRETS_ENCRYPTION_KEY is missing or not a valid Fernet key "
+            "(got %r) — falling back to a dev-only default key. AI provider "
+            "secrets encrypted with this fallback are NOT safe for "
+            "production. Generate a real key with: "
+            "python -c \"from cryptography.fernet import Fernet; "
+            'print(Fernet.generate_key().decode())"',
+            v,
+        )
+        return _DEV_FALLBACK_FERNET_KEY
+
+    @model_validator(mode="after")
+    def _reject_insecure_production_keys(self) -> "Settings":
+        # The dev-only fallbacks above keep local/demo startup from crashing
+        # on an unedited `.env.example`. In production that same leniency
+        # would be a real vulnerability, so fail fast there instead.
+        if self.is_production:
+            if self.secret_key in ("", "dev-only-insecure-secret-key") or self.secret_key.startswith(
+                "change-me"
+            ):
+                raise ValueError("SECRET_KEY must be set to a real secret in production (ENVIRONMENT=production).")
+            if self.secrets_encryption_key == _DEV_FALLBACK_FERNET_KEY:
+                raise ValueError(
+                    "SECRETS_ENCRYPTION_KEY must be set to a real Fernet key in production "
+                    "(ENVIRONMENT=production)."
+                )
+        return self
 
     @property
     def sqlalchemy_database_uri(self) -> str:

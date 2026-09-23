@@ -8,13 +8,15 @@
     "scheduler": "Planificador",
     "riskEngine": "Motor de riesgo",
     "alerts": "Alertas",
+    "map": "Mapa",
     "usersAccess": "Usuarios y accesos",
     "system": "Sistema"
   },
   "general": {
     "city": "Ciudad",
     "timezone": "Zona horaria",
-    "dateFormat": "Formato de fecha"
+    "dateFormat": "Formato de fecha",
+    "singleCityNotice": "Este despliegue está configurado únicamente para Toulouse Métropole. El soporte multi-ciudad no forma parte de esta versión del hackathon."
   },
   "languages": {
     "defaultLocale": "Idioma predeterminado",
@@ -26,7 +28,7 @@
     "apiKey": "Clave API",
     "apiKeyHint": "Solo escritura. Déjelo en blanco para conservar la clave almacenada actualmente.",
     "maxOutputTokens": "Tokens de salida máximos",
-    "scheduledInterval": "Intervalo de análisis programado (minutos)",
+    "scheduledInterval": "Intervalo de análisis programado (horas)",
     "dailyCeiling": "Límite diario de solicitudes",
     "eventTriggered": "Análisis desencadenado por eventos",
     "cooldown": "Tiempo de enfriamiento (segundos)",
@@ -37,6 +39,18 @@
     "testSuccess": "Conexión exitosa.",
     "testFailure": "Conexión fallida.",
     "saved": "Configuración del proveedor de IA guardada."
+  },
+  "riskEngine": {
+    "description": "Pesos y umbrales de severidad del motor de riesgo determinista. La puntuación es una combinación ponderada de los 4 factores siguientes (los pesos se renormalizan cuando un factor aún no tiene datos); la puntuación se clasifica luego en BAJO/MODERADO/ALTO/CRÍTICO según los 3 umbrales.",
+    "tooltips": {
+      "weightsRainfall": "Parte de la puntuación determinada por la precipitación acumulada en 24h. Normalizada respecto a una referencia de 40mm/24h (valor de respaldo documentado — los umbrales oficiales de Vigicrues no estaban disponibles durante el desarrollo).",
+      "weightsHydrology": "Parte de la puntuación determinada por el nivel actual del Garona, situado en una escala 0–1 según el mínimo/máximo observado por la estación en los últimos 90 días (respaldo relativo hasta disponer de umbrales oficiales de crecida).",
+      "weightsEnvironmental": "Parte de la puntuación determinada por la humedad del suelo (ya expresada 0–1 por Open-Meteo).",
+      "weightsTrend": "Parte de la puntuación determinada por la velocidad de subida del nivel del agua en las últimas 6h, normalizada respecto a una referencia de 50mm/h. Un nivel estable o en descenso nunca añade riesgo.",
+      "thresholdsLow": "Una puntuación igual o superior a este valor es al menos MODERADA (por debajo, BAJA).",
+      "thresholdsModerate": "Una puntuación igual o superior a este valor es al menos ALTA.",
+      "thresholdsHigh": "Una puntuación igual o superior a este valor es CRÍTICA."
+    }
   },
   "usersAccess": {
     "users": "Usuarios",
@@ -49,7 +63,26 @@
     "activeStatus": "Activo",
     "resetPassword": "Restablecer contraseña",
     "matrixHint": "Otorgue acceso de módulo × permiso por rol.",
-    "cannotDeleteSelf": "No puede eliminar su propia cuenta."
+    "cannotDeleteSelf": "No puede eliminar su propia cuenta.",
+    "editPermissions": "Editar permisos",
+    "userPermissionsTitle": "Permisos — {name}",
+    "userPermissionsHint": "Marcar una casilla aquí crea un conjunto de permisos específico para este usuario, clonado de su rol actual — el rol compartido en sí nunca se modifica, por lo que nadie más con ese rol se ve afectado.",
+    "currentRole": "Rol actual: {role}",
+    "customRoleBadge": "Personalizado"
+  },
+  "map": {
+    "description": "Elija qué proveedor de teselas gratuito y abierto dibuja el Mapa de Resiliencia. No se necesita cuenta ni clave de API para ninguno de ellos.",
+    "tileProvider": "Proveedor de teselas",
+    "providers": {
+      "osm": "OpenStreetMap (estándar)",
+      "cartoLight": "CARTO Positron (claro)",
+      "cartoDark": "CARTO Dark Matter (oscuro)"
+    },
+    "defaultView": "Vista predeterminada",
+    "defaultViewHint": "El mapa se centra aquí al cargar. Proviene de los datos de referencia de la ciudad configurada — para cambiarla, agregue o edite una ciudad en lugar de escribir coordenadas aquí.",
+    "longitude": "Longitud",
+    "latitude": "Latitud",
+    "zoom": "Zoom"
   },
   "system": {
     "maintenanceMode": "Modo de mantenimiento"

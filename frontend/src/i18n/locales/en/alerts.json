@@ -11,5 +11,13 @@
     "moderate": "Moderate",
     "high": "High",
     "critical": "Critical"
-  }
+  },
+  "actions": {
+    "acknowledge": "Acknowledge",
+    "resolve": "Resolve"
+  },
+  "score": "Score: {score}/100",
+  "triggeredAt": "Triggered {time}",
+  "acknowledgedAt": "Acknowledged {time} by {name}",
+  "resolvedAt": "Resolved {time} by {name}"
 }

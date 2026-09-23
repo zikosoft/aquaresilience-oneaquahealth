@@ -8,13 +8,15 @@
     "scheduler": "Planificateur",
     "riskEngine": "Moteur de risque",
     "alerts": "Alertes",
+    "map": "Carte",
     "usersAccess": "Utilisateurs et accès",
     "system": "Système"
   },
   "general": {
     "city": "Ville",
     "timezone": "Fuseau horaire",
-    "dateFormat": "Format de date"
+    "dateFormat": "Format de date",
+    "singleCityNotice": "Ce déploiement est configuré uniquement pour Toulouse Métropole. Le support multi-villes ne fait pas partie de cette version hackathon."
   },
   "languages": {
     "defaultLocale": "Langue par défaut",
@@ -26,7 +28,7 @@
     "apiKey": "Clé API",
     "apiKeyHint": "Écriture seule. Laissez vide pour conserver la clé actuellement enregistrée.",
     "maxOutputTokens": "Jetons de sortie maximum",
-    "scheduledInterval": "Intervalle d'analyse programmée (minutes)",
+    "scheduledInterval": "Intervalle d'analyse programmée (heures)",
     "dailyCeiling": "Plafond de requêtes quotidien",
     "eventTriggered": "Analyse déclenchée par événement",
     "cooldown": "Délai de récupération (secondes)",
@@ -37,6 +39,18 @@
     "testSuccess": "Connexion réussie.",
     "testFailure": "Échec de la connexion.",
     "saved": "Configuration du fournisseur IA enregistrée."
+  },
+  "riskEngine": {
+    "description": "Poids et seuils de sévérité du moteur de risque déterministe. Le score est une combinaison pondérée des 4 facteurs ci-dessous (les poids sont renormalisés quand un facteur n'a pas encore de données) ; le score est ensuite classé en FAIBLE/MODÉRÉ/ÉLEVÉ/CRITIQUE selon les 3 seuils.",
+    "tooltips": {
+      "weightsRainfall": "Part du score liée aux précipitations cumulées sur 24h. Normalisée par rapport à une référence de 40mm/24h (valeur de repli documentée — les seuils officiels Vigicrues n'étaient pas disponibles au moment du développement).",
+      "weightsHydrology": "Part du score liée au niveau actuel de la Garonne, placé sur une échelle 0–1 selon le min/max observé par la station sur les 90 derniers jours (repli relatif en attendant les seuils officiels de crue).",
+      "weightsEnvironmental": "Part du score liée à l'humidité du sol (déjà exprimée 0–1 par Open-Meteo).",
+      "weightsTrend": "Part du score liée à la vitesse de montée du niveau d'eau sur les 6 dernières heures, normalisée par rapport à une référence de 50mm/h. Un niveau stable ou en baisse n'ajoute jamais de risque.",
+      "thresholdsLow": "Un score égal ou supérieur à cette valeur est au moins MODÉRÉ (en dessous, FAIBLE).",
+      "thresholdsModerate": "Un score égal ou supérieur à cette valeur est au moins ÉLEVÉ.",
+      "thresholdsHigh": "Un score égal ou supérieur à cette valeur est CRITIQUE."
+    }
   },
   "usersAccess": {
     "users": "Utilisateurs",
@@ -49,7 +63,26 @@
     "activeStatus": "Actif",
     "resetPassword": "Réinitialiser le mot de passe",
     "matrixHint": "Accordez l'accès module × permission par rôle.",
-    "cannotDeleteSelf": "Vous ne pouvez pas supprimer votre propre compte."
+    "cannotDeleteSelf": "Vous ne pouvez pas supprimer votre propre compte.",
+    "editPermissions": "Modifier les permissions",
+    "userPermissionsTitle": "Permissions — {name}",
+    "userPermissionsHint": "Cocher une case ici crée un ensemble de permissions propre à cet utilisateur, cloné depuis son rôle actuel — le rôle partagé lui-même n'est jamais modifié, donc personne d'autre sur ce rôle n'est affecté.",
+    "currentRole": "Rôle actuel : {role}",
+    "customRoleBadge": "Personnalisé"
+  },
+  "map": {
+    "description": "Choisissez le fournisseur de tuiles cartographiques gratuit et ouvert utilisé par la Carte de résilience. Aucun compte ni clé API n'est nécessaire.",
+    "tileProvider": "Fournisseur de tuiles",
+    "providers": {
+      "osm": "OpenStreetMap (standard)",
+      "cartoLight": "CARTO Positron (clair)",
+      "cartoDark": "CARTO Dark Matter (sombre)"
+    },
+    "defaultView": "Vue par défaut",
+    "defaultViewHint": "La carte se centre ici au chargement. Provient des données de référence de la ville configurée — pour la changer, ajoutez ou modifiez une ville plutôt que de saisir des coordonnées ici.",
+    "longitude": "Longitude",
+    "latitude": "Latitude",
+    "zoom": "Zoom"
   },
   "system": {
     "maintenanceMode": "Mode maintenance"

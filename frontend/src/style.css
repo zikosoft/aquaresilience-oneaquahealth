@@ -10,8 +10,17 @@ body,
   white-space: nowrap;
 }
 
+/* !important is deliberate here: this is an escape-hatch utility applied to
+   Vuetify components (v-card, the DefaultLayout root) that already carry
+   their own base `position` from Vuetify's own stylesheet. Both rules are
+   single-class selectors of equal specificity, so without !important the
+   winner depends on unpredictable CSS bundling/load order between
+   `vuetify/styles` and this file rather than on which one is actually
+   meant to take precedence — confirmed by testing: without it, a widget's
+   "fullscreen" toggle silently stayed at `position: relative` and never
+   actually covered the viewport. */
 .aq-monitoring-fullscreen {
-  position: fixed;
-  inset: 0;
-  z-index: 2400;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2400 !important;
 }

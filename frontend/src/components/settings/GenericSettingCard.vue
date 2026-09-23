@@ -18,6 +18,7 @@ export interface SettingField {
   options?: SettingFieldOption[]
   readonly?: boolean
   suffix?: string
+  tooltip?: string // shown as an info icon next to the field's label
 }
 
 const props = defineProps<{
@@ -190,7 +191,26 @@ defineExpose({ reload: load })
               :label="field.label"
               :disabled="!canEdit || field.readonly"
               @update:model-value="(v: unknown) => setPath(value, field.path, field.type === 'number' ? Number(v) : v)"
-            />
+            >
+              <template
+                v-if="field.tooltip"
+                #append-inner
+              >
+                <v-tooltip
+                  :text="field.tooltip"
+                  location="top"
+                >
+                  <template #activator="{ props: tooltipProps }">
+                    <v-icon
+                      v-bind="tooltipProps"
+                      icon="mdi-information-outline"
+                      size="16"
+                      color="medium-emphasis"
+                    />
+                  </template>
+                </v-tooltip>
+              </template>
+            </v-text-field>
           </v-col>
         </v-row>
       </template>

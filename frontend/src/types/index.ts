@@ -47,11 +47,39 @@ export interface PermissionMatrix {
   grants: RolePermissionCell[]
 }
 
+// P2.1 (D015): response to a single per-user permission-cell toggle — the
+// role the user ends up on (their existing role, or a newly-cloned
+// "Custom — <name>" role) plus that role's full grant set.
+export interface UserPermissionsResult {
+  role: Role
+  grants: RolePermissionCell[]
+}
+
 export interface AppSetting {
   category: string
   key: string
   value: Record<string, unknown>
   description: string
+}
+
+// P2.1: read-only geography reference data (D016) — currently always
+// exactly one row (Toulouse, hackathon scope). `ResilienceMap.vue` and the
+// Settings > Map tab both read this for the default center/zoom.
+export interface City {
+  id: string
+  label_en: string
+  label_fr: string
+  label_es: string
+  country_iso2: string
+  default_lon: number
+  default_lat: number
+  default_zoom: number
+}
+
+export type MapTileProvider = 'osm' | 'carto_light' | 'carto_dark'
+
+export interface MapSettings {
+  tile_provider: MapTileProvider
 }
 
 export interface AIProviderConfig {
@@ -83,4 +111,144 @@ export interface ApiErrorEnvelope {
     message: string
     details?: unknown
   }
+}
+
+// --- P1: environmental data ---
+
+export type SourceHealthStatus = 'fresh' | 'stale' | 'degraded'
+
+export interface SourceHealth {
+  id: string
+  code: string
+  name: string
+  provider: string
+  kind: string
+  is_active: boolean
+  license: string
+  homepage_url: string
+  health: SourceHealthStatus
+  last_attempt_at: string | null
+  last_success_at: string | null
+  consecutive_failures: number
+  last_error_message: string | null
+}
+
+export interface LatestReading {
+  variable: string
+  value: number
+  unit: string
+  observed_at: string
+}
+
+export interface Station {
+  id: string
+  external_code: string
+  name: string
+  kind: string
+  city: string
+  river_name: string | null
+  lon: number
+  lat: number
+  source_code: string
+  source_health: SourceHealthStatus
+  latest: LatestReading[]
+}
+
+export interface TimeseriesPoint {
+  value: number
+  observed_at: string
+}
+
+export interface TimeseriesSeries {
+  variable: string
+  unit: string
+  points: TimeseriesPoint[]
+}
+
+export interface StationTimeseries {
+  station_id: string
+  station_name: string
+  series: TimeseriesSeries[]
+}
+
+export interface EnvironmentalSummary {
+  monitored_stations: number
+  active_sources: number
+  fresh_sources: number
+  // P2.1 (D017): the trend window is caller-selectable (`?hours=`); this
+  // echoes back the effective window actually used, for chart titles.
+  trend_window_hours: number
+  water_level: LatestReading | null
+  water_level_trend: number[]
+  water_level_trend_timestamps: string[]
+  precipitation_24h_total_mm: number | null
+  precipitation_trend: number[]
+  precipitation_trend_timestamps: string[]
+  temperature: LatestReading | null
+  temperature_trend: number[]
+  temperature_trend_timestamps: string[]
+  humidity: LatestReading | null
+  humidity_trend: number[]
+  humidity_trend_timestamps: string[]
+  // P2.1: 4 more free Open-Meteo hourly variables — same trend pattern.
+  wind_speed: LatestReading | null
+  wind_speed_trend: number[]
+  wind_speed_trend_timestamps: string[]
+  wind_direction: LatestReading | null
+  wind_direction_trend: number[]
+  wind_direction_trend_timestamps: string[]
+  surface_pressure: LatestReading | null
+  surface_pressure_trend: number[]
+  surface_pressure_trend_timestamps: string[]
+  uv_index: LatestReading | null
+  uv_index_trend: number[]
+  uv_index_trend_timestamps: string[]
+}
+
+// --- P2: deterministic risk engine + early warnings ---
+
+export type RiskSeverity = 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL'
+
+export interface RiskFactor {
+  key: string
+  label: string
+  weight: number
+  normalized_value: number | null
+  contribution: number
+  available: boolean
+}
+
+export interface RiskScore {
+  score: number
+  severity: RiskSeverity
+  factors: RiskFactor[]
+  factors_available: number
+  factors_total: number
+  computed_at: string
+}
+
+export type EarlyWarningStatus = 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED'
+
+export interface WarningFactorSnapshot {
+  label: string
+  weight: number
+  normalized_value: number | null
+  contribution: number
+  available: boolean
+}
+
+export interface EarlyWarning {
+  id: string
+  severity: RiskSeverity
+  status: EarlyWarningStatus
+  risk_score: number
+  factors: Record<string, WarningFactorSnapshot>
+  message: string
+  triggered_at: string
+  acknowledged_at: string | null
+  acknowledged_by: string | null
+  resolved_at: string | null
+  resolved_by: string | null
+  created_at: string
+  updated_at: string
 }

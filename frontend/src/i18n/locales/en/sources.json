@@ -6,5 +6,7 @@
     "status": "Status",
     "lastSync": "Last sync"
   },
-  "empty": "No data sources are connected yet. Real environmental connectors ship in P1."
+  "empty": "No data sources are connected yet.",
+  "license": "License",
+  "lastError": "Last error"
 }

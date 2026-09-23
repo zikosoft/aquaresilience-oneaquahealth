@@ -6,5 +6,7 @@
     "status": "Statut",
     "lastSync": "Dernière synchronisation"
   },
-  "empty": "Aucune source de données connectée pour le moment. Les connecteurs environnementaux réels arrivent en P1."
+  "empty": "Aucune source de données connectée pour le moment.",
+  "license": "Licence",
+  "lastError": "Dernière erreur"
 }

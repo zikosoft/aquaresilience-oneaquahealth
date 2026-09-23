@@ -9,5 +9,26 @@
     "scenario": "Proyección de escenario"
   },
   "loading": "Cargando mapa…",
-  "styleUnavailable": "Estilo de mapa no disponible. Verifique la fuente de mosaicos configurada en Configuración."
+  "styleUnavailable": "Estilo de mapa no disponible. Verifique la fuente de mosaicos configurada en Configuración.",
+  "loadTimeout": "El mapa está tardando demasiado en cargar. Esto suele deberse a un problema de red o firewall al acceder al servidor de mosaicos — verifique su conexión e intente actualizar.",
+  "health": {
+    "fresh": "Actualizado",
+    "stale": "Desactualizado",
+    "degraded": "Degradado"
+  },
+  "station": {
+    "lastUpdated": "Última actualización",
+    "risk": "Riesgo actual"
+  },
+  "variable": {
+    "water_level_mm": "Nivel del agua",
+    "precipitation_mm": "Precipitación",
+    "soil_moisture_ratio": "Humedad del suelo",
+    "temperature_c": "Temperatura",
+    "humidity_percent": "Humedad",
+    "wind_speed_kmh": "Velocidad del viento",
+    "wind_direction_deg": "Dirección del viento",
+    "surface_pressure_hpa": "Presión atmosférica",
+    "uv_index": "Índice UV"
+  }
 }

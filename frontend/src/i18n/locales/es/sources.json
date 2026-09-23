@@ -6,5 +6,7 @@
     "status": "Estado",
     "lastSync": "Última sincronización"
   },
-  "empty": "Aún no hay fuentes de datos conectadas. Los conectores ambientales reales llegan en P1."
+  "empty": "Aún no hay fuentes de datos conectadas.",
+  "license": "Licencia",
+  "lastError": "Último error"
 }

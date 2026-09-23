@@ -5,8 +5,40 @@
     "environmentalRisk": "Riesgo ambiental",
     "activeWarnings": "Alertas activas",
     "monitoredZones": "Zonas monitoreadas",
+    "monitoredZonesTooltip": "Número de estaciones de monitoreo activas: {sources}",
     "dataSources": "Fuentes de datos",
-    "aiMonitoring": "Monitoreo IA"
+    "aiMonitoring": "Monitoreo IA",
+    "comingInP2": "Disponible desde P2",
+    "comingInP3": "Disponible desde P3",
+    "factorsAvailable": "{available}/{total} factores de riesgo disponibles"
+  },
+  "timeRange": {
+    "label": "Rango temporal",
+    "hoursShort": "{hours} h"
+  },
+  "waterLevel": {
+    "title": "Nivel del agua — Garona ({hours} h)"
+  },
+  "precipitation": {
+    "title": "Precipitación ({hours} h)"
+  },
+  "temperature": {
+    "title": "Temperatura ({hours} h)"
+  },
+  "humidity": {
+    "title": "Humedad ({hours} h)"
+  },
+  "windSpeed": {
+    "title": "Velocidad del viento ({hours} h)"
+  },
+  "windDirection": {
+    "title": "Dirección del viento ({hours} h)"
+  },
+  "surfacePressure": {
+    "title": "Presión atmosférica ({hours} h)"
+  },
+  "uvIndex": {
+    "title": "Índice UV ({hours} h)"
   },
   "situationBrief": {
     "title": "Resumen de situación IA",
@@ -17,7 +49,8 @@
   },
   "currentWarning": {
     "title": "Alerta actual",
-    "none": "No hay alertas activas"
+    "none": "No hay alertas activas",
+    "triggeredAt": "Activada {time}"
   },
   "factorContribution": {
     "title": "Contribución de factores de riesgo"
@@ -25,5 +58,5 @@
   "sourceHealth": {
     "title": "Frescura de las fuentes"
   },
-  "placeholderNotice": "Los datos ambientales en vivo, el cálculo de riesgo y las alertas llegan en P1/P2. Esta es la base de la plataforma P0."
+  "placeholderNotice": "Los datos ambientales en vivo de Hub'Eau y Open-Meteo ya están activos. El cálculo de riesgo determinista y las alertas tempranas llegan en P2; el resumen de IA llega en P3."
 }

@@ -50,3 +50,20 @@ class PermissionMatrixUpdate(BaseModel):
 
     role_id: uuid.UUID
     grants: list[RolePermissionCell] = Field(default_factory=list)
+
+
+class UserPermissionToggle(BaseModel):
+    """P2.1 (D015): one permission-cell toggle for a single user."""
+
+    module_id: uuid.UUID
+    permission_id: uuid.UUID
+    granted: bool
+
+
+class UserPermissionsOut(BaseModel):
+    """The role a user ends up on after a toggle, plus that role's full
+    grant set — enough for the frontend to update its UI live with no
+    extra round trip (D015's "reflect the switch to Custom live" requirement)."""
+
+    role: RoleOut
+    grants: list[RolePermissionCell]

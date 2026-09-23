@@ -64,6 +64,11 @@ DEFAULT_APP_SETTINGS = [
     }, "Deterministic risk engine weights and severity thresholds (implemented in P2)."),
     ("ALERTS", "alerts", {"lifecycle": ["ACTIVE", "ACKNOWLEDGED", "RESOLVED"], "notification_channels": []},
      "Early warning lifecycle and notification configuration."),
+    # P2.1: tile provider only — no default lat/lon/zoom stored here. Those
+    # already live on the `City` row the GENERAL tab's `city` setting names
+    # (D016); duplicating them into a second settings row would just be two
+    # places that could drift out of sync for one hackathon-scope city.
+    ("MAP", "map", {"tile_provider": "osm"}, "Map tile provider (default view comes from the configured city)."),
     ("SYSTEM", "system", {"maintenance_mode": False}, "System-level toggles."),
 ]
 
@@ -185,6 +190,20 @@ def run() -> None:
         raise
     finally:
         db.close()
+
+    # P1: deterministic environmental backfill, so the Command Center/map are
+    # never empty on a fresh install — even before the live scheduler has had
+    # a chance to run, and even if the deployment network can't reach the
+    # live APIs at all. Only fills stations that have no data yet (idempotent).
+    from app.seed.seed_environmental import run as seed_environmental_run
+
+    seed_environmental_run()
+
+    # P1.1 hotfix: countries/cities reference tables (D016) — schema
+    # foundation only, seeded with France/Toulouse (idempotent).
+    from app.seed.seed_geography import run as seed_geography_run
+
+    seed_geography_run()
 
 
 if __name__ == "__main__":

@@ -188,6 +188,78 @@ async function saveMatrix(): Promise<void> {
   }
 }
 
+// --- P2.1 (D015): per-user "Custom" permission override ---
+// A per-row editor scoped to one user, distinct from the shared matrix
+// above: every toggle here is live-saved immediately (no Save button) and
+// the backend clones the user's role into a user-scoped "Custom" role on
+// the first edit, so the shared role — and everyone else on it — is never
+// touched. The dialog reflects that switch the moment it happens.
+const permissionsDialog = ref(false)
+const permissionsDialogUser = ref<User | null>(null)
+const permissionsDialogGrants = ref<Set<string>>(new Set())
+const permissionsDialogRoleId = ref<string>('')
+const permissionsDialogRoleName = ref<string>('')
+const permissionsDialogSavingKey = ref<string | null>(null)
+
+function openUserPermissions(user: User): void {
+  permissionsDialogUser.value = user
+  const roleId = user.roles[0]?.id ?? ''
+  permissionsDialogRoleId.value = roleId
+  permissionsDialogRoleName.value = user.roles[0]?.name ?? '—'
+  const set = new Set<string>()
+  ;(matrix.value?.grants ?? [])
+    .filter((g) => g.role_id === roleId)
+    .forEach((g) => set.add(cellKey(g.module_id, g.permission_id)))
+  permissionsDialogGrants.value = set
+  permissionsDialog.value = true
+}
+
+function isUserPermissionGranted(moduleId: string, permissionId: string): boolean {
+  return permissionsDialogGrants.value.has(cellKey(moduleId, permissionId))
+}
+
+function mergeUserPermissionResult(userId: string, result: { role: Role; grants: { role_id: string; module_id: string; permission_id: string }[] }): void {
+  // Users table row: the role chip updates live, with no reload.
+  const userRow = users.value.find((u) => u.id === userId)
+  if (userRow) userRow.roles = [result.role]
+
+  // The "Edit user" role dropdown and the shared matrix's role tabs both
+  // read from `roles`/`matrix` — keep a newly-cloned "Custom — <name>" role
+  // visible there too, live, same as any other role.
+  if (!roles.value.some((r) => r.id === result.role.id)) roles.value = [...roles.value, result.role]
+  if (matrix.value) {
+    const rolesNext = matrix.value.roles.some((r) => r.id === result.role.id)
+      ? matrix.value.roles.map((r) => (r.id === result.role.id ? result.role : r))
+      : [...matrix.value.roles, result.role]
+    const grantsNext = [...matrix.value.grants.filter((g) => g.role_id !== result.role.id), ...result.grants]
+    matrix.value = { ...matrix.value, roles: rolesNext, grants: grantsNext }
+  }
+
+  permissionsDialogRoleId.value = result.role.id
+  permissionsDialogRoleName.value = result.role.name
+  permissionsDialogGrants.value = new Set(result.grants.map((g) => cellKey(g.module_id, g.permission_id)))
+}
+
+async function toggleUserPermission(moduleId: string, permissionId: string): Promise<void> {
+  if (!permissionsDialogUser.value) return
+  const granted = !isUserPermissionGranted(moduleId, permissionId)
+  const key = cellKey(moduleId, permissionId)
+  permissionsDialogSavingKey.value = key
+  errorMessage.value = null
+  try {
+    const result = await rbacApi.setUserPermission(permissionsDialogUser.value.id, {
+      module_id: moduleId,
+      permission_id: permissionId,
+      granted,
+    })
+    mergeUserPermissionResult(permissionsDialogUser.value.id, result)
+  } catch (err) {
+    errorMessage.value = extractApiErrorMessage(err, t('common.status.error'))
+  } finally {
+    permissionsDialogSavingKey.value = null
+  }
+}
+
 onMounted(async () => {
   await Promise.all([loadUsers(), loadMatrix()])
 })
@@ -246,7 +318,11 @@ onMounted(async () => {
         density="comfortable"
       >
         <template #item.role="{ item }">
-          <v-chip size="small">
+          <v-chip
+            size="small"
+            :color="item.roles[0] && !item.roles[0].is_system ? 'primary' : undefined"
+            :variant="item.roles[0] && !item.roles[0].is_system ? 'tonal' : 'flat'"
+          >
             {{ item.roles[0]?.name ?? '—' }}
           </v-chip>
         </template>
@@ -264,6 +340,14 @@ onMounted(async () => {
             size="small"
             variant="text"
             @click="openEditUser(item)"
+          />
+          <v-btn
+            v-if="canAdminister"
+            icon="mdi-shield-key-outline"
+            size="small"
+            variant="text"
+            :title="t('settings.usersAccess.editPermissions')"
+            @click="openUserPermissions(item)"
           />
           <v-btn
             v-if="canEditUsers"
@@ -452,6 +536,77 @@ onMounted(async () => {
             @click="submitResetPassword"
           >
             {{ t('common.actions.confirm') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog
+      v-model="permissionsDialog"
+      max-width="640"
+    >
+      <v-card v-if="permissionsDialogUser && matrix">
+        <v-card-item>
+          <v-card-title>
+            {{ t('settings.usersAccess.userPermissionsTitle', { name: permissionsDialogUser.full_name || permissionsDialogUser.email }) }}
+          </v-card-title>
+          <v-card-subtitle>{{ t('settings.usersAccess.userPermissionsHint') }}</v-card-subtitle>
+        </v-card-item>
+        <v-card-text>
+          <div class="d-flex align-center ga-2 mb-4">
+            <span class="text-body-2 text-medium-emphasis">
+              {{ t('settings.usersAccess.currentRole', { role: permissionsDialogRoleName }) }}
+            </span>
+            <v-chip
+              v-if="permissionsDialogRoleId && matrix.roles.find((r) => r.id === permissionsDialogRoleId && !r.is_system)"
+              size="x-small"
+              color="primary"
+              variant="tonal"
+            >
+              {{ t('settings.usersAccess.customRoleBadge') }}
+            </v-chip>
+          </div>
+          <v-table density="compact">
+            <thead>
+              <tr>
+                <th>{{ t('nav.dashboard') }}</th>
+                <th
+                  v-for="perm in matrix.permissions"
+                  :key="perm.id"
+                  class="text-center"
+                >
+                  {{ perm.code }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="mod in matrix.modules"
+                :key="mod.id"
+              >
+                <td>{{ mod.name }}</td>
+                <td
+                  v-for="perm in matrix.permissions"
+                  :key="perm.id"
+                  class="text-center"
+                >
+                  <v-checkbox-btn
+                    :model-value="isUserPermissionGranted(mod.id, perm.id)"
+                    :disabled="permissionsDialogSavingKey === `${mod.id}:${perm.id}`"
+                    @update:model-value="toggleUserPermission(mod.id, perm.id)"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </v-table>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            variant="text"
+            @click="permissionsDialog = false"
+          >
+            {{ t('common.actions.close') }}
           </v-btn>
         </v-card-actions>
       </v-card>

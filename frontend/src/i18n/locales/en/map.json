@@ -9,5 +9,26 @@
     "scenario": "Scenario projection"
   },
   "loading": "Loading map…",
-  "styleUnavailable": "Map style unavailable. Check the configured tile source in Settings."
+  "styleUnavailable": "Map style unavailable. Check the configured tile source in Settings.",
+  "loadTimeout": "The map is taking too long to load. This is usually a network or firewall issue reaching the tile server — check your connection and try refreshing.",
+  "health": {
+    "fresh": "Fresh",
+    "stale": "Stale",
+    "degraded": "Degraded"
+  },
+  "station": {
+    "lastUpdated": "Last updated",
+    "risk": "Current risk"
+  },
+  "variable": {
+    "water_level_mm": "Water level",
+    "precipitation_mm": "Precipitation",
+    "soil_moisture_ratio": "Soil moisture",
+    "temperature_c": "Temperature",
+    "humidity_percent": "Humidity",
+    "wind_speed_kmh": "Wind speed",
+    "wind_direction_deg": "Wind direction",
+    "surface_pressure_hpa": "Surface pressure",
+    "uv_index": "UV index"
+  }
 }

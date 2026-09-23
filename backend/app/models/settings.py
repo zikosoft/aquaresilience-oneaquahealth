@@ -18,6 +18,7 @@ class SettingCategory(StrEnum):
     SCHEDULER = "SCHEDULER"
     RISK_ENGINE = "RISK_ENGINE"
     ALERTS = "ALERTS"
+    MAP = "MAP"
     SYSTEM = "SYSTEM"
 
 

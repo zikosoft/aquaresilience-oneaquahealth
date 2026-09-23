@@ -11,5 +11,13 @@
     "moderate": "Moderada",
     "high": "Alta",
     "critical": "Crítica"
-  }
+  },
+  "actions": {
+    "acknowledge": "Reconocer",
+    "resolve": "Resolver"
+  },
+  "score": "Puntuación: {score}/100",
+  "triggeredAt": "Activada {time}",
+  "acknowledgedAt": "Reconocida {time} por {name}",
+  "resolvedAt": "Resuelta {time} por {name}"
 }

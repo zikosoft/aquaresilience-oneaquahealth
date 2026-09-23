@@ -24,6 +24,11 @@ frontend/.vite/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+# vite.config.ts is the source of truth; a same-named .js can appear here if
+# `vue-tsc -b` is ever run without tsconfig.node.json's noEmit (now set) —
+# Vite's config-file resolution prefers .js over .ts, so a stray compiled
+# copy silently shadows real edits to vite.config.ts. Never commit it.
+frontend/vite.config.js
 
 # --- Docker / data ---
 postgres-data/

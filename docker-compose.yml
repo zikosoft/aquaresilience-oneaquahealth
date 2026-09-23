@@ -76,6 +76,15 @@ services:
     restart: unless-stopped
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000/api/v1}
+      # Previously defined in .env.example but never actually passed through
+      # to the container, so they silently had no effect (Vite's dev server
+      # only sees vars it's given here, not the repo-root .env used for
+      # compose interpolation). Left unset by default: the frontend's own
+      # built-in OSM-raster fallback is used unless a value is provided.
+      VITE_MAP_STYLE_URL: ${VITE_MAP_STYLE_URL:-}
+      VITE_MAP_DEFAULT_LON: ${VITE_MAP_DEFAULT_LON:-}
+      VITE_MAP_DEFAULT_LAT: ${VITE_MAP_DEFAULT_LAT:-}
+      VITE_MAP_DEFAULT_ZOOM: ${VITE_MAP_DEFAULT_ZOOM:-}
     depends_on:
       - backend
     ports:
