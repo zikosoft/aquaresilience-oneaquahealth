@@ -252,3 +252,43 @@ export interface EarlyWarning {
   created_at: string
   updated_at: string
 }
+
+// --- P3: AI Resilience Intelligence ---
+
+export type SituationLevel = 'low' | 'moderate' | 'high' | 'critical'
+
+export interface SituationBrief {
+  id: string
+  generated_at: string
+  language: string
+  triggered_by: 'scheduled' | 'manual'
+  situation: SituationLevel
+  summary: string
+  drivers: string[]
+  zones_to_watch: string[]
+  recommendations: string[]
+  confidence: number
+  limitations: string[]
+  risk_score_snapshot: number
+  risk_severity_snapshot: RiskSeverity
+  provider: string
+  model: string
+}
+
+export interface AIIntelligenceStatus {
+  is_configured: boolean
+  scheduled_analysis_interval_minutes: number
+  daily_request_ceiling: number
+  requests_today: number
+  cooldown_seconds: number
+  event_triggered_enabled: boolean
+  last_analysis_at: string | null
+  next_analysis_at: string | null
+  last_analysis_error: string | null
+}
+
+export interface TriggerAnalysisResult {
+  ok: boolean
+  message: string
+  brief: SituationBrief | null
+}

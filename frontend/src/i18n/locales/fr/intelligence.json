@@ -5,14 +5,26 @@
     "lastAnalysis": "Dernière analyse",
     "nextAnalysis": "Prochaine analyse",
     "countdown": "Prochaine dans",
-    "disabled": "Fournisseur IA non configuré"
+    "dueNow": "Imminente",
+    "disabled": "Fournisseur IA non configuré",
+    "never": "Jamais",
+    "requestsToday": "Requêtes aujourd'hui",
+    "refresh": "Actualiser maintenant",
+    "refreshing": "Analyse en cours…",
+    "errorPrefix": "Dernière tentative échouée :",
+    "configureLink": "Configurer dans les Paramètres"
   },
   "brief": {
     "drivers": "Facteurs déterminants",
     "zonesToWatch": "Zones à surveiller",
     "recommendations": "Recommandations",
     "confidence": "Confiance",
-    "limitations": "Limites"
+    "limitations": "Limites",
+    "generatedBy": "Généré par",
+    "triggeredBy": {
+      "scheduled": "Analyse programmée",
+      "manual": "Actualisation manuelle"
+    }
   },
   "empty": "Aucune synthèse IA pour le moment. Configurez un fournisseur IA dans les Paramètres pour activer l'analyse programmée."
 }

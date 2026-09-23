@@ -89,9 +89,6 @@ onMounted(loadCities)
       <v-tab value="ai-provider">
         {{ t('settings.tabs.aiProvider') }}
       </v-tab>
-      <v-tab value="scheduler">
-        {{ t('settings.tabs.scheduler') }}
-      </v-tab>
       <v-tab value="risk-engine">
         {{ t('settings.tabs.riskEngine') }}
       </v-tab>
@@ -207,23 +204,12 @@ onMounted(loadCities)
       </v-window-item>
 
       <v-window-item value="ai-provider">
+        <!-- P3: the real scheduling cadence lives here
+             (scheduled_analysis_interval_minutes, on AIProviderConfig) —
+             a separate "Scheduler" tab used to expose a same-labeled but
+             disconnected generic setting nobody read; removed rather than
+             left as a trap (Session 013). -->
         <AIProviderSettings />
-      </v-window-item>
-
-      <v-window-item value="scheduler">
-        <GenericSettingCard
-          category="scheduler"
-          setting-key="scheduler"
-          :title="t('settings.tabs.scheduler')"
-          :fields="[
-            {
-              path: 'situation_brief_interval_hours',
-              label: t('settings.aiProvider.scheduledInterval'),
-              type: 'number',
-              suffix: 'h',
-            },
-          ]"
-        />
       </v-window-item>
 
       <v-window-item value="risk-engine">

@@ -10,7 +10,7 @@ from app.api.v1.deps import require_permission
 from app.core.database import get_db
 from app.core.errors import NotFoundError
 from app.core.security import decrypt_secret, encrypt_secret
-from app.models.settings import AIProviderConfig, AppSetting, SettingCategory
+from app.models.settings import AppSetting, SettingCategory
 from app.models.user import User
 from app.schemas.settings import (
     AIProviderConfigOut,
@@ -19,7 +19,7 @@ from app.schemas.settings import (
     AppSettingOut,
     AppSettingUpdate,
 )
-from app.services.ai_provider_service import get_provider
+from app.services.ai_provider_service import get_or_create_ai_config, get_provider
 
 router = APIRouter()
 
@@ -39,22 +39,12 @@ def list_settings(
     return rows
 
 
-def _get_or_create_ai_config(db: Session) -> AIProviderConfig:
-    config = db.execute(select(AIProviderConfig)).scalars().first()
-    if config is None:
-        config = AIProviderConfig()
-        db.add(config)
-        db.commit()
-        db.refresh(config)
-    return config
-
-
 @router.get("/ai-provider/config", response_model=AIProviderConfigOut)
 def get_ai_provider_config(
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("SETTINGS", "VIEW")),
 ) -> AIProviderConfigOut:
-    config = _get_or_create_ai_config(db)
+    config = get_or_create_ai_config(db)
     return AIProviderConfigOut(
         provider=config.provider,
         model=config.model,
@@ -74,7 +64,7 @@ def update_ai_provider_config(
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("SETTINGS", "EDIT")),
 ) -> AIProviderConfigOut:
-    config = _get_or_create_ai_config(db)
+    config = get_or_create_ai_config(db)
     config.provider = payload.provider
     config.model = payload.model
     config.max_output_tokens = payload.max_output_tokens
@@ -107,7 +97,7 @@ async def test_ai_provider_connection(
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("SETTINGS", "EDIT")),
 ) -> AIProviderTestResult:
-    config = _get_or_create_ai_config(db)
+    config = get_or_create_ai_config(db)
     if not config.encrypted_api_key:
         return AIProviderTestResult(ok=False, message="No API key configured yet.")
 
