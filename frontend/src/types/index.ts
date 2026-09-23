@@ -76,7 +76,7 @@ export interface City {
   default_zoom: number
 }
 
-export type MapTileProvider = 'osm' | 'carto_light' | 'carto_dark'
+export type MapTileProvider = 'osm' | 'carto_light' | 'carto_dark' | 'cyclosm' | 'humanitarian'
 
 export interface MapSettings {
   tile_provider: MapTileProvider

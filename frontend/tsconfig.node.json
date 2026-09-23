@@ -8,5 +8,13 @@
     "types": ["node"],
     "noEmit": true
   },
-  "include": ["vite.config.ts"]
+  // Also includes src/jsx.d.ts: vite.config.ts imports vite-plugin-vuetify,
+  // which pulls in vuetify's own component type declarations — those
+  // reference the global `JSX` namespace (for render-function typings) the
+  // same way app code does, but this tsconfig is a separate TS program from
+  // tsconfig.app.json (whose "src/**/*.d.ts" include normally picks up
+  // jsx.d.ts), so without an explicit include here that global namespace is
+  // invisible to this program and `vue-tsc -b` fails with
+  // "TS2503: Cannot find namespace 'JSX'" pointing into node_modules/vuetify.
+  "include": ["vite.config.ts", "src/jsx.d.ts"]
 }

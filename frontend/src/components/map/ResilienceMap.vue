@@ -87,6 +87,39 @@ const RASTER_STYLES: Record<MapTileProvider, StyleSpecification> = {
     },
     layers: [{ id: 'carto-tiles', type: 'raster', source: 'carto' }],
   },
+  // Both added per user request (Session 012): free, keyless raster tile
+  // sets hosted by the French OSM chapter (openstreetmap.fr) — verified
+  // against https://wiki.openstreetmap.org/wiki/Raster_tile_providers, no
+  // account/API key needed, same as the 3 providers above. Kept to this set
+  // because it's the whole premise of Settings > Map's own copy ("Aucun
+  // compte ni clé API n'est nécessaire") and D019 — providers that require
+  // a key (Thunderforest Cycle Map/Transport, Tracestrack, MapTiler) or a
+  // vector-tile schema (Shortbread) are a different, larger trade-off, not
+  // added here. No free/keyless satellite imagery provider exists (D019).
+  cyclosm: {
+    version: 8,
+    sources: {
+      cyclosm: {
+        type: 'raster',
+        tiles: ['a', 'b', 'c'].map((s) => `https://${s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png`),
+        tileSize: 256,
+        attribution: '© OpenStreetMap contributors — CyclOSM',
+      },
+    },
+    layers: [{ id: 'cyclosm-tiles', type: 'raster', source: 'cyclosm' }],
+  },
+  humanitarian: {
+    version: 8,
+    sources: {
+      humanitarian: {
+        type: 'raster',
+        tiles: ['a', 'b', 'c'].map((s) => `https://${s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png`),
+        tileSize: 256,
+        attribution: '© OpenStreetMap contributors — Humanitarian OSM Team',
+      },
+    },
+    layers: [{ id: 'humanitarian-tiles', type: 'raster', source: 'humanitarian' }],
+  },
 }
 // Env-var overrides for center/zoom are a deployment-level escape hatch too
 // (preserved unchanged); otherwise the fallback below matches Toulouse's
@@ -105,7 +138,7 @@ const FALLBACK_ZOOM = envZoom ?? 11
 // viewer in localStorage, same "saved and reused across sessions, no
 // server round trip" model as D017's dashboard time-range selector.
 const MAP_PROVIDER_STORAGE_KEY = 'aquaresilience.mapTileProvider'
-const KNOWN_PROVIDERS: MapTileProvider[] = ['osm', 'carto_light', 'carto_dark']
+const KNOWN_PROVIDERS: MapTileProvider[] = ['osm', 'carto_light', 'carto_dark', 'cyclosm', 'humanitarian']
 
 function loadStoredProvider(): MapTileProvider | null {
   try {
@@ -169,6 +202,8 @@ const PROVIDER_I18N_KEY: Record<MapTileProvider, string> = {
   osm: 'osm',
   carto_light: 'cartoLight',
   carto_dark: 'cartoDark',
+  cyclosm: 'cyclosm',
+  humanitarian: 'humanitarian',
 }
 
 function selectProvider(provider: MapTileProvider): void {
@@ -176,6 +211,11 @@ function selectProvider(provider: MapTileProvider): void {
   if (!map || provider === activeProvider.value) return
   activeProvider.value = provider
   saveStoredProvider(provider === defaultProvider.value ? null : provider)
+  // A manual switch is also the natural recovery action from a stale error
+  // overlay left over from a previous provider's tile issue — clear it here
+  // rather than waiting on another 'load' event that setStyle() won't fire
+  // again (see initialStyleLoaded above; 'load' is only ever emitted once).
+  error.value = null
   // Markers/popups are plain DOM overlays positioned via the map's own
   // projection, not style layers — they survive setStyle() untouched, so
   // there is no need to re-fetch stations or re-add them here.
@@ -321,6 +361,19 @@ async function addStationMarkers(): Promise<void> {
   }
 }
 
+// Set once the map's initial style has actually finished loading. Used to
+// scope the 'error' handler below: MapLibre fires the *same* 'error' event
+// both for a genuinely fatal initial style load failure and for routine,
+// recoverable hiccups afterwards (a single tile 404/timeout at the edge of a
+// provider's coverage, a transient network blip on one host) — e.g. the
+// layer picker's own live verification hit exactly this against a tile host
+// blocked only by this sandbox's own network policy, and the map was left
+// permanently showing "Map style unavailable" even though every subsequent
+// style switch (and its tiles) kept loading correctly underneath. Only an
+// error before this first successful load is treated as fatal; anything
+// after is logged but no longer takes down an otherwise-working map.
+let initialStyleLoaded = false
+
 async function initMap(): Promise<void> {
   if (!mapContainer.value) return
   const { style, center, zoom } = await resolveMapConfig()
@@ -336,15 +389,16 @@ async function initMap(): Promise<void> {
     instance.addControl(new NavigationControl({ visualizePitch: false }), 'top-right')
     instance.on('load', () => {
       clearLoadTimeout()
+      initialStyleLoaded = true
       loading.value = false
       void addStationMarkers()
     })
     instance.on('error', (e) => {
+      console.error('MapLibre error', e?.error)
+      if (initialStyleLoaded) return // see initialStyleLoaded comment above
       clearLoadTimeout()
       error.value = t('map.styleUnavailable')
       loading.value = false
-
-      console.error('MapLibre error', e?.error)
     })
     map = instance
 
@@ -452,7 +506,7 @@ watch(
         >
           <v-list-subheader>{{ t('map.baseMap.title') }}</v-list-subheader>
           <v-list-item
-            v-for="provider in (['osm', 'carto_light', 'carto_dark'] as const)"
+            v-for="provider in (['osm', 'carto_light', 'carto_dark', 'cyclosm', 'humanitarian'] as const)"
             :key="provider"
             :active="activeProvider === provider"
             @click="selectProvider(provider)"

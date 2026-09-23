@@ -21,11 +21,19 @@ class _FakeConnector(BaseConnector):
 
     def __init__(self, fail: bool = False) -> None:
         self.fail = fail
+        # Frozen once at construction, not recomputed per fetch(): the
+        # idempotency test below calls fetch() twice (once per run_connector
+        # call) and asserts the second run inserts 0 rows. Recomputing
+        # datetime.now() on each call made those two readings' timestamps
+        # differ whenever the two calls landed in different wall-clock
+        # seconds, so the "same window re-ingested" premise silently broke
+        # depending on execution speed (flaky, not a real ingestion bug).
+        self._now = datetime.now(timezone.utc).replace(microsecond=0)
 
     def fetch(self) -> list[NormalizedReading]:
         if self.fail:
             raise ConnectorError("simulated failure")
-        now = datetime.now(timezone.utc).replace(microsecond=0)
+        now = self._now
         return [
             NormalizedReading(
                 "FAKE1", "Fake Station", StationKind.RIVER_GAUGE, "Toulouse", "Garonne", 1.44, 43.60,

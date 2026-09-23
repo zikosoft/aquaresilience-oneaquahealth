@@ -269,6 +269,8 @@ onMounted(loadCities)
                 { value: 'osm', label: t('settings.map.providers.osm') },
                 { value: 'carto_light', label: t('settings.map.providers.cartoLight') },
                 { value: 'carto_dark', label: t('settings.map.providers.cartoDark') },
+                { value: 'cyclosm', label: t('settings.map.providers.cyclosm') },
+                { value: 'humanitarian', label: t('settings.map.providers.humanitarian') },
               ],
             },
           ]"

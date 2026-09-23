@@ -76,7 +76,9 @@
     "providers": {
       "osm": "OpenStreetMap (estándar)",
       "cartoLight": "CARTO Positron (claro)",
-      "cartoDark": "CARTO Dark Matter (oscuro)"
+      "cartoDark": "CARTO Dark Matter (oscuro)",
+      "cyclosm": "CyclOSM (ciclismo)",
+      "humanitarian": "Humanitarian OSM"
     },
     "defaultView": "Vista predeterminada",
     "defaultViewHint": "El mapa se centra aquí al cargar. Proviene de los datos de referencia de la ciudad configurada — para cambiarla, agregue o edite una ciudad en lugar de escribir coordenadas aquí.",

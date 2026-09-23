@@ -25,7 +25,9 @@
     "providers": {
       "osm": "OpenStreetMap (estándar)",
       "cartoLight": "CARTO Positron (claro)",
-      "cartoDark": "CARTO Dark Matter (oscuro)"
+      "cartoDark": "CARTO Dark Matter (oscuro)",
+      "cyclosm": "CyclOSM (ciclismo)",
+      "humanitarian": "Humanitarian OSM"
     },
     "defaultBadge": "(predeterminado)"
   },
