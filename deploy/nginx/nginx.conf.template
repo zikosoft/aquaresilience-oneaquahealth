@@ -1,0 +1,103 @@
+# AquaResilience — production reverse proxy (P5).
+#
+# Single public entry point: TLS termination + routing. `/` goes to the
+# frontend container (itself a small nginx serving the pre-built static SPA
+# — see frontend/Dockerfile's `production` stage), `/api/` goes to the
+# backend container unchanged (it already mounts everything under
+# /api/v1 itself, see app/core/config.py's `api_v1_prefix`). Postgres and
+# Redis are never reachable from here — they stay on the internal-only
+# compose network, exactly as in the dev compose.
+#
+# This file is a *template*: the official nginx image auto-runs `envsubst`
+# on every file under /etc/nginx/templates/*.template at container start,
+# writing the result to /etc/nginx/conf.d/ — see the `reverse-proxy`
+# service's `NGINX_ENVSUBST_TEMPLATE_DIR`/`_SUFFIX` env vars in
+# docker-compose.prod.yml. Only ${DOMAIN} is substituted; every other
+# `$variable` below (nginx's own runtime variables — $host, $remote_addr,
+# $scheme, ...) is left untouched, because envsubst only replaces names
+# that are actually set as environment variables in this container, and
+# DOMAIN is deliberately the only custom one passed in.
+#
+# `listen ... http2` (rather than the newer separate `http2 on;` directive)
+# is used deliberately so this exact file validates cleanly with `nginx -t`
+# on both an older nginx (as available for local/CI syntax checking) and
+# the nginx:1.27-alpine image this stack actually runs — it still works on
+# 1.27, just with a harmless deprecation notice in the logs.
+
+# --- HTTP: ACME challenge passthrough (for certbot) + redirect everything
+#     else to HTTPS. Port 80 always stays open for this, even after a real
+#     certificate is issued — Let's Encrypt renewal needs it. ---
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# --- HTTPS: the real application. ---
+server {
+    listen 443 ssl http2;
+    server_name ${DOMAIN};
+
+    # Populated either by deploy/nginx/generate-self-signed-cert.sh (quick
+    # local/demo HTTPS, browsers will show a trust warning — expected) or
+    # by certbot against a real domain (see DEPLOYMENT.md). Same path
+    # either way, so switching from self-signed to real Let's Encrypt certs
+    # never requires touching this file.
+    ssl_certificate     /etc/nginx/certs/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    client_max_body_size 10m;
+
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css application/json application/javascript text/javascript image/svg+xml;
+
+    # Nginx's own edge health check — for an external uptime monitor, not
+    # for Docker's internal healthchecks (each container already has its
+    # own, see docker-compose.prod.yml). Answered directly, never proxied.
+    location = /health {
+        default_type text/plain;
+        return 200 "ok";
+    }
+
+    # Backend API — full path forwarded unchanged (no proxy_pass URI, so no
+    # prefix rewriting to reason about); the app already expects and mounts
+    # everything under /api/v1 itself.
+    location /api/ {
+        proxy_pass http://backend:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    # Frontend SPA (static bundle served by its own small nginx container).
+    location / {
+        proxy_pass http://frontend:80;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

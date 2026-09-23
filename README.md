@@ -54,6 +54,15 @@ npm install
 npm run dev
 ```
 
+## Production deployment
+
+`docker-compose.yml` above is the dev stack (hot-reload, ports exposed for
+convenience). For a real deployment — reverse proxy, HTTPS, no source
+bind-mounts, Postgres/Redis/backend/frontend all internal-only — see
+[`DEPLOYMENT.md`](DEPLOYMENT.md) and `docker-compose.prod.yml`. It includes
+a quick self-signed-HTTPS path that needs no domain at all, for local
+testing or recording a demo.
+
 ## Security notes (P0 baseline)
 
 - Passwords hashed with bcrypt (via passlib).

@@ -2,8 +2,12 @@
 .env
 .env.*
 !.env.example
+!.env.production.example
 *.pem
 *.key
+
+# --- P5 deploy: certbot's own Let's Encrypt state (never committed) ---
+deploy/nginx/certs/
 
 # --- Python / backend ---
 backend/__pycache__/

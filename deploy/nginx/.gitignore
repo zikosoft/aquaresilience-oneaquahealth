@@ -1,0 +1,3 @@
+# Generated locally by generate-self-signed-cert.sh, or written by certbot.
+# Never commit real or throwaway private keys.
+certs/

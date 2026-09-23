@@ -57,7 +57,13 @@ services:
     networks:
       - aquaresilience-internal
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/health/live').status==200 else sys.exit(1)"]
+      # Session 016 fix: this used to probe /health/live, which is mounted
+      # under the versioned API prefix (/api/v1/health/live) and never
+      # existed at this bare path — the healthcheck had been silently
+      # failing (always 404) since it was written. Now points at the
+      # unprefixed /health liveness route added in app/main.py for exactly
+      # this purpose.
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/health').status==200 else sys.exit(1)"]
       interval: 10s
       timeout: 5s
       retries: 10

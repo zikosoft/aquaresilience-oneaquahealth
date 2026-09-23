@@ -1,0 +1,177 @@
+# AquaResilience — production stack (P5): reverse proxy + HTTPS in front of
+# the exact same backend/frontend images used everywhere else, with
+# Postgres/Redis kept fully internal.
+#
+# Quick start (self-signed cert, works immediately, no domain needed):
+#   cp .env.production.example .env.production   # then edit it — see that file
+#   ./deploy/nginx/generate-self-signed-cert.sh <your-domain-or-localhost>
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+#
+# --env-file .env.production is required on every command below (not just
+# the first): Compose's ${VAR} interpolation in *this* file (DOMAIN,
+# POSTGRES_PASSWORD, ...) is resolved from that flag / a plain `.env`, never
+# from a service's own `env_file:` list (that only affects the container's
+# runtime environment, after interpolation already happened) — and this
+# project also has a dev `.env` in the same directory, so leaving the flag
+# off would silently interpolate from the WRONG file instead of erroring.
+#
+# Real domain + trusted certificate: see DEPLOYMENT.md.
+#
+# Unlike docker-compose.yml (the dev stack): no source bind-mounts (the
+# image's own COPY'd code runs, matching what would actually be deployed),
+# no --reload, no host ports published for backend/frontend/postgres/redis
+# — the reverse-proxy container is the only public entry point.
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: aquaresilience-postgres
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aquaresilience}
+      POSTGRES_USER: ${POSTGRES_USER:-aquaresilience}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env.production}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - aquaresilience-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aquaresilience} -d ${POSTGRES_DB:-aquaresilience}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: aquaresilience-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - aquaresilience-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aquaresilience-backend
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      ENVIRONMENT: production
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      # Same-origin via the reverse proxy in the normal case (frontend and
+      # API are both served from https://${DOMAIN}), so CORS is largely a
+      # defense-in-depth setting here rather than a functional requirement
+      # — still set correctly for any direct/cross-origin API callers.
+      CORS_ORIGINS: https://${DOMAIN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # No host port published — only reachable from other containers on the
+    # internal network (the reverse-proxy's /api/ location proxies to it).
+    networks:
+      - aquaresilience-internal
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/health').status==200 else sys.exit(1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    command: >
+      sh -c "alembic upgrade head &&
+             python -m app.seed.seed_data &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers --forwarded-allow-ips='*'"
+    # --forwarded-allow-ips='*' trusts X-Forwarded-* headers from ANY
+    # upstream — safe only because this container is never reachable except
+    # through the reverse-proxy container on the internal network (no host
+    # port published above), so "any upstream" always means "our own nginx".
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+      # Deliberately no VITE_API_BASE_URL build arg: the .dockerignore'd-out
+      # dev .env is gone from the build context, so Vite falls back to the
+      # relative '/api/v1' baseURL baked into src/services/api.ts — correct
+      # for any domain this gets deployed to, no rebuild needed per-domain.
+    container_name: aquaresilience-frontend
+    restart: unless-stopped
+    networks:
+      - aquaresilience-internal
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  reverse-proxy:
+    image: nginx:1.27-alpine
+    container_name: aquaresilience-reverse-proxy
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN must be set in .env.production (or exported) — e.g. app.example.com or localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./deploy/nginx/certs:/etc/nginx/certs:ro
+      - certbot-webroot:/var/www/certbot:ro
+    networks:
+      - aquaresilience-internal
+
+  # Real Let's Encrypt certs (optional — the stack runs fine on the
+  # self-signed cert from generate-self-signed-cert.sh without this).
+  # First issuance is a one-off command (see DEPLOYMENT.md); once issued,
+  # this service renews automatically every 12h (certbot itself only
+  # actually renews within ~30 days of expiry, so this loop is cheap/idle
+  # almost all the time) and copies the renewed cert into place via
+  # --deploy-hook. nginx still needs a manual/cron `nginx -s reload` after
+  # a renewal — see DEPLOYMENT.md.
+  certbot:
+    image: certbot/certbot:latest
+    container_name: aquaresilience-certbot
+    restart: unless-stopped
+    volumes:
+      - letsencrypt-data:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+      - ./deploy/nginx/certs:/etc/nginx/certs
+      - ./deploy/nginx/certbot-deploy-hook.sh:/etc/letsencrypt/renewal-hooks/deploy/copy-to-nginx.sh:ro
+    networks:
+      - aquaresilience-internal
+    entrypoint: >
+      sh -c "trap exit TERM;
+             while :; do
+               certbot renew --webroot -w /var/www/certbot --quiet;
+               sleep 12h;
+             done"
+
+networks:
+  aquaresilience-internal:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  certbot-webroot:
+  letsencrypt-data:
