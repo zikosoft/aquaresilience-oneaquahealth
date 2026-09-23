@@ -13,16 +13,23 @@ import type { MapTileProvider, RiskScore, SourceHealthStatus, Station } from '@/
 
 import 'maplibre-gl/dist/maplibre-gl.css'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     widgetId?: string
     title?: string
     heroHeight?: string | number
+    // P4: when set, the risk ring/popup use this instead of calling
+    // fetchCurrentRisk() — lets the Scenario Simulator reuse this exact map
+    // component to show a "Current vs Projected" view without a second,
+    // divergent map implementation (Stop Rule: don't rebuild what already
+    // exists). Left undefined/null, behavior is 100% unchanged from P2.1.
+    riskOverride?: RiskScore | null
   }>(),
   {
     widgetId: 'resilience-map',
     title: '',
     heroHeight: 480,
+    riskOverride: null,
   },
 )
 
@@ -328,12 +335,17 @@ async function addStationMarkers(): Promise<void> {
   try {
     // Best-effort: a failed risk fetch must never keep station markers from
     // rendering at all — the map degrades to exactly its pre-P2.1 look.
+    // P4: a non-null riskOverride (Scenario Simulator) skips the network
+    // call entirely and uses the already-computed projected/current score
+    // the caller passed in.
     const [stations, risk] = await Promise.all([
       fetchStations(),
-      fetchCurrentRisk().catch((e) => {
-        console.error('Failed to load current risk for map', e)
-        return null
-      }),
+      props.riskOverride !== null && props.riskOverride !== undefined
+        ? Promise.resolve(props.riskOverride)
+        : fetchCurrentRisk().catch((e) => {
+            console.error('Failed to load current risk for map', e)
+            return null
+          }),
     ])
     for (const station of stations) {
       const el = document.createElement('div')
@@ -434,6 +446,15 @@ watch(
   () => uiStore.widgetFullscreenId,
   () => {
     requestAnimationFrame(() => map?.resize())
+  },
+)
+
+// P4: re-render markers (ring/popup only — no re-fetch of stations, no map
+// re-init) whenever the Scenario Simulator flips between Current/Projected.
+watch(
+  () => props.riskOverride,
+  () => {
+    if (!loading.value) void addStationMarkers()
   },
 )
 </script>

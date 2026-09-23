@@ -79,6 +79,15 @@ class AIProviderConfig(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     requests_today: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     requests_today_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
+    # --- P4: Scenario Simulator AI-explanation cooldown (Master Spec §20) ---
+    # A separate cooldown timestamp from `last_analysis_attempt_at` above:
+    # explaining a scenario is user-triggered, on-demand, and must never
+    # consume the shared Situation Brief's `requests_today`/daily ceiling
+    # budget (a demo running several scenarios shouldn't block the next
+    # scheduled 4h brief). Reuses the same `cooldown_seconds` value for a
+    # consistent "please wait" experience, independently tracked.
+    last_scenario_explanation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     @property
     def is_configured(self) -> bool:
         return bool(self.encrypted_api_key)

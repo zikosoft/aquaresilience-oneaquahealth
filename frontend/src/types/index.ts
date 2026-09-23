@@ -292,3 +292,38 @@ export interface TriggerAnalysisResult {
   message: string
   brief: SituationBrief | null
 }
+
+// --- P4: Scenario Simulator ---
+
+export interface ScenarioWarningPreview {
+  would_trigger: boolean
+  severity: RiskSeverity | null
+  message: string | null
+}
+
+export interface ScenarioAIExplanation {
+  explanation: string
+  resilience_recommendations: string[]
+  confidence: number
+}
+
+export interface ScenarioSimulateRequest {
+  rainfall_adjustment_pct: number
+  river_level_adjustment_pct: number
+  language?: string
+  include_ai_explanation?: boolean
+}
+
+export interface ScenarioSimulateResponse {
+  current: RiskScore
+  projected: RiskScore
+  rainfall_adjustment_pct: number
+  river_level_adjustment_pct: number
+  water_level_mm_current: number | null
+  water_level_mm_projected: number | null
+  precipitation_24h_mm_current: number | null
+  precipitation_24h_mm_projected: number | null
+  projected_warning: ScenarioWarningPreview
+  ai_explanation: ScenarioAIExplanation | null
+  ai_explanation_error: string | null
+}

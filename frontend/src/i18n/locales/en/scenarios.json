@@ -6,7 +6,29 @@
     "temperature": "Temperature adjustment"
   },
   "run": "Run simulation",
+  "running": "Running simulation…",
   "current": "Current",
   "projected": "Projected",
-  "empty": "The Scenario Simulator becomes available once the deterministic Risk Engine ships (P4)."
+  "empty": "Adjust the controls and run a simulation to see the projected risk.",
+  "riskScore": "Risk score",
+  "waterLevel": "Water level (mm)",
+  "precipitation": "Precipitation (24h, mm)",
+  "map": {
+    "current": "Current",
+    "projected": "Projected",
+    "hint": "Showing the {view} risk on the map."
+  },
+  "warning": {
+    "title": "Projected warning",
+    "wouldTrigger": "This scenario would trigger a warning",
+    "wouldNotTrigger": "This scenario would not trigger a warning",
+    "note": "Preview only — no real warning is created by a simulation."
+  },
+  "ai": {
+    "title": "AI explanation",
+    "recommendations": "Resilience recommendations",
+    "confidence": "Confidence",
+    "unavailable": "AI explanation not available:"
+  },
+  "errorPrefix": "Simulation failed:"
 }

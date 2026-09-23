@@ -15,6 +15,10 @@ const props = withDefaults(
     loading?: boolean
     error?: string | null
     emptyText?: string
+    // P4: default 100 keeps the original risk-score (0-100) usage
+    // unchanged; pass null to let ECharts auto-scale for a different unit
+    // (e.g. water level in mm), or an explicit number for a fixed scale.
+    yAxisMax?: number | null
   }>(),
   {
     currentValue: null,
@@ -24,6 +28,7 @@ const props = withDefaults(
     loading: false,
     error: null,
     emptyText: '',
+    yAxisMax: 100,
   },
 )
 
@@ -33,7 +38,7 @@ const option = computed<EChartsOption | null>(() => {
     grid: { left: 40, right: 16, top: 16, bottom: 24 },
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     xAxis: { type: 'category', data: [props.currentLabel, props.projectedLabel] },
-    yAxis: { type: 'value', max: 100 },
+    yAxis: { type: 'value', max: props.yAxisMax ?? undefined },
     series: [
       {
         type: 'bar',

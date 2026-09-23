@@ -6,7 +6,29 @@
     "temperature": "Ajustement de la température"
   },
   "run": "Lancer la simulation",
+  "running": "Simulation en cours…",
   "current": "Actuel",
   "projected": "Projeté",
-  "empty": "Le simulateur de scénarios sera disponible une fois le moteur de risque déterministe livré (P4)."
+  "empty": "Ajustez les curseurs et lancez une simulation pour voir le risque projeté.",
+  "riskScore": "Score de risque",
+  "waterLevel": "Niveau d'eau (mm)",
+  "precipitation": "Précipitations (24h, mm)",
+  "map": {
+    "current": "Actuel",
+    "projected": "Projeté",
+    "hint": "Affichage du risque {view} sur la carte."
+  },
+  "warning": {
+    "title": "Alerte projetée",
+    "wouldTrigger": "Ce scénario déclencherait une alerte",
+    "wouldNotTrigger": "Ce scénario ne déclencherait pas d'alerte",
+    "note": "Aperçu uniquement — aucune alerte réelle n'est créée par une simulation."
+  },
+  "ai": {
+    "title": "Explication IA",
+    "recommendations": "Recommandations de résilience",
+    "confidence": "Confiance",
+    "unavailable": "Explication IA non disponible :"
+  },
+  "errorPrefix": "Échec de la simulation :"
 }

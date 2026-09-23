@@ -99,7 +99,12 @@ def _get_risk_engine_settings(db: Session) -> dict:
     return {"weights": weights, "thresholds": thresholds}
 
 
-def _normalize_rainfall(db: Session, now: datetime) -> float | None:
+def _normalize_rainfall(db: Session, now: datetime, multiplier: float = 1.0) -> float | None:
+    """`multiplier` defaults to 1.0 (unchanged, real-data behavior). P4's
+    Scenario Simulator (`compute_projected_risk`) passes a
+    `1 + rainfall_adjustment_pct/100` multiplier here to scale the actual
+    observed 24h total by a hypothetical +X% — never a second, divergent
+    computation path, just this same normalizer fed a scaled input."""
     since = now - timedelta(hours=24)
     total = db.execute(
         select(func.sum(Measurement.value)).where(
@@ -109,10 +114,13 @@ def _normalize_rainfall(db: Session, now: datetime) -> float | None:
     ).scalar_one_or_none()
     if total is None:
         return None
-    return max(0.0, min(total / RAINFALL_REFERENCE_MM_24H, 1.0))
+    adjusted = max(0.0, total * multiplier)
+    return max(0.0, min(adjusted / RAINFALL_REFERENCE_MM_24H, 1.0))
 
 
-def _normalize_hydrology(db: Session, now: datetime) -> float | None:
+def _normalize_hydrology(db: Session, now: datetime, multiplier: float = 1.0) -> float | None:
+    """See `_normalize_rainfall`'s docstring — same pattern, scaling the
+    latest observed water level by a hypothetical river-level adjustment."""
     latest = db.execute(
         select(Measurement.value)
         .where(Measurement.variable == MeasurementVariable.WATER_LEVEL_MM.value)
@@ -121,6 +129,7 @@ def _normalize_hydrology(db: Session, now: datetime) -> float | None:
     ).scalar_one_or_none()
     if latest is None:
         return None
+    adjusted_latest = max(0.0, latest * multiplier)
     since = now - timedelta(days=HYDROLOGY_LOOKBACK_DAYS)
     lo, hi = db.execute(
         select(func.min(Measurement.value), func.max(Measurement.value)).where(
@@ -132,7 +141,7 @@ def _normalize_hydrology(db: Session, now: datetime) -> float | None:
         # Flat/degenerate range (e.g. a single reading so far): not enough
         # signal yet to place the current level on a relative scale.
         return None
-    return max(0.0, min((latest - lo) / (hi - lo), 1.0))
+    return max(0.0, min((adjusted_latest - lo) / (hi - lo), 1.0))
 
 
 def _normalize_environmental(db: Session) -> float | None:
@@ -147,7 +156,14 @@ def _normalize_environmental(db: Session) -> float | None:
     return max(0.0, min(latest, 1.0))
 
 
-def _normalize_trend(db: Session, now: datetime) -> float | None:
+def _normalize_trend(db: Session, now: datetime, level_multiplier: float = 1.0) -> float | None:
+    """`level_multiplier` defaults to 1.0 (unchanged, real-data behavior).
+    P4 passes the same river-level multiplier used by `_normalize_hydrology`
+    here too, applied to the *most recent* reading only: the implied rate of
+    rise is recomputed as if the water level ends up at that projected
+    value by `last_ts`, rather than independently scaling the observed rate
+    itself (which would wrongly make an already-falling trend fall faster
+    under a "river level up" scenario)."""
     since = now - timedelta(hours=TREND_WINDOW_HOURS)
     rows = db.execute(
         select(Measurement.value, Measurement.observed_at)
@@ -161,10 +177,11 @@ def _normalize_trend(db: Session, now: datetime) -> float | None:
         return None
     first_value, first_ts = rows[0]
     last_value, last_ts = rows[-1]
+    adjusted_last_value = max(0.0, last_value * level_multiplier)
     hours_elapsed = (last_ts - first_ts).total_seconds() / 3600.0
     if hours_elapsed <= 0:
         return None
-    rate = (last_value - first_value) / hours_elapsed
+    rate = (adjusted_last_value - first_value) / hours_elapsed
     return max(0.0, min(rate / TREND_REFERENCE_MM_PER_HOUR, 1.0))
 
 
@@ -178,21 +195,13 @@ def _severity_for_score(score: float, thresholds: dict) -> str:
     return "LOW"
 
 
-def compute_risk(db: Session, now: datetime | None = None) -> RiskResult:
-    """Deterministic: reads only stored measurements + Settings, no
-    randomness, no external calls, no AI. Same DB state -> same result."""
-    now = now or datetime.now(timezone.utc)
-    config = _get_risk_engine_settings(db)
-    weights = config["weights"]
-    thresholds = config["thresholds"]
-
-    raw_values: dict[str, float | None] = {
-        "rainfall": _normalize_rainfall(db, now),
-        "hydrology": _normalize_hydrology(db, now),
-        "environmental": _normalize_environmental(db),
-        "trend": _normalize_trend(db, now),
-    }
-
+def _combine_factors(
+    raw_values: dict[str, float | None], weights: dict, thresholds: dict, now: datetime
+) -> RiskResult:
+    """The single scoring/combination step shared by `compute_risk` (real
+    ingested data) and `compute_projected_risk` (P4: hypothetical scenario
+    inputs) — same weighted-average-with-renormalization logic either way,
+    so a projection can never drift from how the real score is computed."""
     available_keys = [k for k in FACTOR_ORDER if raw_values[k] is not None]
     available_weight_total = sum(weights.get(k, 0.0) for k in available_keys)
 
@@ -229,6 +238,71 @@ def compute_risk(db: Session, now: datetime | None = None) -> RiskResult:
         factors_total=len(FACTOR_ORDER),
         computed_at=now,
     )
+
+
+def compute_risk(db: Session, now: datetime | None = None) -> RiskResult:
+    """Deterministic: reads only stored measurements + Settings, no
+    randomness, no external calls, no AI. Same DB state -> same result."""
+    now = now or datetime.now(timezone.utc)
+    config = _get_risk_engine_settings(db)
+    weights = config["weights"]
+    thresholds = config["thresholds"]
+
+    raw_values: dict[str, float | None] = {
+        "rainfall": _normalize_rainfall(db, now),
+        "hydrology": _normalize_hydrology(db, now),
+        "environmental": _normalize_environmental(db),
+        "trend": _normalize_trend(db, now),
+    }
+    return _combine_factors(raw_values, weights, thresholds, now)
+
+
+def compute_projected_risk(
+    db: Session,
+    rainfall_adjustment_pct: float,
+    river_level_adjustment_pct: float,
+    now: datetime | None = None,
+) -> RiskResult:
+    """P4 — Scenario Simulator (Master Spec §20). Deterministic projection:
+    the rainfall/hydrology/trend factors are recomputed from the exact same
+    normalizers `compute_risk` uses, fed the real observed data scaled by
+    the requested percentage adjustments — never a separate model, never
+    randomness, never an AI call. The environmental (soil moisture) factor
+    is left as currently observed since it isn't one of the exposed
+    scenario controls (Master Spec §20 only lists rainfall/river-level/
+    optional temperature, and temperature isn't a Risk Engine factor)."""
+    now = now or datetime.now(timezone.utc)
+    config = _get_risk_engine_settings(db)
+    weights = config["weights"]
+    thresholds = config["thresholds"]
+
+    rainfall_multiplier = 1.0 + (rainfall_adjustment_pct / 100.0)
+    river_multiplier = 1.0 + (river_level_adjustment_pct / 100.0)
+
+    raw_values: dict[str, float | None] = {
+        "rainfall": _normalize_rainfall(db, now, multiplier=rainfall_multiplier),
+        "hydrology": _normalize_hydrology(db, now, multiplier=river_multiplier),
+        "environmental": _normalize_environmental(db),
+        "trend": _normalize_trend(db, now, level_multiplier=river_multiplier),
+    }
+    return _combine_factors(raw_values, weights, thresholds, now)
+
+
+def describe_warning_outcome(result: RiskResult) -> dict:
+    """Non-persisting preview of what `evaluate_and_persist_warnings` would
+    do for this `RiskResult`, without touching the database. Used
+    exclusively by the P4 Scenario Simulator: a hypothetical projection must
+    never create, update or resolve a real `Warning` row — that would
+    corrupt the real operational warning lifecycle with a "what if" input.
+    Reuses the same `OPEN_SEVERITIES`/`_build_message` the real lifecycle
+    uses, so the preview text matches exactly what a real warning would say
+    if this projection ever became reality."""
+    would_trigger = result.severity in OPEN_SEVERITIES
+    return {
+        "would_trigger": would_trigger,
+        "severity": result.severity if would_trigger else None,
+        "message": _build_message(result) if would_trigger else None,
+    }
 
 
 def _factors_payload(result: RiskResult) -> dict:
