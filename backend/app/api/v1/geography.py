@@ -1,5 +1,8 @@
-"""P2.1: read-only geography reference data — currently just the single
-seeded city (D016, Toulouse-only for the hackathon). Gated on MAP:VIEW
+"""P2.1: read-only geography reference data. Session 018: now returns all
+9 OneAquaHealth consortium cities (D016 schema, extended), each flagged
+with `has_live_data` so the frontend can distinguish Toulouse (real
+connector) from the other 8 (real, selectable, no connector yet). Gated
+on MAP:VIEW
 rather than SETTINGS:VIEW: every role that can see the map (Viewer,
 Operator, Administrator) needs this to center it, not just Settings
 editors — see `ResilienceMap.vue` and the Settings > Map tab, both of
@@ -44,6 +47,8 @@ def _list_cities(db: Session) -> list[CityOut]:
             default_lon=city.default_lon,
             default_lat=city.default_lat,
             default_zoom=city.default_zoom,
+            has_live_data=city.has_live_data,
+            planned_data_source=city.planned_data_source,
         )
         for city, country in rows
     ]

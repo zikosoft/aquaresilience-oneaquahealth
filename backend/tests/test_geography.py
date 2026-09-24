@@ -1,6 +1,7 @@
-"""P1.1 hotfix — countries/cities reference tables (D016): schema foundation
-only, seeded with France/Toulouse. Verifies the seed is correct and
-idempotent (mirrors the pattern already used for the environmental seed)."""
+"""P1.1 hotfix, extended Session 018 — countries/cities reference tables
+(D016), now seeded with all 9 OneAquaHealth consortium countries. Verifies
+the seed is correct and idempotent (mirrors the pattern already used for
+the environmental seed), and that only Toulouse is flagged has_live_data."""
 from __future__ import annotations
 
 from sqlalchemy import select
@@ -23,6 +24,7 @@ def test_geography_seed_creates_france_and_toulouse(db_session):
     assert toulouse.default_lon == 1.4442
     assert toulouse.default_lat == 43.6047
     assert toulouse.default_zoom == 11
+    assert toulouse.has_live_data is True
 
 
 def test_geography_seed_is_idempotent(db_session):
@@ -31,5 +33,17 @@ def test_geography_seed_is_idempotent(db_session):
 
     countries = db_session.execute(select(Country)).scalars().all()
     cities = db_session.execute(select(City)).scalars().all()
-    assert len(countries) == 1
-    assert len(cities) == 1
+    assert len(countries) == 9
+    assert len(cities) == 9
+
+
+def test_geography_seed_only_toulouse_has_live_data(db_session):
+    seed_geography_run()
+
+    cities = db_session.execute(select(City)).scalars().all()
+    live = [c for c in cities if c.has_live_data]
+    assert [c.label_en for c in live] == ["Toulouse"]
+
+    oslo = db_session.execute(select(City).where(City.label_en == "Oslo")).scalar_one()
+    assert oslo.has_live_data is False
+    assert oslo.planned_data_source == "NVE HydAPI"

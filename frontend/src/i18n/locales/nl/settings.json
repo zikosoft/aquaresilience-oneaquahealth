@@ -1,0 +1,104 @@
+{
+  "title": "Instellingen",
+  "tabs": {
+    "general": "Algemeen",
+    "languages": "Talen",
+    "dataSources": "Gegevensbronnen",
+    "aiProvider": "AI-provider",
+    "scheduler": "Planner",
+    "riskEngine": "Risico-engine",
+    "alerts": "Waarschuwingen",
+    "map": "Kaart",
+    "usersAccess": "Gebruikers & Toegang",
+    "system": "Systeem"
+  },
+  "general": {
+    "city": "Stad",
+    "timezone": "Tijdzone",
+    "dateFormat": "Datumnotatie",
+    "singleCityNotice": "Toulouse Métropole is momenteel de enige stad met een actieve live-gegevensconnector. Gebruik de stadskiezer in de koptekst om de andere steden van het OneAquaHealth-consortium te bekijken die het platform al klaar heeft staan om te integreren."
+  },
+  "languages": {
+    "defaultLocale": "Standaardtaal",
+    "enabledLocales": "Ingeschakelde talen"
+  },
+  "aiProvider": {
+    "provider": "Provider",
+    "model": "Model",
+    "apiKey": "API-sleutel",
+    "apiKeyHint": "Alleen schrijven. Laat leeg om de momenteel opgeslagen sleutel te behouden.",
+    "maxOutputTokens": "Maximum aantal output-tokens",
+    "scheduledInterval": "Interval geplande analyse (uren)",
+    "dailyCeiling": "Dagelijkse verzoeklimiet",
+    "eventTriggered": "Gebeurtenisgestuurde analyse",
+    "cooldown": "Afkoelperiode (seconden)",
+    "testConnection": "Verbinding testen",
+    "save": "Configuratie opslaan",
+    "configured": "Er is een API-sleutel geconfigureerd.",
+    "notConfigured": "Er is nog geen API-sleutel geconfigureerd.",
+    "testSuccess": "Verbinding geslaagd.",
+    "testFailure": "Verbinding mislukt.",
+    "saved": "AI-providerconfiguratie opgeslagen."
+  },
+  "riskEngine": {
+    "description": "Gewichten en ernstdrempels van de deterministische risico-engine. De score is een gewogen combinatie van de 4 onderstaande factoren (de gewichten worden opnieuw genormaliseerd wanneer een factor nog geen gegevens heeft); de score wordt vervolgens ingedeeld in LAAG/MATIG/HOOG/KRITIEK op basis van de 3 drempels.",
+    "tooltips": {
+      "weightsRainfall": "Aandeel van de score bepaald door de gecumuleerde neerslag over 24u. Genormaliseerd ten opzichte van een referentie van 40mm/24u (gedocumenteerde terugvalwaarde — officiële Vigicrues-drempels waren tijdens de ontwikkeling niet beschikbaar).",
+      "weightsHydrology": "Aandeel van de score bepaald door het huidige waterpeil van de Garonne, geplaatst op een 0–1-schaal op basis van het door het station waargenomen minimum/maximum over de afgelopen 90 dagen (relatieve terugvaloplossing tot officiële overstromingsdrempels beschikbaar zijn).",
+      "weightsEnvironmental": "Aandeel van de score bepaald door de bodemvochtigheid (al uitgedrukt als 0–1 door Open-Meteo).",
+      "weightsTrend": "Aandeel van de score bepaald door hoe snel het waterpeil de afgelopen 6u stijgt, genormaliseerd ten opzichte van een referentie van 50mm/u. Een dalend of gelijkblijvend peil verhoogt het risico nooit.",
+      "thresholdsLow": "Een score gelijk aan of hoger dan deze waarde is minstens MATIG (daaronder LAAG).",
+      "thresholdsModerate": "Een score gelijk aan of hoger dan deze waarde is minstens HOOG.",
+      "thresholdsHigh": "Een score gelijk aan of hoger dan deze waarde is KRITIEK."
+    }
+  },
+  "usersAccess": {
+    "users": "Gebruikers",
+    "roles": "Rollen",
+    "permissionMatrix": "Rechtenmatrix",
+    "addUser": "Gebruiker toevoegen",
+    "email": "E-mail",
+    "fullName": "Volledige naam",
+    "role": "Rol",
+    "activeStatus": "Actief",
+    "resetPassword": "Wachtwoord opnieuw instellen",
+    "matrixHint": "Verleen module × rechttoegang per rol.",
+    "cannotDeleteSelf": "U kunt uw eigen account niet verwijderen.",
+    "editPermissions": "Rechten bewerken",
+    "userPermissionsTitle": "Rechten — {name}",
+    "userPermissionsHint": "Het aanvinken van een vakje hier maakt een rechtenset specifiek voor deze gebruiker aan, gekloond van diens huidige rol — de gedeelde rol zelf wordt nooit gewijzigd, dus niemand anders met die rol wordt beïnvloed.",
+    "currentRole": "Huidige rol: {role}",
+    "customRoleBadge": "Aangepast"
+  },
+  "map": {
+    "description": "Kies de standaard gratis en open tegelprovider voor de Veerkrachtkaart. Voor geen van deze is een account of API-sleutel vereist. Elke gebruiker kan zelf nog steeds een andere basiskaart kiezen via de eigen laagkiezer van de kaart — deze instelling bepaalt alleen wat zij zien voordat ze dat doen.",
+    "tileProvider": "Tegelprovider",
+    "providers": {
+      "osm": "OpenStreetMap (standaard)",
+      "cyclosm": "CyclOSM (fietsen)",
+      "humanitarian": "Humanitarian OSM"
+    },
+    "defaultView": "Standaardweergave",
+    "defaultViewHint": "De kaart centreert hier bij het laden. Komt uit de referentiegegevens van de geconfigureerde stad — om dit te wijzigen, voegt u een stad toe of bewerkt u deze in plaats van hier coördinaten in te voeren.",
+    "longitude": "Lengtegraad",
+    "latitude": "Breedtegraad",
+    "zoom": "Zoom",
+    "riskLayerOpacity": "Dekking risicolaag",
+    "riskLayerOpacityHint": "Dekking (0-100) van de risiconiveau-gloed rond het rivierpeilstation op de kaart. Stel in op 0 om deze te verbergen."
+  },
+  "alerts": {
+    "description": "Vroegtijdige Waarschuwingen volgen een vaste levenscyclus in 3 stappen — niets hier is door de gebruiker configureerbaar (de ernstdrempels die een waarschuwing openen, worden hierboven in Risico-engine ingesteld).",
+    "lifecycleTitle": "Levenscyclus",
+    "lifecycle": {
+      "active": "Automatisch aangemaakt zodra de risicoscore MATIG of hoger bereikt.",
+      "acknowledged": "Een operator of beheerder heeft het gezien en handelt het af — ingesteld vanaf de pagina Vroegtijdige Waarschuwingen.",
+      "resolved": "Automatisch, zodra de score weer naar LAAG daalt — of op elk moment handmatig, door een operator of beheerder."
+    },
+    "viewWarnings": "Vroegtijdige Waarschuwingen bekijken"
+  },
+  "system": {
+    "maintenanceMode": "Onderhoudsmodus",
+    "maintenanceModeHint": "Indien ingeschakeld, kunnen alleen beheerders overal in het platform wijzigingen aanbrengen (aanmaken, bewerken, bevestigen, een scenario uitvoeren, enz.) — iedereen anders krijgt een duidelijk alleen-lezen bericht. Gegevens bekijken, aanmelden en infrastructuur-gezondheidscontroles worden hier nooit door beïnvloed. Gebruik dit vóór een risicovolle wijziging (bijv. het herstellen van een back-up) zodat niemand anders ondertussen gegevens wegschrijft."
+  },
+  "saved": "Instellingen opgeslagen."
+}

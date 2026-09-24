@@ -1,0 +1,104 @@
+{
+  "title": "Impostazioni",
+  "tabs": {
+    "general": "Generale",
+    "languages": "Lingue",
+    "dataSources": "Fonti di Dati",
+    "aiProvider": "Fornitore IA",
+    "scheduler": "Pianificatore",
+    "riskEngine": "Motore di Rischio",
+    "alerts": "Allerte",
+    "map": "Mappa",
+    "usersAccess": "Utenti e Accessi",
+    "system": "Sistema"
+  },
+  "general": {
+    "city": "Città",
+    "timezone": "Fuso orario",
+    "dateFormat": "Formato data",
+    "singleCityNotice": "Toulouse Métropole è oggi l'unica città con un connettore dati in tempo reale attivo. Usa il selettore di città nell'intestazione per esplorare le altre città del consorzio OneAquaHealth che la piattaforma è già pronta a integrare."
+  },
+  "languages": {
+    "defaultLocale": "Lingua predefinita",
+    "enabledLocales": "Lingue abilitate"
+  },
+  "aiProvider": {
+    "provider": "Fornitore",
+    "model": "Modello",
+    "apiKey": "Chiave API",
+    "apiKeyHint": "Solo scrittura. Lascia vuoto per mantenere la chiave attualmente salvata.",
+    "maxOutputTokens": "Token di output massimi",
+    "scheduledInterval": "Intervallo di analisi programmata (ore)",
+    "dailyCeiling": "Limite giornaliero di richieste",
+    "eventTriggered": "Analisi attivata da eventi",
+    "cooldown": "Tempo di attesa (secondi)",
+    "testConnection": "Testa connessione",
+    "save": "Salva configurazione",
+    "configured": "È configurata una chiave API.",
+    "notConfigured": "Nessuna chiave API ancora configurata.",
+    "testSuccess": "Connessione riuscita.",
+    "testFailure": "Connessione non riuscita.",
+    "saved": "Configurazione del fornitore IA salvata."
+  },
+  "riskEngine": {
+    "description": "Pesi e soglie di gravità del motore di rischio deterministico. Il punteggio è una combinazione ponderata dei 4 fattori sottostanti (i pesi vengono rinormalizzati quando un fattore non ha ancora dati); il punteggio viene poi classificato in BASSO/MODERATO/ALTO/CRITICO in base alle 3 soglie.",
+    "tooltips": {
+      "weightsRainfall": "Quota del punteggio determinata dalle precipitazioni cumulate nelle 24h. Normalizzata rispetto a un riferimento di 40mm/24h (valore di ripiego documentato — le soglie ufficiali Vigicrues non erano disponibili al momento dello sviluppo).",
+      "weightsHydrology": "Quota del punteggio determinata dal livello attuale del fiume Garonna, collocato su una scala 0–1 in base al minimo/massimo osservato dalla stazione negli ultimi 90 giorni (soluzione relativa di ripiego fino alla disponibilità di soglie di piena ufficiali).",
+      "weightsEnvironmental": "Quota del punteggio determinata dall'umidità del suolo (già espressa 0–1 da Open-Meteo).",
+      "weightsTrend": "Quota del punteggio determinata dalla velocità di aumento del livello dell'acqua nelle ultime 6h, normalizzata rispetto a un riferimento di 50mm/h. Un livello stabile o in calo non aggiunge mai rischio.",
+      "thresholdsLow": "Un punteggio pari o superiore a questo valore è almeno MODERATO (al di sotto, BASSO).",
+      "thresholdsModerate": "Un punteggio pari o superiore a questo valore è almeno ALTO.",
+      "thresholdsHigh": "Un punteggio pari o superiore a questo valore è CRITICO."
+    }
+  },
+  "usersAccess": {
+    "users": "Utenti",
+    "roles": "Ruoli",
+    "permissionMatrix": "Matrice dei Permessi",
+    "addUser": "Aggiungi utente",
+    "email": "Email",
+    "fullName": "Nome completo",
+    "role": "Ruolo",
+    "activeStatus": "Attivo",
+    "resetPassword": "Reimposta password",
+    "matrixHint": "Concedi l'accesso modulo × permesso per ruolo.",
+    "cannotDeleteSelf": "Non puoi eliminare il tuo stesso account.",
+    "editPermissions": "Modifica permessi",
+    "userPermissionsTitle": "Permessi — {name}",
+    "userPermissionsHint": "Selezionare una casella qui crea un insieme di permessi specifico per questo utente, clonato dal suo ruolo attuale — il ruolo condiviso non viene mai modificato, quindi nessun altro con quel ruolo è interessato.",
+    "currentRole": "Ruolo attuale: {role}",
+    "customRoleBadge": "Personalizzato"
+  },
+  "map": {
+    "description": "Scegli il fornitore di tile gratuito e aperto predefinito per la Mappa della Resilienza. Non è richiesto alcun account o chiave API per nessuno di essi. Ogni utente può comunque scegliere per sé una mappa di base diversa dal selettore di livelli della mappa — questa impostazione definisce solo cosa vedono prima di farlo.",
+    "tileProvider": "Fornitore di tile",
+    "providers": {
+      "osm": "OpenStreetMap (standard)",
+      "cyclosm": "CyclOSM (ciclismo)",
+      "humanitarian": "Humanitarian OSM"
+    },
+    "defaultView": "Vista predefinita",
+    "defaultViewHint": "La mappa si centra qui al caricamento. Deriva dai dati di riferimento della città configurata — per modificarla, aggiungi o modifica una città invece di digitare le coordinate qui.",
+    "longitude": "Longitudine",
+    "latitude": "Latitudine",
+    "zoom": "Zoom",
+    "riskLayerOpacity": "Opacità del livello di rischio",
+    "riskLayerOpacityHint": "Opacità (0-100) dell'alone del livello di rischio mostrato attorno alla stazione idrometrica sulla mappa. Imposta a 0 per nasconderlo."
+  },
+  "alerts": {
+    "description": "Le Allerte Precoci seguono un ciclo di vita fisso in 3 fasi — nulla qui è configurabile dall'utente (le soglie di gravità che aprono un'allerta si impostano nel Motore di Rischio sopra).",
+    "lifecycleTitle": "Ciclo di vita",
+    "lifecycle": {
+      "active": "Creata automaticamente non appena il punteggio di rischio raggiunge MODERATO o superiore.",
+      "acknowledged": "Un operatore o amministratore l'ha vista e se ne sta occupando — impostato dalla pagina Allerte Precoci.",
+      "resolved": "Automaticamente, non appena il punteggio torna a BASSO — oppure manualmente, in qualsiasi momento, da un operatore o amministratore."
+    },
+    "viewWarnings": "Visualizza Allerte Precoci"
+  },
+  "system": {
+    "maintenanceMode": "Modalità manutenzione",
+    "maintenanceModeHint": "Quando attivata, solo gli amministratori possono apportare modifiche in qualsiasi punto della piattaforma (creare, modificare, prendere in carico, eseguire uno scenario, ecc.) — tutti gli altri ricevono un chiaro messaggio di sola lettura. La visualizzazione dei dati, l'accesso e i controlli di integrità dell'infrastruttura non sono mai interessati. Usala prima di una modifica delicata (ad es. il ripristino di un backup) affinché nessun altro scriva dati nel frattempo."
+  },
+  "saved": "Impostazioni salvate."
+}

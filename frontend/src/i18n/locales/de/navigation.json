@@ -1,0 +1,13 @@
+{
+  "dashboard": "Leitstand",
+  "map": "Resilienzkarte",
+  "alerts": "Frühwarnungen",
+  "aiIntelligence": "KI-Intelligenz",
+  "scenarios": "Szenariosimulator",
+  "dataSources": "Datenquellen",
+  "settings": "Einstellungen",
+  "administration": "Verwaltung",
+  "collapse": "Seitenleiste einklappen",
+  "expand": "Seitenleiste ausklappen",
+  "monitoringMode": "Überwachungsmodus"
+}

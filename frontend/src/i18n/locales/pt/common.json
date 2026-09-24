@@ -1,0 +1,60 @@
+{
+  "appName": "AquaResilience",
+  "tagline": "Inteligência de resiliência da água doce urbana",
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "create": "Criar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "test": "Testar",
+    "refresh": "Atualizar",
+    "back": "Voltar",
+    "search": "Pesquisar",
+    "apply": "Aplicar",
+    "reset": "Repor"
+  },
+  "status": {
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "loading": "A carregar…",
+    "error": "Ocorreu um erro",
+    "empty": "Sem dados disponíveis",
+    "configured": "Configurado",
+    "notConfigured": "Não configurado",
+    "ok": "OK",
+    "degraded": "Degradado"
+  },
+  "fullscreen": {
+    "enter": "Entrar em ecrã inteiro",
+    "exit": "Sair do ecrã inteiro"
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Escuro",
+    "toggle": "Alternar tema"
+  },
+  "language": "Idioma",
+  "notifications": "Notificações",
+  "profile": "Perfil",
+  "logout": "Terminar sessão",
+  "maintenance": {
+    "bannerMessage": "A plataforma está em modo de manutenção. Pode continuar a consultar tudo — apenas um administrador pode fazer alterações neste momento."
+  },
+  "riskFactors": {
+    "rainfall": "Precipitação (24h)",
+    "hydrology": "Nível do rio",
+    "environmental": "Humidade do solo",
+    "trend": "Tendência do nível da água"
+  },
+  "city": {
+    "select": "Cidade",
+    "noLiveData": {
+      "title": "Ainda sem dados em tempo real para {city}",
+      "body": "Este projeto recolhe dados reais apenas para Toulouse. {city} é apresentada para mostrar a capacidade da plataforma de integrar as outras cidades do consórcio OneAquaHealth.",
+      "plannedSource": "Conector candidato identificado: {source}"
+    }
+  }
+}

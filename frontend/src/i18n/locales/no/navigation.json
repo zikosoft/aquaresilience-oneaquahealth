@@ -1,0 +1,13 @@
+{
+  "dashboard": "Kommandosentral",
+  "map": "Resilienskart",
+  "alerts": "Tidlige varsler",
+  "aiIntelligence": "KI-intelligens",
+  "scenarios": "Scenariosimulator",
+  "dataSources": "Datakilder",
+  "settings": "Innstillinger",
+  "administration": "Administrasjon",
+  "collapse": "Slå sammen sidepanel",
+  "expand": "Utvid sidepanel",
+  "monitoringMode": "Overvåkingsmodus"
+}

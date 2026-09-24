@@ -1,0 +1,34 @@
+{
+  "title": "Simulador de Cenários",
+  "controls": {
+    "rainfall": "Ajuste de precipitação",
+    "riverLevel": "Ajuste do nível do rio",
+    "temperature": "Ajuste de temperatura"
+  },
+  "run": "Executar simulação",
+  "running": "A executar simulação…",
+  "current": "Atual",
+  "projected": "Projetado",
+  "empty": "Ajuste os controlos e execute uma simulação para ver o risco projetado.",
+  "riskScore": "Pontuação de risco",
+  "waterLevel": "Nível da água (mm)",
+  "precipitation": "Precipitação (24h, mm)",
+  "map": {
+    "current": "Atual",
+    "projected": "Projetado",
+    "hint": "A mostrar o risco {view} no mapa."
+  },
+  "warning": {
+    "title": "Alerta projetado",
+    "wouldTrigger": "Este cenário acionaria um alerta",
+    "wouldNotTrigger": "Este cenário não acionaria um alerta",
+    "note": "Apenas pré-visualização — nenhum alerta real é criado por uma simulação."
+  },
+  "ai": {
+    "title": "Explicação da IA",
+    "recommendations": "Recomendações de resiliência",
+    "confidence": "Confiança",
+    "unavailable": "Explicação da IA indisponível:"
+  },
+  "errorPrefix": "A simulação falhou:"
+}

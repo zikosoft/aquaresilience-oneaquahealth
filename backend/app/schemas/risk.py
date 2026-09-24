@@ -25,6 +25,11 @@ class RiskScoreOut(BaseModel):
     factors_available: int
     factors_total: int
     computed_at: datetime
+    # Session 018: False only when a non-demo city (no live connector) was
+    # requested via ?city_id= — see app/services/city_context.py. Always
+    # True for the pre-existing single-city behavior.
+    data_available: bool = True
+    planned_data_source: str | None = None
 
 
 class WarningOut(BaseModel):

@@ -1,0 +1,104 @@
+{
+  "title": "Innstillinger",
+  "tabs": {
+    "general": "Generelt",
+    "languages": "Språk",
+    "dataSources": "Datakilder",
+    "aiProvider": "KI-leverandør",
+    "scheduler": "Planlegger",
+    "riskEngine": "Risikomotor",
+    "alerts": "Varsler",
+    "map": "Kart",
+    "usersAccess": "Brukere og tilgang",
+    "system": "System"
+  },
+  "general": {
+    "city": "By",
+    "timezone": "Tidssone",
+    "dateFormat": "Datoformat",
+    "singleCityNotice": "Toulouse Métropole er i dag den eneste byen med en sanntids datakilde. Bruk byvelgeren i toppmenyen for å forhåndsvise de andre byene i OneAquaHealth-konsortiet som plattformen allerede er klar til å ta i bruk."
+  },
+  "languages": {
+    "defaultLocale": "Standardspråk",
+    "enabledLocales": "Aktiverte språk"
+  },
+  "aiProvider": {
+    "provider": "Leverandør",
+    "model": "Modell",
+    "apiKey": "API-nøkkel",
+    "apiKeyHint": "Kun skriving. La stå tom for å beholde den lagrede nøkkelen.",
+    "maxOutputTokens": "Maks utdata-tokens",
+    "scheduledInterval": "Planlagt analyseintervall (timer)",
+    "dailyCeiling": "Daglig forespørselstak",
+    "eventTriggered": "Hendelsesutløst analyse",
+    "cooldown": "Nedkjølingstid (sekunder)",
+    "testConnection": "Test tilkobling",
+    "save": "Lagre konfigurasjon",
+    "configured": "En API-nøkkel er konfigurert.",
+    "notConfigured": "Ingen API-nøkkel konfigurert ennå.",
+    "testSuccess": "Tilkobling vellykket.",
+    "testFailure": "Tilkobling mislyktes.",
+    "saved": "KI-leverandørkonfigurasjon lagret."
+  },
+  "riskEngine": {
+    "description": "Vekter og alvorlighetsterskler for den deterministiske risikomotoren. Scoren er en vektet kombinasjon av de 4 faktorene under (vektene renormaliseres når en faktor ennå ikke har data); scoren klassifiseres deretter som LAV/MODERAT/HØY/KRITISK ut fra de 3 tersklene.",
+    "tooltips": {
+      "weightsRainfall": "Andel av scoren drevet av akkumulert nedbør over 24t. Normalisert mot en referanse på 40mm/24t (dokumentert reserveverdi — offisielle Vigicrues-terskler var ikke tilgjengelige under utviklingen).",
+      "weightsHydrology": "Andel av scoren drevet av nåværende vannstand i Garonne, plassert på en 0–1-skala basert på stasjonens eget observerte min/maks over de siste 90 dagene (relativ reserveløsning inntil offisielle flomterskler er tilgjengelige).",
+      "weightsEnvironmental": "Andel av scoren drevet av jordfuktighet (allerede uttrykt 0–1 av Open-Meteo).",
+      "weightsTrend": "Andel av scoren drevet av hvor raskt vannstanden stiger over de siste 6t, normalisert mot en referanse på 50mm/t. Et fallende eller flatt nivå gir aldri økt risiko.",
+      "thresholdsLow": "En score lik eller over denne verdien er minst MODERAT (under den, LAV).",
+      "thresholdsModerate": "En score lik eller over denne verdien er minst HØY.",
+      "thresholdsHigh": "En score lik eller over denne verdien er KRITISK."
+    }
+  },
+  "usersAccess": {
+    "users": "Brukere",
+    "roles": "Roller",
+    "permissionMatrix": "Tilgangsmatrise",
+    "addUser": "Legg til bruker",
+    "email": "E-post",
+    "fullName": "Fullt navn",
+    "role": "Rolle",
+    "activeStatus": "Aktiv",
+    "resetPassword": "Tilbakestill passord",
+    "matrixHint": "Gi modul × tilgangsrettighet per rolle.",
+    "cannotDeleteSelf": "Du kan ikke slette din egen konto.",
+    "editPermissions": "Rediger tilganger",
+    "userPermissionsTitle": "Tilganger — {name}",
+    "userPermissionsHint": "Å krysse av en boks her lager et tilgangssett spesifikt for denne brukeren, klonet fra deres nåværende rolle — den delte rollen endres aldri, så ingen andre med den rollen påvirkes.",
+    "currentRole": "Nåværende rolle: {role}",
+    "customRoleBadge": "Tilpasset"
+  },
+  "map": {
+    "description": "Velg standard gratis og åpen kartflis-leverandør for Resilienskartet. Ingen konto eller API-nøkkel kreves for noen av disse. Hver bruker kan fortsatt velge et annet grunnkart for seg selv fra kartets eget lagvelger — dette valget setter bare hva de ser før de gjør det.",
+    "tileProvider": "Kartflis-leverandør",
+    "providers": {
+      "osm": "OpenStreetMap (standard)",
+      "cyclosm": "CyclOSM (sykkel)",
+      "humanitarian": "Humanitarian OSM"
+    },
+    "defaultView": "Standardvisning",
+    "defaultViewHint": "Kartet sentreres her ved lasting. Kommer fra den konfigurerte byens egne referansedata — for å endre det, legg til eller rediger en by i stedet for å skrive inn koordinater her.",
+    "longitude": "Lengdegrad",
+    "latitude": "Breddegrad",
+    "zoom": "Zoom",
+    "riskLayerOpacity": "Risikolagets gjennomsiktighet",
+    "riskLayerOpacityHint": "Gjennomsiktighet (0-100) for risikonivå-glorien vist rundt elvemålestasjonen på kartet. Sett til 0 for å skjule den."
+  },
+  "alerts": {
+    "description": "Tidlige varsler følger en fast 3-trinns livssyklus — ingenting her er brukerkonfigurerbart (alvorlighetstersklene som åpner et varsel settes i Risikomotor ovenfor).",
+    "lifecycleTitle": "Livssyklus",
+    "lifecycle": {
+      "active": "Opprettet automatisk så snart risikoscoren når MODERAT eller høyere.",
+      "acknowledged": "En operatør eller administrator har sett det og følger opp — settes fra siden Tidlige varsler.",
+      "resolved": "Automatisk, når scoren faller tilbake til LAV — eller manuelt, når som helst, av en operatør eller administrator."
+    },
+    "viewWarnings": "Vis tidlige varsler"
+  },
+  "system": {
+    "maintenanceMode": "Vedlikeholdsmodus",
+    "maintenanceModeHint": "Når aktivert kan bare administratorer gjøre endringer hvor som helst på plattformen (opprette, redigere, bekrefte, kjøre et scenario osv.) — alle andre får en tydelig skrivebeskyttet melding. Visning av data, innlogging og infrastrukturhelsesjekker påvirkes aldri. Bruk dette før en risikabel endring (f.eks. gjenoppretting av en sikkerhetskopi) slik at ingen andre skriver data samtidig."
+  },
+  "saved": "Innstillinger lagret."
+}

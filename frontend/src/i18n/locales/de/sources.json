@@ -1,0 +1,12 @@
+{
+  "title": "Datenquellen",
+  "table": {
+    "name": "Quelle",
+    "category": "Kategorie",
+    "status": "Status",
+    "lastSync": "Letzte Synchronisierung"
+  },
+  "empty": "Es sind noch keine Datenquellen verbunden.",
+  "license": "Lizenz",
+  "lastError": "Letzter Fehler"
+}

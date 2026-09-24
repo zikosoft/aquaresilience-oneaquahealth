@@ -25,6 +25,7 @@ from app.schemas.environmental import (
     TimeseriesPoint,
     TimeseriesSeries,
 )
+from app.services.city_context import resolve_city
 from app.services.ingestion_service import compute_source_health
 
 router = APIRouter()
@@ -147,10 +148,48 @@ def environmental_summary(
     # consistency. Defaults to 48h (the prior hardcoded window) so existing
     # callers/tests that omit it keep the exact previous behavior.
     hours: int = Query(default=48, ge=1, le=168),
+    # Session 018: the header's city selector. Omitted => today's unchanged
+    # single-city behavior (existing callers/tests are unaffected).
+    city_id: uuid.UUID | None = Query(default=None),
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("DASHBOARD", "VIEW")),
 ) -> EnvironmentalSummaryOut:
     now = datetime.now(timezone.utc)
+
+    city, has_data = resolve_city(db, city_id)
+    if not has_data:
+        return EnvironmentalSummaryOut(
+            monitored_stations=0,
+            active_sources=0,
+            fresh_sources=0,
+            trend_window_hours=hours,
+            water_level=None,
+            water_level_trend=[],
+            water_level_trend_timestamps=[],
+            precipitation_24h_total_mm=None,
+            precipitation_trend=[],
+            precipitation_trend_timestamps=[],
+            temperature=None,
+            temperature_trend=[],
+            temperature_trend_timestamps=[],
+            humidity=None,
+            humidity_trend=[],
+            humidity_trend_timestamps=[],
+            wind_speed=None,
+            wind_speed_trend=[],
+            wind_speed_trend_timestamps=[],
+            wind_direction=None,
+            wind_direction_trend=[],
+            wind_direction_trend_timestamps=[],
+            surface_pressure=None,
+            surface_pressure_trend=[],
+            surface_pressure_trend_timestamps=[],
+            uv_index=None,
+            uv_index_trend=[],
+            uv_index_trend_timestamps=[],
+            data_available=False,
+            planned_data_source=city.planned_data_source if city else None,
+        )
 
     sources = db.execute(select(DataSource)).scalars().all()
     active_sources = sum(1 for s in sources if s.is_active)

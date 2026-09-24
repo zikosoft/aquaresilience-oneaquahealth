@@ -62,9 +62,12 @@ export interface AppSetting {
   description: string
 }
 
-// P2.1: read-only geography reference data (D016) — currently always
-// exactly one row (Toulouse, hackathon scope). `ResilienceMap.vue` and the
-// Settings > Map tab both read this for the default center/zoom.
+// P2.1: read-only geography reference data (D016). Session 018: now 9
+// OneAquaHealth consortium cities, not just Toulouse — `ResilienceMap.vue`,
+// the Settings > Map tab and the header's city selector (`stores/city.ts`)
+// all read this. `has_live_data` is true only for Toulouse (the one city
+// with an actual ingested connector); the other 8 are real, selectable
+// cities with no connector yet — see `app/services/city_context.py`.
 export interface City {
   id: string
   label_en: string
@@ -74,6 +77,8 @@ export interface City {
   default_lon: number
   default_lat: number
   default_zoom: number
+  has_live_data: boolean
+  planned_data_source: string | null
 }
 
 // P4.1: 'carto_light'/'carto_dark' removed — CARTO's raster basemap tiles
@@ -210,6 +215,9 @@ export interface EnvironmentalSummary {
   uv_index: LatestReading | null
   uv_index_trend: number[]
   uv_index_trend_timestamps: string[]
+  // Session 018: same convention as RiskScore — see `stores/city.ts`.
+  data_available: boolean
+  planned_data_source: string | null
 }
 
 // --- P2: deterministic risk engine + early warnings ---
@@ -232,6 +240,10 @@ export interface RiskScore {
   factors_available: number
   factors_total: number
   computed_at: string
+  // Session 018: false only when a non-demo city (no live connector) was
+  // requested — see `stores/city.ts` and `app/services/city_context.py`.
+  data_available: boolean
+  planned_data_source: string | null
 }
 
 export type EarlyWarningStatus = 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED'

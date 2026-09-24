@@ -1,0 +1,31 @@
+{
+  "title": "AI-intelligentie",
+  "status": {
+    "active": "AI-monitoring Actief",
+    "lastAnalysis": "Laatste analyse",
+    "nextAnalysis": "Volgende analyse",
+    "countdown": "Volgende over",
+    "dueNow": "Nu verschuldigd",
+    "disabled": "AI-provider niet geconfigureerd",
+    "never": "Nooit",
+    "requestsToday": "Verzoeken vandaag",
+    "refresh": "Nu vernieuwen",
+    "refreshing": "Analyseren…",
+    "errorPrefix": "Laatste poging mislukt:",
+    "configureLink": "Configureren in Instellingen"
+  },
+  "brief": {
+    "drivers": "Bepalende factoren",
+    "zonesToWatch": "Zones om in de gaten te houden",
+    "recommendations": "Aanbevelingen",
+    "confidence": "Betrouwbaarheid",
+    "limitations": "Beperkingen",
+    "generatedBy": "Gegenereerd door",
+    "triggeredBy": {
+      "scheduled": "Geplande analyse",
+      "manual": "Handmatige vernieuwing",
+      "event": "Automatische waarschuwing (risico-gebeurtenis)"
+    }
+  },
+  "empty": "Nog geen AI-situatierapport. Configureer een AI-provider in Instellingen om geplande analyse in te schakelen."
+}

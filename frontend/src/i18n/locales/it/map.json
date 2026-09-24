@@ -1,0 +1,46 @@
+{
+  "title": "Mappa della Resilienza",
+  "loading": "Caricamento mappa…",
+  "styleUnavailable": "Stile della mappa non disponibile. Controlla la fonte dei tile configurata nelle Impostazioni.",
+  "loadTimeout": "La mappa impiega troppo tempo a caricarsi. Di solito è dovuto a un problema di rete o firewall nell'accesso al server dei tile — controlla la connessione e prova ad aggiornare.",
+  "health": {
+    "fresh": "Recente",
+    "stale": "Non aggiornato",
+    "degraded": "Degradato"
+  },
+  "station": {
+    "lastUpdated": "Ultimo aggiornamento",
+    "risk": "Rischio attuale"
+  },
+  "baseMap": {
+    "title": "Mappa di base",
+    "providers": {
+      "osm": "OpenStreetMap (standard)",
+      "cyclosm": "CyclOSM (ciclismo)",
+      "humanitarian": "Humanitarian OSM"
+    },
+    "defaultBadge": "(predefinito)"
+  },
+  "stationKind": {
+    "river_gauge": "Stazione idrometrica",
+    "weather_point": "Stazione meteorologica"
+  },
+  "legend": {
+    "title": "Legenda",
+    "markersTitle": "Indicatori",
+    "healthTitle": "Freschezza dei dati",
+    "riskLayerTitle": "Livello di rischio",
+    "riskLayerHint": "L'alone colorato attorno alla stazione idrometrica mostra il livello di rischio attuale dell'intera piattaforma. La sua opacità è configurabile in Impostazioni > Mappa."
+  },
+  "variable": {
+    "water_level_mm": "Livello dell'acqua",
+    "precipitation_mm": "Precipitazioni",
+    "soil_moisture_ratio": "Umidità del suolo",
+    "temperature_c": "Temperatura",
+    "humidity_percent": "Umidità",
+    "wind_speed_kmh": "Velocità del vento",
+    "wind_direction_deg": "Direzione del vento",
+    "surface_pressure_hpa": "Pressione al suolo",
+    "uv_index": "Indice UV"
+  }
+}

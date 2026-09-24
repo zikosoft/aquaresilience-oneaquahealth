@@ -1,0 +1,60 @@
+{
+  "appName": "AquaResilience",
+  "tagline": "Intelligentie voor veerkrachtig stedelijk zoetwater",
+  "actions": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "create": "Aanmaken",
+    "close": "Sluiten",
+    "confirm": "Bevestigen",
+    "test": "Testen",
+    "refresh": "Vernieuwen",
+    "back": "Terug",
+    "search": "Zoeken",
+    "apply": "Toepassen",
+    "reset": "Herstellen"
+  },
+  "status": {
+    "active": "Actief",
+    "inactive": "Inactief",
+    "loading": "Laden…",
+    "error": "Er is iets misgegaan",
+    "empty": "Geen gegevens beschikbaar",
+    "configured": "Geconfigureerd",
+    "notConfigured": "Niet geconfigureerd",
+    "ok": "OK",
+    "degraded": "Verminderd"
+  },
+  "fullscreen": {
+    "enter": "Volledig scherm openen",
+    "exit": "Volledig scherm sluiten"
+  },
+  "theme": {
+    "light": "Licht",
+    "dark": "Donker",
+    "toggle": "Thema wisselen"
+  },
+  "language": "Taal",
+  "notifications": "Meldingen",
+  "profile": "Profiel",
+  "logout": "Afmelden",
+  "maintenance": {
+    "bannerMessage": "Het platform staat in onderhoudsmodus. U kunt nog steeds alles bekijken — alleen een beheerder kan nu wijzigingen aanbrengen."
+  },
+  "riskFactors": {
+    "rainfall": "Neerslag (24u)",
+    "hydrology": "Rivierpeil",
+    "environmental": "Bodemvochtigheid",
+    "trend": "Trend waterpeil"
+  },
+  "city": {
+    "select": "Stad",
+    "noLiveData": {
+      "title": "Nog geen live gegevens voor {city}",
+      "body": "Dit platform verzamelt echte gegevens uitsluitend voor Toulouse. {city} wordt getoond om te laten zien dat het platform klaar is om de andere steden van het OneAquaHealth-consortium te integreren.",
+      "plannedSource": "Kandidaat-connector geïdentificeerd: {source}"
+    }
+  }
+}

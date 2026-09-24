@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 
 import { api } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
+import { useCityStore } from '@/stores/city'
 import { useUiStore } from '@/stores/ui'
 import { SUPPORTED_LOCALES, setLocale, type AppLocale } from '@/i18n'
 
@@ -14,6 +15,7 @@ const { t, locale } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
 const uiStore = useUiStore()
+const cityStore = useCityStore()
 
 const systemOnline = ref(true)
 let healthTimer: ReturnType<typeof setInterval> | undefined
@@ -30,7 +32,21 @@ async function pollHealth(): Promise<void> {
 onMounted(() => {
   pollHealth()
   healthTimer = setInterval(pollHealth, 30000)
+  cityStore.load()
 })
+
+// Session 018: {code} in nav.cityLabel below picks label_en/fr/es/... by
+// the active UI locale, falling back to English for the 6 new languages
+// (the City rows themselves only carry en/fr/es labels per D016) — the
+// selector's own label doesn't need every language, just something honest.
+function cityLabel(city: { label_en: string; label_fr: string; label_es: string }): string {
+  const byLocale: Record<string, string> = { en: city.label_en, fr: city.label_fr, es: city.label_es }
+  return byLocale[locale.value] ?? city.label_en
+}
+
+function onCityChange(cityId: string): void {
+  cityStore.selectCity(cityId)
+}
 onUnmounted(() => {
   if (healthTimer) clearInterval(healthTimer)
 })
@@ -90,6 +106,40 @@ async function onLogout(): Promise<void> {
     </v-app-bar-title>
 
     <template #append>
+      <!-- Session 018 (user request): city selector in the header — the
+           whole dashboard re-centers/re-fetches around cityStore.selectedCity.
+           Reuses the same flag styling as the language menu below. -->
+      <v-menu v-if="cityStore.cities.length">
+        <template #activator="{ props: menuProps }">
+          <v-btn
+            v-bind="menuProps"
+            variant="text"
+            class="text-none"
+            :aria-label="t('common.city.select')"
+          >
+            <v-icon
+              icon="mdi-map-marker-outline"
+              start
+            />
+            <span class="d-none d-md-inline">{{ cityStore.selectedCity ? cityLabel(cityStore.selectedCity) : '' }}</span>
+          </v-btn>
+        </template>
+        <v-list min-width="220">
+          <v-list-item
+            v-for="city in cityStore.cities"
+            :key="city.id"
+            :active="cityStore.selectedCityId === city.id"
+            @click="onCityChange(city.id)"
+          >
+            <template #prepend>
+              <span class="mr-2">{{ city.has_live_data ? '🟢' : '⚪' }}</span>
+            </template>
+            <v-list-item-title>{{ cityLabel(city) }}</v-list-item-title>
+            <v-list-item-subtitle>{{ city.country_iso2 }}</v-list-item-subtitle>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+
       <v-menu>
         <template #activator="{ props: menuProps }">
           <v-btn
@@ -105,6 +155,9 @@ async function onLogout(): Promise<void> {
             :active="locale === opt.code"
             @click="onLocaleChange(opt.code)"
           >
+            <template #prepend>
+              <span class="mr-2">{{ opt.flag }}</span>
+            </template>
             <v-list-item-title>{{ opt.label }}</v-list-item-title>
           </v-list-item>
         </v-list>

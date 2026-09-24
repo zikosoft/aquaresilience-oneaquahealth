@@ -1,0 +1,12 @@
+{
+  "title": "Gegevensbronnen",
+  "table": {
+    "name": "Bron",
+    "category": "Categorie",
+    "status": "Status",
+    "lastSync": "Laatste synchronisatie"
+  },
+  "empty": "Er zijn nog geen gegevensbronnen gekoppeld.",
+  "license": "Licentie",
+  "lastError": "Laatste fout"
+}

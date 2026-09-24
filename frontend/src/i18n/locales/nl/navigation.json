@@ -1,0 +1,13 @@
+{
+  "dashboard": "Commandocentrum",
+  "map": "Veerkrachtkaart",
+  "alerts": "Vroegtijdige Waarschuwingen",
+  "aiIntelligence": "AI-intelligentie",
+  "scenarios": "Scenariosimulator",
+  "dataSources": "Gegevensbronnen",
+  "settings": "Instellingen",
+  "administration": "Beheer",
+  "collapse": "Zijbalk inklappen",
+  "expand": "Zijbalk uitklappen",
+  "monitoringMode": "Monitoringmodus"
+}

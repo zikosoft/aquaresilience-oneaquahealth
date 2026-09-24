@@ -8,6 +8,7 @@ import WidgetCard from '@/components/common/WidgetCard.vue'
 import { fetchStations } from '@/services/environmentalApi'
 import { fetchMapConfig } from '@/services/geographyApi'
 import { fetchCurrentRisk } from '@/services/riskApi'
+import { useCityStore } from '@/stores/city'
 import { useUiStore } from '@/stores/ui'
 import type { MapTileProvider, RiskScore, SourceHealthStatus, Station } from '@/types'
 
@@ -35,6 +36,7 @@ const props = withDefaults(
 
 const { t } = useI18n()
 const uiStore = useUiStore()
+const cityStore = useCityStore()
 
 const mapContainer = ref<HTMLDivElement | null>(null)
 let map: MapLibreMap | null = null
@@ -175,7 +177,11 @@ async function resolveMapConfig(): Promise<{ style: string | StyleSpecification;
     const provider = loadStoredProvider() ?? config.tile_provider
     activeProvider.value = provider
     const style = RASTER_STYLES[provider] ?? RASTER_STYLES.osm
-    const city = config.cities[0]
+    // Session 018: honor the header's city selector (already loaded by
+    // AppHeader by the time this mounts in practice; config.cities[0]
+    // remains the fallback if the store hasn't resolved yet for some
+    // reason, same as before this change).
+    const city = cityStore.selectedCity ?? config.cities[0]
     const center: [number, number] = [
       envCenterLon ?? city?.default_lon ?? FALLBACK_CENTER[0],
       envCenterLat ?? city?.default_lat ?? FALLBACK_CENTER[1],
@@ -529,6 +535,25 @@ watch(
   () => props.riskOverride,
   () => {
     if (!loading.value) void addStationMarkers()
+  },
+)
+
+// Session 018 (user request): fly to the newly selected city — a visual
+// recenter only. Station markers are never re-fetched here: the backend
+// has exactly one real station (Toulouse) regardless of which city is
+// centered, so nothing is fabricated for the other 8 — the map honestly
+// just won't show a marker nearby until that city has a connector of
+// its own (see the dashboard's "no live data" banner for the rest of
+// that story).
+watch(
+  () => cityStore.selectedCityId,
+  () => {
+    const city = cityStore.selectedCity
+    if (!map || !city) return
+    map.flyTo({
+      center: [envCenterLon ?? city.default_lon, envCenterLat ?? city.default_lat],
+      zoom: envZoom ?? city.default_zoom,
+    })
   },
 )
 </script>

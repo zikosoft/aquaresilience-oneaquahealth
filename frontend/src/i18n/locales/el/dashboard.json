@@ -1,0 +1,62 @@
+{
+  "title": "Κέντρο Επιχειρήσεων",
+  "kpi": {
+    "resilienceScore": "Δείκτης Ανθεκτικότητας",
+    "environmentalRisk": "Περιβαλλοντικός Κίνδυνος",
+    "activeWarnings": "Ενεργές Προειδοποιήσεις",
+    "monitoredZones": "Παρακολουθούμενες Ζώνες",
+    "monitoredZonesTooltip": "Αριθμός ενεργών σταθμών παρακολούθησης: {sources}",
+    "dataSources": "Πηγές Δεδομένων",
+    "aiMonitoring": "Παρακολούθηση ΤΝ",
+    "comingInP2": "Διαθέσιμο από το P2",
+    "comingInP3": "Διαθέσιμο από το P3",
+    "factorsAvailable": "{available}/{total} διαθέσιμοι παράγοντες κινδύνου"
+  },
+  "timeRange": {
+    "label": "Χρονικό εύρος",
+    "hoursShort": "{hours}ω",
+    "limitedHistory": "Έχουν καταγραφεί μόνο {available}ω ιστορικού μέχρι στιγμής — εμφανίζονται όλα (επιλέξατε {requested}ω). Τα γραφήματα θα συμπληρωθούν καθώς συλλέγονται περισσότερα δεδομένα."
+  },
+  "waterLevel": {
+    "title": "Στάθμη Νερού — Garonne ({hours}ω)"
+  },
+  "precipitation": {
+    "title": "Βροχόπτωση ({hours}ω)"
+  },
+  "temperature": {
+    "title": "Θερμοκρασία ({hours}ω)"
+  },
+  "humidity": {
+    "title": "Υγρασία ({hours}ω)"
+  },
+  "windSpeed": {
+    "title": "Ταχύτητα Ανέμου ({hours}ω)"
+  },
+  "windDirection": {
+    "title": "Διεύθυνση Ανέμου ({hours}ω)"
+  },
+  "surfacePressure": {
+    "title": "Πίεση Επιφανείας ({hours}ω)"
+  },
+  "uvIndex": {
+    "title": "Δείκτης UV ({hours}ω)"
+  },
+  "situationBrief": {
+    "title": "Αναφορά Κατάστασης ΤΝ",
+    "notAvailable": "Δεν έχει δημιουργηθεί ακόμη αναφορά κατάστασης από ΤΝ."
+  },
+  "timeline": {
+    "title": "Περιβαλλοντικά Σήματα"
+  },
+  "currentWarning": {
+    "title": "Τρέχουσα Προειδοποίηση",
+    "none": "Καμία ενεργή προειδοποίηση",
+    "triggeredAt": "Ενεργοποιήθηκε {time}"
+  },
+  "factorContribution": {
+    "title": "Συμβολή Παραγόντων Κινδύνου"
+  },
+  "sourceHealth": {
+    "title": "Φρεσκάδα Πηγών"
+  }
+}

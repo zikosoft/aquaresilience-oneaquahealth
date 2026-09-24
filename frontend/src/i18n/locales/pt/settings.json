@@ -1,0 +1,104 @@
+{
+  "title": "Definições",
+  "tabs": {
+    "general": "Geral",
+    "languages": "Idiomas",
+    "dataSources": "Fontes de Dados",
+    "aiProvider": "Fornecedor de IA",
+    "scheduler": "Planeador",
+    "riskEngine": "Motor de Risco",
+    "alerts": "Alertas",
+    "map": "Mapa",
+    "usersAccess": "Utilizadores e Acessos",
+    "system": "Sistema"
+  },
+  "general": {
+    "city": "Cidade",
+    "timezone": "Fuso horário",
+    "dateFormat": "Formato de data",
+    "singleCityNotice": "Toulouse Métropole é hoje a única cidade com um conector de dados em tempo real. Utilize o seletor de cidade no cabeçalho para pré-visualizar as outras cidades do consórcio OneAquaHealth que a plataforma já está preparada para integrar."
+  },
+  "languages": {
+    "defaultLocale": "Idioma predefinido",
+    "enabledLocales": "Idiomas ativados"
+  },
+  "aiProvider": {
+    "provider": "Fornecedor",
+    "model": "Modelo",
+    "apiKey": "Chave API",
+    "apiKeyHint": "Apenas escrita. Deixe em branco para manter a chave atualmente guardada.",
+    "maxOutputTokens": "Máximo de tokens de saída",
+    "scheduledInterval": "Intervalo de análise programada (horas)",
+    "dailyCeiling": "Limite diário de pedidos",
+    "eventTriggered": "Análise acionada por eventos",
+    "cooldown": "Tempo de espera (segundos)",
+    "testConnection": "Testar ligação",
+    "save": "Guardar configuração",
+    "configured": "Uma chave API está configurada.",
+    "notConfigured": "Ainda não está configurada nenhuma chave API.",
+    "testSuccess": "Ligação bem-sucedida.",
+    "testFailure": "Falha na ligação.",
+    "saved": "Configuração do fornecedor de IA guardada."
+  },
+  "riskEngine": {
+    "description": "Pesos e limiares de gravidade do motor de risco determinístico. A pontuação é uma combinação ponderada dos 4 fatores abaixo (os pesos são renormalizados quando um fator ainda não tem dados); a pontuação é depois classificada em BAIXO/MODERADO/ALTO/CRÍTICO segundo os 3 limiares.",
+    "tooltips": {
+      "weightsRainfall": "Parte da pontuação determinada pela precipitação acumulada em 24h. Normalizada em relação a uma referência de 40mm/24h (valor de recurso documentado — os limiares oficiais Vigicrues não estavam disponíveis durante o desenvolvimento).",
+      "weightsHydrology": "Parte da pontuação determinada pelo nível atual do rio Garonne, colocado numa escala 0–1 com base no mínimo/máximo observado pela estação nos últimos 90 dias (recurso relativo até estarem disponíveis limiares oficiais de cheia).",
+      "weightsEnvironmental": "Parte da pontuação determinada pela humidade do solo (já expressa de 0 a 1 pela Open-Meteo).",
+      "weightsTrend": "Parte da pontuação determinada pela rapidez com que o nível da água está a subir nas últimas 6h, normalizada em relação a uma referência de 50mm/h. Um nível estável ou em descida nunca aumenta o risco.",
+      "thresholdsLow": "Uma pontuação igual ou superior a este valor é pelo menos MODERADA (abaixo, BAIXA).",
+      "thresholdsModerate": "Uma pontuação igual ou superior a este valor é pelo menos ALTA.",
+      "thresholdsHigh": "Uma pontuação igual ou superior a este valor é CRÍTICA."
+    }
+  },
+  "usersAccess": {
+    "users": "Utilizadores",
+    "roles": "Funções",
+    "permissionMatrix": "Matriz de Permissões",
+    "addUser": "Adicionar utilizador",
+    "email": "Email",
+    "fullName": "Nome completo",
+    "role": "Função",
+    "activeStatus": "Ativo",
+    "resetPassword": "Repor palavra-passe",
+    "matrixHint": "Conceda acesso de módulo × permissão por função.",
+    "cannotDeleteSelf": "Não pode eliminar a sua própria conta.",
+    "editPermissions": "Editar permissões",
+    "userPermissionsTitle": "Permissões — {name}",
+    "userPermissionsHint": "Marcar uma caixa aqui cria um conjunto de permissões específico deste utilizador, clonado da sua função atual — a função partilhada nunca é alterada, pelo que mais ninguém nessa função é afetado.",
+    "currentRole": "Função atual: {role}",
+    "customRoleBadge": "Personalizado"
+  },
+  "map": {
+    "description": "Escolha o fornecedor de tiles gratuito e aberto predefinido para o Mapa de Resiliência. Não é necessária conta nem chave API para nenhum deles. Cada utilizador pode escolher um mapa base diferente para si próprio no seletor de camadas do mapa — esta definição estabelece apenas o que veem antes de o fazerem.",
+    "tileProvider": "Fornecedor de tiles",
+    "providers": {
+      "osm": "OpenStreetMap (padrão)",
+      "cyclosm": "CyclOSM (ciclismo)",
+      "humanitarian": "Humanitarian OSM"
+    },
+    "defaultView": "Vista predefinida",
+    "defaultViewHint": "O mapa centra-se aqui ao carregar. Provém dos dados de referência da cidade configurada — para a alterar, adicione ou edite uma cidade em vez de introduzir coordenadas aqui.",
+    "longitude": "Longitude",
+    "latitude": "Latitude",
+    "zoom": "Zoom",
+    "riskLayerOpacity": "Opacidade da camada de risco",
+    "riskLayerOpacityHint": "Opacidade (0-100) do halo de nível de risco mostrado à volta da estação hidrométrica no mapa. Defina como 0 para o ocultar."
+  },
+  "alerts": {
+    "description": "Os Alertas Precoces seguem um ciclo de vida fixo de 3 etapas — nada aqui é configurável pelo utilizador (os limiares de gravidade que abrem um alerta são definidos em Motor de Risco acima).",
+    "lifecycleTitle": "Ciclo de vida",
+    "lifecycle": {
+      "active": "Criado automaticamente assim que a pontuação de risco atinge MODERADO ou superior.",
+      "acknowledged": "Um operador ou administrador viu-o e está a tratar dele — definido a partir da página de Alertas Precoces.",
+      "resolved": "Automaticamente, assim que a pontuação volta a BAIXO — ou manualmente, a qualquer momento, por um operador ou administrador."
+    },
+    "viewWarnings": "Ver Alertas Precoces"
+  },
+  "system": {
+    "maintenanceMode": "Modo de manutenção",
+    "maintenanceModeHint": "Quando ativado, apenas os administradores podem fazer alterações em qualquer parte da plataforma (criar, editar, reconhecer, executar um cenário, etc.) — todos os outros recebem uma mensagem clara de apenas leitura. A consulta de dados, o início de sessão e as verificações de saúde da infraestrutura nunca são afetados. Utilize isto antes de uma alteração sensível (ex.: restaurar uma cópia de segurança) para que mais ninguém escreva dados durante a operação."
+  },
+  "saved": "Definições guardadas."
+}

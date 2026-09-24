@@ -1,0 +1,12 @@
+{
+  "title": "Fontes de Dados",
+  "table": {
+    "name": "Fonte",
+    "category": "Categoria",
+    "status": "Estado",
+    "lastSync": "Última sincronização"
+  },
+  "empty": "Ainda não há fontes de dados ligadas.",
+  "license": "Licença",
+  "lastError": "Último erro"
+}

@@ -1,0 +1,34 @@
+{
+  "title": "Scenariosimulator",
+  "controls": {
+    "rainfall": "Aanpassing neerslag",
+    "riverLevel": "Aanpassing rivierpeil",
+    "temperature": "Aanpassing temperatuur"
+  },
+  "run": "Simulatie uitvoeren",
+  "running": "Simulatie wordt uitgevoerd…",
+  "current": "Huidig",
+  "projected": "Verwacht",
+  "empty": "Pas de instellingen aan en voer een simulatie uit om het verwachte risico te zien.",
+  "riskScore": "Risicoscore",
+  "waterLevel": "Waterpeil (mm)",
+  "precipitation": "Neerslag (24u, mm)",
+  "map": {
+    "current": "Huidig",
+    "projected": "Verwacht",
+    "hint": "Toont het {view} risico op de kaart."
+  },
+  "warning": {
+    "title": "Verwachte waarschuwing",
+    "wouldTrigger": "Dit scenario zou een waarschuwing activeren",
+    "wouldNotTrigger": "Dit scenario zou geen waarschuwing activeren",
+    "note": "Alleen een voorbeeld — een simulatie maakt geen echte waarschuwing aan."
+  },
+  "ai": {
+    "title": "AI-uitleg",
+    "recommendations": "Veerkrachtaanbevelingen",
+    "confidence": "Betrouwbaarheid",
+    "unavailable": "AI-uitleg niet beschikbaar:"
+  },
+  "errorPrefix": "Simulatie mislukt:"
+}

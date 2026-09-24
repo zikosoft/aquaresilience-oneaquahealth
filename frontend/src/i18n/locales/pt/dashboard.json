@@ -1,0 +1,62 @@
+{
+  "title": "Centro de Comando",
+  "kpi": {
+    "resilienceScore": "Índice de Resiliência",
+    "environmentalRisk": "Risco Ambiental",
+    "activeWarnings": "Alertas Ativos",
+    "monitoredZones": "Zonas Monitorizadas",
+    "monitoredZonesTooltip": "Número de estações de monitorização ativas: {sources}",
+    "dataSources": "Fontes de Dados",
+    "aiMonitoring": "Monitorização IA",
+    "comingInP2": "Disponível a partir de P2",
+    "comingInP3": "Disponível a partir de P3",
+    "factorsAvailable": "{available}/{total} fatores de risco disponíveis"
+  },
+  "timeRange": {
+    "label": "Intervalo de tempo",
+    "hoursShort": "{hours}h",
+    "limitedHistory": "Apenas {available}h de histórico registadas até agora — a mostrar tudo (selecionou {requested}h). Os gráficos preencher-se-ão à medida que mais dados forem recolhidos."
+  },
+  "waterLevel": {
+    "title": "Nível da Água — Garonne ({hours}h)"
+  },
+  "precipitation": {
+    "title": "Precipitação ({hours}h)"
+  },
+  "temperature": {
+    "title": "Temperatura ({hours}h)"
+  },
+  "humidity": {
+    "title": "Humidade ({hours}h)"
+  },
+  "windSpeed": {
+    "title": "Velocidade do Vento ({hours}h)"
+  },
+  "windDirection": {
+    "title": "Direção do Vento ({hours}h)"
+  },
+  "surfacePressure": {
+    "title": "Pressão à Superfície ({hours}h)"
+  },
+  "uvIndex": {
+    "title": "Índice UV ({hours}h)"
+  },
+  "situationBrief": {
+    "title": "Resumo de Situação IA",
+    "notAvailable": "Ainda não foi gerado nenhum resumo de situação por IA."
+  },
+  "timeline": {
+    "title": "Sinais Ambientais"
+  },
+  "currentWarning": {
+    "title": "Alerta Atual",
+    "none": "Sem alertas ativos",
+    "triggeredAt": "Acionado {time}"
+  },
+  "factorContribution": {
+    "title": "Contribuição dos Fatores de Risco"
+  },
+  "sourceHealth": {
+    "title": "Frescura das Fontes"
+  }
+}

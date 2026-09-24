@@ -48,5 +48,13 @@
     "hydrology": "Niveau de la rivière",
     "environmental": "Humidité du sol",
     "trend": "Tendance du niveau d'eau"
+  },
+  "city": {
+    "select": "Ville",
+    "noLiveData": {
+      "title": "Pas encore de données en direct pour {city}",
+      "body": "Ce déploiement ingère des données réelles uniquement pour Toulouse. {city} est affichée pour illustrer la capacité de la plateforme à intégrer les autres villes du consortium OneAquaHealth.",
+      "plannedSource": "Connecteur candidat identifié : {source}"
+    }
   }
 }

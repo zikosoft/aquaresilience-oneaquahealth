@@ -16,7 +16,7 @@
     "city": "Ciudad",
     "timezone": "Zona horaria",
     "dateFormat": "Formato de fecha",
-    "singleCityNotice": "Este despliegue está configurado únicamente para Toulouse Métropole. El soporte multi-ciudad no forma parte de esta versión del hackathon."
+    "singleCityNotice": "Toulouse Métropole es hoy la única ciudad con un conector de datos en vivo. Use el selector de ciudad en la cabecera para previsualizar las demás ciudades del consorcio OneAquaHealth que la plataforma ya está lista para incorporar."
   },
   "languages": {
     "defaultLocale": "Idioma predeterminado",

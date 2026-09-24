@@ -1,0 +1,24 @@
+{
+  "title": "Frühwarnungen",
+  "lifecycle": {
+    "active": "Aktiv",
+    "acknowledged": "Bestätigt",
+    "resolved": "Behoben"
+  },
+  "empty": "Bisher wurden keine Warnungen erfasst.",
+  "severity": {
+    "low": "Niedrig",
+    "moderate": "Mäßig",
+    "high": "Hoch",
+    "critical": "Kritisch"
+  },
+  "actions": {
+    "acknowledge": "Bestätigen",
+    "resolve": "Beheben"
+  },
+  "score": "Score: {score}/100",
+  "triggeredAt": "Ausgelöst {time}",
+  "acknowledgedAt": "Bestätigt {time} von {name}",
+  "resolvedAt": "Behoben {time} von {name}",
+  "message": "Risiko-Score {score}/100 ({severity}) — ausschlaggebender Faktor: {factor}."
+}

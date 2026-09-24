@@ -1,0 +1,104 @@
+{
+  "title": "Einstellungen",
+  "tabs": {
+    "general": "Allgemein",
+    "languages": "Sprachen",
+    "dataSources": "Datenquellen",
+    "aiProvider": "KI-Anbieter",
+    "scheduler": "Planer",
+    "riskEngine": "Risiko-Engine",
+    "alerts": "Warnungen",
+    "map": "Karte",
+    "usersAccess": "Benutzer & Zugriff",
+    "system": "System"
+  },
+  "general": {
+    "city": "Stadt",
+    "timezone": "Zeitzone",
+    "dateFormat": "Datumsformat",
+    "singleCityNotice": "Toulouse Métropole ist derzeit die einzige Stadt mit einer aktiven Echtzeit-Datenquelle. Nutzen Sie den Stadtauswähler in der Kopfzeile, um die anderen Städte des OneAquaHealth-Konsortiums zu erkunden, die die Plattform bereits einbinden kann."
+  },
+  "languages": {
+    "defaultLocale": "Standardsprache",
+    "enabledLocales": "Aktivierte Sprachen"
+  },
+  "aiProvider": {
+    "provider": "Anbieter",
+    "model": "Modell",
+    "apiKey": "API-Schlüssel",
+    "apiKeyHint": "Nur schreibbar. Leer lassen, um den aktuell gespeicherten Schlüssel beizubehalten.",
+    "maxOutputTokens": "Maximale Ausgabe-Tokens",
+    "scheduledInterval": "Intervall der geplanten Analyse (Stunden)",
+    "dailyCeiling": "Tägliches Anfragelimit",
+    "eventTriggered": "Ereignisgesteuerte Analyse",
+    "cooldown": "Abklingzeit (Sekunden)",
+    "testConnection": "Verbindung testen",
+    "save": "Konfiguration speichern",
+    "configured": "Ein API-Schlüssel ist konfiguriert.",
+    "notConfigured": "Noch kein API-Schlüssel konfiguriert.",
+    "testSuccess": "Verbindung erfolgreich.",
+    "testFailure": "Verbindung fehlgeschlagen.",
+    "saved": "KI-Anbieter-Konfiguration gespeichert."
+  },
+  "riskEngine": {
+    "description": "Gewichte und Schweregradschwellen der deterministischen Risiko-Engine. Der Score ist eine gewichtete Kombination der 4 folgenden Faktoren (die Gewichte werden neu normalisiert, wenn ein Faktor noch keine Daten hat); der Score wird dann anhand der 3 Schwellenwerte in NIEDRIG/MÄSSIG/HOCH/KRITISCH eingestuft.",
+    "tooltips": {
+      "weightsRainfall": "Anteil des Scores, der durch den kumulierten Niederschlag über 24h bestimmt wird. Normalisiert gegenüber einem Referenzwert von 40mm/24h (dokumentierter Ersatzwert — die offiziellen Vigicrues-Schwellenwerte waren zum Entwicklungszeitpunkt nicht verfügbar).",
+      "weightsHydrology": "Anteil des Scores, der durch den aktuellen Wasserstand der Garonne bestimmt wird, eingeordnet auf einer 0–1-Skala anhand des von der Station beobachteten Minimums/Maximums der letzten 90 Tage (relativer Ersatzwert, bis offizielle Hochwasserschwellen verfügbar sind).",
+      "weightsEnvironmental": "Anteil des Scores, der durch die Bodenfeuchte bestimmt wird (von Open-Meteo bereits als 0–1 angegeben).",
+      "weightsTrend": "Anteil des Scores, der davon bestimmt wird, wie schnell der Wasserstand in den letzten 6h steigt, normalisiert gegenüber einem Referenzwert von 50mm/h. Ein fallender oder gleichbleibender Pegel erhöht das Risiko nie.",
+      "thresholdsLow": "Ein Score gleich oder über diesem Wert ist mindestens MÄSSIG (darunter NIEDRIG).",
+      "thresholdsModerate": "Ein Score gleich oder über diesem Wert ist mindestens HOCH.",
+      "thresholdsHigh": "Ein Score gleich oder über diesem Wert ist KRITISCH."
+    }
+  },
+  "usersAccess": {
+    "users": "Benutzer",
+    "roles": "Rollen",
+    "permissionMatrix": "Berechtigungsmatrix",
+    "addUser": "Benutzer hinzufügen",
+    "email": "E-Mail",
+    "fullName": "Vollständiger Name",
+    "role": "Rolle",
+    "activeStatus": "Aktiv",
+    "resetPassword": "Passwort zurücksetzen",
+    "matrixHint": "Vergeben Sie Modul- × Berechtigungszugriff pro Rolle.",
+    "cannotDeleteSelf": "Sie können Ihr eigenes Konto nicht löschen.",
+    "editPermissions": "Berechtigungen bearbeiten",
+    "userPermissionsTitle": "Berechtigungen — {name}",
+    "userPermissionsHint": "Das Aktivieren eines Kästchens hier erstellt einen für diesen Benutzer spezifischen Berechtigungssatz, geklont von seiner aktuellen Rolle — die gemeinsame Rolle selbst wird nie geändert, sodass niemand sonst mit dieser Rolle betroffen ist.",
+    "currentRole": "Aktuelle Rolle: {role}",
+    "customRoleBadge": "Benutzerdefiniert"
+  },
+  "map": {
+    "description": "Wählen Sie den standardmäßigen kostenlosen und offenen Kachelanbieter für die Resilienzkarte. Für keinen davon sind ein Konto oder ein API-Schlüssel erforderlich. Jeder Benutzer kann sich zusätzlich über die eigene Ebenenauswahl der Karte eine andere Basiskarte auswählen — diese Einstellung legt nur fest, was sie vorher sehen.",
+    "tileProvider": "Kachelanbieter",
+    "providers": {
+      "osm": "OpenStreetMap (Standard)",
+      "cyclosm": "CyclOSM (Radfahren)",
+      "humanitarian": "Humanitarian OSM"
+    },
+    "defaultView": "Standardansicht",
+    "defaultViewHint": "Die Karte zentriert sich beim Laden hier. Stammt aus den Referenzdaten der konfigurierten Stadt — um dies zu ändern, fügen Sie eine Stadt hinzu oder bearbeiten Sie sie, statt hier Koordinaten einzugeben.",
+    "longitude": "Längengrad",
+    "latitude": "Breitengrad",
+    "zoom": "Zoom",
+    "riskLayerOpacity": "Deckkraft der Risikoebene",
+    "riskLayerOpacityHint": "Deckkraft (0-100) des Risikoscheins, der auf der Karte um die Flusspegelstation angezeigt wird. Auf 0 setzen, um ihn auszublenden."
+  },
+  "alerts": {
+    "description": "Frühwarnungen folgen einem festen 3-stufigen Lebenszyklus — nichts hier ist vom Benutzer konfigurierbar (die Schweregradschwellen, die eine Warnung auslösen, werden oben in der Risiko-Engine festgelegt).",
+    "lifecycleTitle": "Lebenszyklus",
+    "lifecycle": {
+      "active": "Wird automatisch erstellt, sobald der Risiko-Score MÄSSIG oder höher erreicht.",
+      "acknowledged": "Ein Operator oder Administrator hat sie gesehen und kümmert sich darum — wird auf der Seite Frühwarnungen festgelegt.",
+      "resolved": "Automatisch, sobald der Score wieder auf NIEDRIG fällt — oder jederzeit manuell von einem Operator oder Administrator."
+    },
+    "viewWarnings": "Frühwarnungen anzeigen"
+  },
+  "system": {
+    "maintenanceMode": "Wartungsmodus",
+    "maintenanceModeHint": "Wenn aktiviert, können nur Administratoren Änderungen an der gesamten Plattform vornehmen (Erstellen, Bearbeiten, Bestätigen, Ausführen eines Szenarios usw.) — alle anderen erhalten eine klare Nur-Lese-Meldung. Das Anzeigen von Daten, die Anmeldung und Infrastruktur-Health-Checks sind davon nie betroffen. Verwenden Sie dies vor einer riskanten Änderung (z. B. Wiederherstellung eines Backups), damit währenddessen niemand sonst Daten schreibt."
+  },
+  "saved": "Einstellungen gespeichert."
+}

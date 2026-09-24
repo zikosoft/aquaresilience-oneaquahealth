@@ -1,0 +1,46 @@
+{
+  "title": "Mapa de Resiliência",
+  "loading": "A carregar mapa…",
+  "styleUnavailable": "Estilo do mapa indisponível. Verifique a fonte de tiles configurada nas Definições.",
+  "loadTimeout": "O mapa está a demorar muito a carregar. Isto é normalmente um problema de rede ou firewall ao aceder ao servidor de tiles — verifique a sua ligação e tente atualizar.",
+  "health": {
+    "fresh": "Recente",
+    "stale": "Desatualizado",
+    "degraded": "Degradado"
+  },
+  "station": {
+    "lastUpdated": "Última atualização",
+    "risk": "Risco atual"
+  },
+  "baseMap": {
+    "title": "Mapa base",
+    "providers": {
+      "osm": "OpenStreetMap (padrão)",
+      "cyclosm": "CyclOSM (ciclismo)",
+      "humanitarian": "Humanitarian OSM"
+    },
+    "defaultBadge": "(predefinido)"
+  },
+  "stationKind": {
+    "river_gauge": "Estação hidrométrica",
+    "weather_point": "Estação meteorológica"
+  },
+  "legend": {
+    "title": "Legenda",
+    "markersTitle": "Marcadores",
+    "healthTitle": "Frescura dos dados",
+    "riskLayerTitle": "Camada de risco",
+    "riskLayerHint": "O halo colorido suave à volta da estação hidrométrica mostra o nível de risco atual em toda a plataforma. A sua opacidade é configurável em Definições > Mapa."
+  },
+  "variable": {
+    "water_level_mm": "Nível da água",
+    "precipitation_mm": "Precipitação",
+    "soil_moisture_ratio": "Humidade do solo",
+    "temperature_c": "Temperatura",
+    "humidity_percent": "Humidade",
+    "wind_speed_kmh": "Velocidade do vento",
+    "wind_direction_deg": "Direção do vento",
+    "surface_pressure_hpa": "Pressão à superfície",
+    "uv_index": "Índice UV"
+  }
+}

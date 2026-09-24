@@ -1,0 +1,46 @@
+{
+  "title": "Resilienskart",
+  "loading": "Laster kart…",
+  "styleUnavailable": "Kartstil utilgjengelig. Sjekk den konfigurerte kartflis-kilden i Innstillinger.",
+  "loadTimeout": "Kartet bruker for lang tid på å laste. Dette skyldes vanligvis nettverks- eller brannmurproblemer mot kartflis-serveren — sjekk tilkoblingen og prøv å oppdatere.",
+  "health": {
+    "fresh": "Fersk",
+    "stale": "Utdatert",
+    "degraded": "Redusert"
+  },
+  "station": {
+    "lastUpdated": "Sist oppdatert",
+    "risk": "Nåværende risiko"
+  },
+  "baseMap": {
+    "title": "Grunnkart",
+    "providers": {
+      "osm": "OpenStreetMap (standard)",
+      "cyclosm": "CyclOSM (sykkel)",
+      "humanitarian": "Humanitarian OSM"
+    },
+    "defaultBadge": "(standard)"
+  },
+  "stationKind": {
+    "river_gauge": "Elvemålestasjon",
+    "weather_point": "Værstasjon"
+  },
+  "legend": {
+    "title": "Tegnforklaring",
+    "markersTitle": "Markører",
+    "healthTitle": "Datafriskhet",
+    "riskLayerTitle": "Risikolag",
+    "riskLayerHint": "Den fargede glorien rundt elvemålestasjonen viser gjeldende risikonivå for hele plattformen. Gjennomsiktigheten kan konfigureres i Innstillinger > Kart."
+  },
+  "variable": {
+    "water_level_mm": "Vannstand",
+    "precipitation_mm": "Nedbør",
+    "soil_moisture_ratio": "Jordfuktighet",
+    "temperature_c": "Temperatur",
+    "humidity_percent": "Luftfuktighet",
+    "wind_speed_kmh": "Vindhastighet",
+    "wind_direction_deg": "Vindretning",
+    "surface_pressure_hpa": "Bakketrykk",
+    "uv_index": "UV-indeks"
+  }
+}

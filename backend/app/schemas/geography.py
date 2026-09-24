@@ -14,6 +14,11 @@ class CityOut(BaseModel):
     default_lon: float
     default_lat: float
     default_zoom: int
+    # Session 018: whether this city has an actual ingested data connector
+    # (only Toulouse today) vs. is a real, selectable-but-not-yet-connected
+    # consortium city — see app/models/geography.py's module docstring.
+    has_live_data: bool
+    planned_data_source: str | None = None
 
     model_config = {"from_attributes": True}
 

@@ -1,0 +1,60 @@
+{
+  "appName": "AquaResilience",
+  "tagline": "Intelligens for motstandsdyktig urbant ferskvann",
+  "actions": {
+    "save": "Lagre",
+    "cancel": "Avbryt",
+    "edit": "Rediger",
+    "delete": "Slett",
+    "create": "Opprett",
+    "close": "Lukk",
+    "confirm": "Bekreft",
+    "test": "Test",
+    "refresh": "Oppdater",
+    "back": "Tilbake",
+    "search": "Søk",
+    "apply": "Bruk",
+    "reset": "Tilbakestill"
+  },
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "loading": "Laster…",
+    "error": "Noe gikk galt",
+    "empty": "Ingen data tilgjengelig",
+    "configured": "Konfigurert",
+    "notConfigured": "Ikke konfigurert",
+    "ok": "OK",
+    "degraded": "Redusert"
+  },
+  "fullscreen": {
+    "enter": "Gå til fullskjerm",
+    "exit": "Avslutt fullskjerm"
+  },
+  "theme": {
+    "light": "Lys",
+    "dark": "Mørk",
+    "toggle": "Bytt tema"
+  },
+  "language": "Språk",
+  "notifications": "Varsler",
+  "profile": "Profil",
+  "logout": "Logg ut",
+  "maintenance": {
+    "bannerMessage": "Plattformen er i vedlikeholdsmodus. Du kan fortsatt se alt — bare en administrator kan gjøre endringer akkurat nå."
+  },
+  "riskFactors": {
+    "rainfall": "Nedbør (24t)",
+    "hydrology": "Elvenivå",
+    "environmental": "Jordfuktighet",
+    "trend": "Vannstandstrend"
+  },
+  "city": {
+    "select": "By",
+    "noLiveData": {
+      "title": "Ingen sanntidsdata ennå for {city}",
+      "body": "Denne installasjonen henter kun ekte data for Toulouse. {city} vises for å illustrere plattformens beredskap til å ta i bruk de andre byene i OneAquaHealth-konsortiet.",
+      "plannedSource": "Aktuell datakilde identifisert: {source}"
+    }
+  }
+}

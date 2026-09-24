@@ -1,0 +1,46 @@
+{
+  "title": "Veerkrachtkaart",
+  "loading": "Kaart laden…",
+  "styleUnavailable": "Kaartstijl niet beschikbaar. Controleer de geconfigureerde tegelbron in Instellingen.",
+  "loadTimeout": "De kaart duurt te lang om te laden. Dit komt meestal door een netwerk- of firewallprobleem bij het bereiken van de tegelserver — controleer uw verbinding en probeer te vernieuwen.",
+  "health": {
+    "fresh": "Actueel",
+    "stale": "Verouderd",
+    "degraded": "Verminderd"
+  },
+  "station": {
+    "lastUpdated": "Laatst bijgewerkt",
+    "risk": "Huidig risico"
+  },
+  "baseMap": {
+    "title": "Basiskaart",
+    "providers": {
+      "osm": "OpenStreetMap (standaard)",
+      "cyclosm": "CyclOSM (fietsen)",
+      "humanitarian": "Humanitarian OSM"
+    },
+    "defaultBadge": "(standaard)"
+  },
+  "stationKind": {
+    "river_gauge": "Rivierpeilstation",
+    "weather_point": "Weerstation"
+  },
+  "legend": {
+    "title": "Legenda",
+    "markersTitle": "Markeringen",
+    "healthTitle": "Actualiteit van gegevens",
+    "riskLayerTitle": "Risicolaag",
+    "riskLayerHint": "De zachte gekleurde gloed rond het rivierpeilstation toont het huidige risiconiveau voor het hele platform. De dekking hiervan is instelbaar via Instellingen > Kaart."
+  },
+  "variable": {
+    "water_level_mm": "Waterpeil",
+    "precipitation_mm": "Neerslag",
+    "soil_moisture_ratio": "Bodemvochtigheid",
+    "temperature_c": "Temperatuur",
+    "humidity_percent": "Luchtvochtigheid",
+    "wind_speed_kmh": "Windsnelheid",
+    "wind_direction_deg": "Windrichting",
+    "surface_pressure_hpa": "Luchtdruk",
+    "uv_index": "UV-index"
+  }
+}

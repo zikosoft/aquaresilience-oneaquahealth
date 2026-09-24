@@ -1,0 +1,62 @@
+{
+  "title": "Leitstand",
+  "kpi": {
+    "resilienceScore": "Resilienz-Score",
+    "environmentalRisk": "Umweltrisiko",
+    "activeWarnings": "Aktive Warnungen",
+    "monitoredZones": "Überwachte Zonen",
+    "monitoredZonesTooltip": "Anzahl aktiver Messstationen: {sources}",
+    "dataSources": "Datenquellen",
+    "aiMonitoring": "KI-Überwachung",
+    "comingInP2": "Verfügbar ab P2",
+    "comingInP3": "Verfügbar ab P3",
+    "factorsAvailable": "{available}/{total} Risikofaktoren verfügbar"
+  },
+  "timeRange": {
+    "label": "Zeitraum",
+    "hoursShort": "{hours}h",
+    "limitedHistory": "Bisher sind nur {available}h Verlaufsdaten erfasst — alle werden angezeigt (Sie haben {requested}h ausgewählt). Die Diagramme füllen sich, sobald mehr Daten erfasst werden."
+  },
+  "waterLevel": {
+    "title": "Wasserstand — Garonne ({hours}h)"
+  },
+  "precipitation": {
+    "title": "Niederschlag ({hours}h)"
+  },
+  "temperature": {
+    "title": "Temperatur ({hours}h)"
+  },
+  "humidity": {
+    "title": "Luftfeuchtigkeit ({hours}h)"
+  },
+  "windSpeed": {
+    "title": "Windgeschwindigkeit ({hours}h)"
+  },
+  "windDirection": {
+    "title": "Windrichtung ({hours}h)"
+  },
+  "surfacePressure": {
+    "title": "Bodendruck ({hours}h)"
+  },
+  "uvIndex": {
+    "title": "UV-Index ({hours}h)"
+  },
+  "situationBrief": {
+    "title": "KI-Lagebericht",
+    "notAvailable": "Es wurde noch kein KI-Lagebericht erstellt."
+  },
+  "timeline": {
+    "title": "Umweltsignale"
+  },
+  "currentWarning": {
+    "title": "Aktuelle Warnung",
+    "none": "Keine aktiven Warnungen",
+    "triggeredAt": "Ausgelöst {time}"
+  },
+  "factorContribution": {
+    "title": "Beitrag der Risikofaktoren"
+  },
+  "sourceHealth": {
+    "title": "Aktualität der Quellen"
+  }
+}

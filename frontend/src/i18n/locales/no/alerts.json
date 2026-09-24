@@ -1,0 +1,24 @@
+{
+  "title": "Tidlige varsler",
+  "lifecycle": {
+    "active": "Aktivt",
+    "acknowledged": "Bekreftet",
+    "resolved": "Løst"
+  },
+  "empty": "Ingen varsler registrert ennå.",
+  "severity": {
+    "low": "Lav",
+    "moderate": "Moderat",
+    "high": "Høy",
+    "critical": "Kritisk"
+  },
+  "actions": {
+    "acknowledge": "Bekreft",
+    "resolve": "Løs"
+  },
+  "score": "Score: {score}/100",
+  "triggeredAt": "Utløst {time}",
+  "acknowledgedAt": "Bekreftet {time} av {name}",
+  "resolvedAt": "Løst {time} av {name}",
+  "message": "Risikoscore {score}/100 ({severity}) — hovedfaktor: {factor}."
+}

@@ -31,17 +31,22 @@ def test_map_tile_provider_setting_roundtrip(client, admin_token):
 
 
 def test_cities_endpoint_returns_the_seeded_toulouse_default(client, admin_token):
+    # Session 018: the seed now covers all 9 OneAquaHealth consortium
+    # cities, ordered by label_en — find Toulouse by name rather than
+    # assuming it's the only (or first) entry.
     headers = {"Authorization": f"Bearer {admin_token}"}
     resp = client.get("/api/v1/geography/cities", headers=headers)
     assert resp.status_code == 200
     cities = resp.json()
-    assert len(cities) == 1
-    toulouse = cities[0]
-    assert toulouse["label_en"] == "Toulouse"
+    assert len(cities) == 9
+    toulouse = next(c for c in cities if c["label_en"] == "Toulouse")
     assert toulouse["country_iso2"] == "FR"
     assert toulouse["default_lon"] == 1.4442
     assert toulouse["default_lat"] == 43.6047
     assert toulouse["default_zoom"] == 11
+    assert toulouse["has_live_data"] is True
+    others_with_live_data = [c for c in cities if c["label_en"] != "Toulouse" and c["has_live_data"]]
+    assert others_with_live_data == []
 
 
 def test_viewer_can_read_cities_but_not_map_settings(client, db_session):
@@ -86,8 +91,9 @@ def test_map_config_folds_tile_provider_into_a_map_view_gated_endpoint(client, a
     assert resp.status_code == 200
     body = resp.json()
     assert body["tile_provider"] == "carto_light"
-    assert len(body["cities"]) == 1
-    assert body["cities"][0]["label_en"] == "Toulouse"
+    # Session 018: 9 consortium cities now seeded, not just Toulouse.
+    assert len(body["cities"]) == 9
+    assert any(c["label_en"] == "Toulouse" for c in body["cities"])
 
 
 def test_map_config_exposes_risk_layer_opacity_with_a_default(client, admin_token):

@@ -1,0 +1,31 @@
+{
+  "title": "KI-intelligens",
+  "status": {
+    "active": "KI-overvåking aktiv",
+    "lastAnalysis": "Siste analyse",
+    "nextAnalysis": "Neste analyse",
+    "countdown": "Neste om",
+    "dueNow": "Forfaller nå",
+    "disabled": "KI-leverandør ikke konfigurert",
+    "never": "Aldri",
+    "requestsToday": "Forespørsler i dag",
+    "refresh": "Oppdater nå",
+    "refreshing": "Analyserer…",
+    "errorPrefix": "Siste forsøk mislyktes:",
+    "configureLink": "Konfigurer i Innstillinger"
+  },
+  "brief": {
+    "drivers": "Pådrivere",
+    "zonesToWatch": "Soner å følge med på",
+    "recommendations": "Anbefalinger",
+    "confidence": "Tillit",
+    "limitations": "Begrensninger",
+    "generatedBy": "Generert av",
+    "triggeredBy": {
+      "scheduled": "Planlagt analyse",
+      "manual": "Manuell oppdatering",
+      "event": "Automatisk varsel (risikohendelse)"
+    }
+  },
+  "empty": "Ingen KI-situasjonsrapport ennå. Konfigurer en KI-leverandør i Innstillinger for å aktivere planlagt analyse."
+}

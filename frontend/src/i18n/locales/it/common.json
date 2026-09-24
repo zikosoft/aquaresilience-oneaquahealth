@@ -1,0 +1,60 @@
+{
+  "appName": "AquaResilience",
+  "tagline": "Intelligenza per la resilienza dell'acqua dolce urbana",
+  "actions": {
+    "save": "Salva",
+    "cancel": "Annulla",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "create": "Crea",
+    "close": "Chiudi",
+    "confirm": "Conferma",
+    "test": "Testa",
+    "refresh": "Aggiorna",
+    "back": "Indietro",
+    "search": "Cerca",
+    "apply": "Applica",
+    "reset": "Ripristina"
+  },
+  "status": {
+    "active": "Attivo",
+    "inactive": "Inattivo",
+    "loading": "Caricamento…",
+    "error": "Si è verificato un errore",
+    "empty": "Nessun dato disponibile",
+    "configured": "Configurato",
+    "notConfigured": "Non configurato",
+    "ok": "OK",
+    "degraded": "Degradato"
+  },
+  "fullscreen": {
+    "enter": "Attiva schermo intero",
+    "exit": "Esci da schermo intero"
+  },
+  "theme": {
+    "light": "Chiaro",
+    "dark": "Scuro",
+    "toggle": "Cambia tema"
+  },
+  "language": "Lingua",
+  "notifications": "Notifiche",
+  "profile": "Profilo",
+  "logout": "Esci",
+  "maintenance": {
+    "bannerMessage": "La piattaforma è in modalità manutenzione. Puoi comunque consultare tutto — solo un amministratore può apportare modifiche in questo momento."
+  },
+  "riskFactors": {
+    "rainfall": "Precipitazioni (24h)",
+    "hydrology": "Livello del fiume",
+    "environmental": "Umidità del suolo",
+    "trend": "Tendenza del livello dell'acqua"
+  },
+  "city": {
+    "select": "Città",
+    "noLiveData": {
+      "title": "Nessun dato in tempo reale ancora per {city}",
+      "body": "Questa distribuzione acquisisce dati reali solo per Tolosa. {city} viene mostrata per illustrare la capacità della piattaforma di integrare le altre città del consorzio OneAquaHealth.",
+      "plannedSource": "Connettore candidato individuato: {source}"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "title": "Intelligenza IA",
+  "status": {
+    "active": "Monitoraggio IA Attivo",
+    "lastAnalysis": "Ultima analisi",
+    "nextAnalysis": "Prossima analisi",
+    "countdown": "Prossima tra",
+    "dueNow": "In scadenza ora",
+    "disabled": "Fornitore IA non configurato",
+    "never": "Mai",
+    "requestsToday": "Richieste oggi",
+    "refresh": "Aggiorna ora",
+    "refreshing": "Analisi in corso…",
+    "errorPrefix": "L'ultimo tentativo non è riuscito:",
+    "configureLink": "Configura nelle Impostazioni"
+  },
+  "brief": {
+    "drivers": "Fattori determinanti",
+    "zonesToWatch": "Zone da osservare",
+    "recommendations": "Raccomandazioni",
+    "confidence": "Affidabilità",
+    "limitations": "Limitazioni",
+    "generatedBy": "Generato da",
+    "triggeredBy": {
+      "scheduled": "Analisi programmata",
+      "manual": "Aggiornamento manuale",
+      "event": "Allerta automatica (evento di rischio)"
+    }
+  },
+  "empty": "Nessun Rapporto di Situazione IA ancora disponibile. Configura un fornitore IA nelle Impostazioni per abilitare l'analisi programmata."
+}

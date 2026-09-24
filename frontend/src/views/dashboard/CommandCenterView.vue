@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import FactorContribution from '@/components/charts/FactorContribution.vue'
@@ -13,11 +13,27 @@ import { extractApiErrorMessage } from '@/services/api'
 import { fetchEnvironmentalSummary, fetchSources } from '@/services/environmentalApi'
 import { acknowledgeWarning, fetchCurrentRisk, fetchWarnings, resolveWarning } from '@/services/riskApi'
 import { useAuthStore } from '@/stores/auth'
+import { useCityStore } from '@/stores/city'
 import type { EarlyWarning, EnvironmentalSummary, RiskScore, SourceHealth } from '@/types'
 import { factorTranslationKey, leadingFactorKey, severityColor } from '@/utils/risk'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const authStore = useAuthStore()
+const cityStore = useCityStore()
+
+// Session 018 (user request): the header's city selector drives the whole
+// dashboard. Warnings have no city dimension in the backend yet (see
+// app/services/city_context.py's module docstring — deliberately scoped to
+// just risk/environmental for this pass), so rather than show Toulouse's
+// real warnings under a different city's label, they're simply left empty
+// for a non-demo city — same honesty rule as the risk/summary payloads.
+const cityHasLiveData = computed(() => cityStore.selectedCity?.has_live_data ?? true)
+const cityLabel = computed(() => {
+  const city = cityStore.selectedCity
+  if (!city) return ''
+  const byLocale: Record<string, string> = { en: city.label_en, fr: city.label_fr, es: city.label_es }
+  return byLocale[locale.value] ?? city.label_en
+})
 
 const loading = ref(true)
 const errorMessage = ref<string | null>(null)
@@ -87,12 +103,17 @@ const limitedHistoryNotice = computed<string | null>(() => {
 async function load(): Promise<void> {
   loading.value = true
   errorMessage.value = null
+  const cityId = cityStore.selectedCityId
+  const hasLiveData = cityHasLiveData.value
   try {
     const [summaryData, sourcesData, riskData, warningsData] = await Promise.all([
-      fetchEnvironmentalSummary(selectedHours.value),
+      fetchEnvironmentalSummary(selectedHours.value, cityId),
       fetchSources(),
-      fetchCurrentRisk(),
-      fetchWarnings(),
+      fetchCurrentRisk(cityId),
+      // See cityHasLiveData's comment above: warnings aren't city-scoped
+      // server-side yet, so a non-demo city gets an honest empty list
+      // instead of Toulouse's real warnings under the wrong label.
+      hasLiveData ? fetchWarnings() : Promise.resolve([]),
     ])
     summary.value = summaryData
     sources.value = sourcesData
@@ -104,6 +125,9 @@ async function load(): Promise<void> {
     loading.value = false
   }
 }
+
+// Reload everything when the header's city selector changes.
+watch(() => cityStore.selectedCityId, load)
 
 async function onHoursChange(hours: number | undefined): Promise<void> {
   if (hours === undefined || hours === selectedHours.value) return
@@ -117,7 +141,7 @@ async function onHoursChange(hours: number | undefined): Promise<void> {
   trendsLoading.value = true
   errorMessage.value = null
   try {
-    summary.value = await fetchEnvironmentalSummary(hours)
+    summary.value = await fetchEnvironmentalSummary(hours, cityStore.selectedCityId)
   } catch (e) {
     errorMessage.value = extractApiErrorMessage(e, t('common.status.error'))
   } finally {
@@ -126,7 +150,11 @@ async function onHoursChange(hours: number | undefined): Promise<void> {
 }
 
 async function reloadRisk(): Promise<void> {
-  const [riskData, warningsData] = await Promise.all([fetchCurrentRisk(), fetchWarnings()])
+  const cityId = cityStore.selectedCityId
+  const [riskData, warningsData] = await Promise.all([
+    fetchCurrentRisk(cityId),
+    cityHasLiveData.value ? fetchWarnings() : Promise.resolve([]),
+  ])
   risk.value = riskData
   warnings.value = warningsData
 }
@@ -157,7 +185,13 @@ async function onResolveWarning(id: string): Promise<void> {
   }
 }
 
-onMounted(load)
+onMounted(async () => {
+  // Ensure the persisted city selection (localStorage) is resolved before
+  // the first fetch, so a returning viewer's chosen city applies
+  // immediately instead of flashing Toulouse's data first.
+  await cityStore.load()
+  await load()
+})
 
 // The engine keeps at most one non-RESOLVED warning open at a time (see
 // `evaluate_and_persist_warnings`); `warnings` is ordered newest-first.
@@ -319,6 +353,27 @@ const openWarningMessage = computed(() => {
       class="mb-4"
     >
       {{ errorMessage }}
+    </v-alert>
+
+    <!-- Session 018 (user request): the header's city selector lets an
+         operator preview any of the 9 OneAquaHealth consortium cities, but
+         only Toulouse has a live connector — this banner replaces silently
+         showing Toulouse's numbers under another city's name. -->
+    <v-alert
+      v-if="!loading && !cityHasLiveData"
+      type="info"
+      variant="tonal"
+      density="compact"
+      class="mb-4"
+      :title="t('common.city.noLiveData.title', { city: cityLabel })"
+    >
+      <div>{{ t('common.city.noLiveData.body', { city: cityLabel }) }}</div>
+      <div
+        v-if="cityStore.selectedCity?.planned_data_source"
+        class="text-caption text-medium-emphasis mt-1"
+      >
+        {{ t('common.city.noLiveData.plannedSource', { source: cityStore.selectedCity.planned_data_source }) }}
+      </div>
     </v-alert>
 
     <v-row

@@ -255,6 +255,29 @@ def test_risk_current_endpoint_requires_dashboard_view(client, admin_token):
     assert body["severity"] in ("LOW", "MODERATE", "HIGH", "CRITICAL")
     assert len(body["factors"]) == 4
     assert body["factors_total"] == 4
+    assert body["data_available"] is True
+
+
+def test_risk_current_is_honestly_empty_for_a_non_demo_city(client, admin_token, db_session):
+    """Session 018: ?city_id= for a consortium city with no live connector
+    (e.g. Oslo) must not silently return Toulouse's numbers under a
+    different label — see app/services/city_context.py."""
+    from sqlalchemy import select
+
+    from app.models.geography import City
+    from app.seed.seed_geography import run as seed_geography_run
+
+    seed_geography_run()
+    oslo = db_session.execute(select(City).where(City.label_en == "Oslo")).scalar_one()
+
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    resp = client.get(f"/api/v1/risk/current?city_id={oslo.id}", headers=headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["data_available"] is False
+    assert body["score"] == 0.0
+    assert body["factors"] == []
+    assert body["planned_data_source"] == "NVE HydAPI"
 
 
 def test_warnings_endpoints_and_actions(client, admin_token, db_session):

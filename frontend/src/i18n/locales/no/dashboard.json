@@ -1,0 +1,62 @@
+{
+  "title": "Kommandosentral",
+  "kpi": {
+    "resilienceScore": "Resiliensscore",
+    "environmentalRisk": "Miljørisiko",
+    "activeWarnings": "Aktive varsler",
+    "monitoredZones": "Overvåkede soner",
+    "monitoredZonesTooltip": "Antall aktive overvåkingsstasjoner: {sources}",
+    "dataSources": "Datakilder",
+    "aiMonitoring": "KI-overvåking",
+    "comingInP2": "Tilgjengelig fra P2",
+    "comingInP3": "Tilgjengelig fra P3",
+    "factorsAvailable": "{available}/{total} risikofaktorer tilgjengelig"
+  },
+  "timeRange": {
+    "label": "Tidsintervall",
+    "hoursShort": "{hours}t",
+    "limitedHistory": "Bare {available}t historikk registrert så langt — viser alt (du valgte {requested}t). Diagrammene fylles ut etter hvert som mer data samles inn."
+  },
+  "waterLevel": {
+    "title": "Vannstand — Garonne ({hours}t)"
+  },
+  "precipitation": {
+    "title": "Nedbør ({hours}t)"
+  },
+  "temperature": {
+    "title": "Temperatur ({hours}t)"
+  },
+  "humidity": {
+    "title": "Luftfuktighet ({hours}t)"
+  },
+  "windSpeed": {
+    "title": "Vindhastighet ({hours}t)"
+  },
+  "windDirection": {
+    "title": "Vindretning ({hours}t)"
+  },
+  "surfacePressure": {
+    "title": "Bakketrykk ({hours}t)"
+  },
+  "uvIndex": {
+    "title": "UV-indeks ({hours}t)"
+  },
+  "situationBrief": {
+    "title": "KI-situasjonsrapport",
+    "notAvailable": "Ingen KI-situasjonsrapport er generert ennå."
+  },
+  "timeline": {
+    "title": "Miljøsignaler"
+  },
+  "currentWarning": {
+    "title": "Gjeldende varsel",
+    "none": "Ingen aktive varsler",
+    "triggeredAt": "Utløst {time}"
+  },
+  "factorContribution": {
+    "title": "Bidrag fra risikofaktorer"
+  },
+  "sourceHealth": {
+    "title": "Datakildenes friskhet"
+  }
+}

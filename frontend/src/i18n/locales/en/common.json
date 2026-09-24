@@ -48,5 +48,13 @@
     "hydrology": "River level",
     "environmental": "Soil moisture",
     "trend": "Water level trend"
+  },
+  "city": {
+    "select": "City",
+    "noLiveData": {
+      "title": "No live data yet for {city}",
+      "body": "This deployment ingests real data for Toulouse only. {city} is shown to preview the platform's readiness to onboard the other OneAquaHealth consortium cities.",
+      "plannedSource": "Candidate connector identified: {source}"
+    }
   }
 }

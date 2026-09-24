@@ -1,0 +1,60 @@
+{
+  "appName": "AquaResilience",
+  "tagline": "Intelligenz für die Resilienz städtischer Süßwasserressourcen",
+  "actions": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "create": "Erstellen",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "test": "Testen",
+    "refresh": "Aktualisieren",
+    "back": "Zurück",
+    "search": "Suchen",
+    "apply": "Anwenden",
+    "reset": "Zurücksetzen"
+  },
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "loading": "Lädt…",
+    "error": "Etwas ist schiefgelaufen",
+    "empty": "Keine Daten verfügbar",
+    "configured": "Konfiguriert",
+    "notConfigured": "Nicht konfiguriert",
+    "ok": "OK",
+    "degraded": "Beeinträchtigt"
+  },
+  "fullscreen": {
+    "enter": "Vollbild aktivieren",
+    "exit": "Vollbild beenden"
+  },
+  "theme": {
+    "light": "Hell",
+    "dark": "Dunkel",
+    "toggle": "Design umschalten"
+  },
+  "language": "Sprache",
+  "notifications": "Benachrichtigungen",
+  "profile": "Profil",
+  "logout": "Abmelden",
+  "maintenance": {
+    "bannerMessage": "Die Plattform befindet sich im Wartungsmodus. Sie können weiterhin alles einsehen — nur ein Administrator kann derzeit Änderungen vornehmen."
+  },
+  "riskFactors": {
+    "rainfall": "Niederschlag (24h)",
+    "hydrology": "Flusspegel",
+    "environmental": "Bodenfeuchte",
+    "trend": "Wasserstandstrend"
+  },
+  "city": {
+    "select": "Stadt",
+    "noLiveData": {
+      "title": "Noch keine Echtzeitdaten für {city}",
+      "body": "Diese Bereitstellung erfasst echte Daten nur für Toulouse. {city} wird angezeigt, um zu zeigen, dass die Plattform bereit ist, die anderen Städte des OneAquaHealth-Konsortiums einzubinden.",
+      "plannedSource": "Identifizierter Kandidat für eine Datenquelle: {source}"
+    }
+  }
+}

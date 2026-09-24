@@ -102,3 +102,7 @@ class EnvironmentalSummaryOut(BaseModel):
     uv_index: LatestReadingOut | None
     uv_index_trend: list[float]
     uv_index_trend_timestamps: list[str]
+    # Session 018: same convention as RiskScoreOut — see
+    # app/services/city_context.py.
+    data_available: bool = True
+    planned_data_source: str | None = None

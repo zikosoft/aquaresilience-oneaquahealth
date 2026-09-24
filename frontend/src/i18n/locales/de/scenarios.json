@@ -1,0 +1,34 @@
+{
+  "title": "Szenariosimulator",
+  "controls": {
+    "rainfall": "Niederschlagsanpassung",
+    "riverLevel": "Flusspegelanpassung",
+    "temperature": "Temperaturanpassung"
+  },
+  "run": "Simulation ausführen",
+  "running": "Simulation läuft…",
+  "current": "Aktuell",
+  "projected": "Prognostiziert",
+  "empty": "Passen Sie die Regler an und führen Sie eine Simulation aus, um das prognostizierte Risiko zu sehen.",
+  "riskScore": "Risiko-Score",
+  "waterLevel": "Wasserstand (mm)",
+  "precipitation": "Niederschlag (24h, mm)",
+  "map": {
+    "current": "Aktuell",
+    "projected": "Prognostiziert",
+    "hint": "Zeigt das {view} Risiko auf der Karte."
+  },
+  "warning": {
+    "title": "Prognostizierte Warnung",
+    "wouldTrigger": "Dieses Szenario würde eine Warnung auslösen",
+    "wouldNotTrigger": "Dieses Szenario würde keine Warnung auslösen",
+    "note": "Nur eine Vorschau — eine Simulation erzeugt keine reale Warnung."
+  },
+  "ai": {
+    "title": "KI-Erklärung",
+    "recommendations": "Resilienzempfehlungen",
+    "confidence": "Konfidenz",
+    "unavailable": "KI-Erklärung nicht verfügbar:"
+  },
+  "errorPrefix": "Simulation fehlgeschlagen:"
+}

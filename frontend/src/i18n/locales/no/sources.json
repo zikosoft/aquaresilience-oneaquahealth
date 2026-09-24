@@ -1,0 +1,12 @@
+{
+  "title": "Datakilder",
+  "table": {
+    "name": "Kilde",
+    "category": "Kategori",
+    "status": "Status",
+    "lastSync": "Sist synkronisert"
+  },
+  "empty": "Ingen datakilder er koblet til ennå.",
+  "license": "Lisens",
+  "lastError": "Siste feil"
+}

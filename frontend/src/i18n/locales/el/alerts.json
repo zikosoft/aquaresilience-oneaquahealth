@@ -1,0 +1,24 @@
+{
+  "title": "Έγκαιρες Προειδοποιήσεις",
+  "lifecycle": {
+    "active": "Ενεργή",
+    "acknowledged": "Επιβεβαιωμένη",
+    "resolved": "Επιλυμένη"
+  },
+  "empty": "Δεν έχουν καταγραφεί προειδοποιήσεις ακόμη.",
+  "severity": {
+    "low": "Χαμηλή",
+    "moderate": "Μέτρια",
+    "high": "Υψηλή",
+    "critical": "Κρίσιμη"
+  },
+  "actions": {
+    "acknowledge": "Επιβεβαίωση",
+    "resolve": "Επίλυση"
+  },
+  "score": "Βαθμολογία: {score}/100",
+  "triggeredAt": "Ενεργοποιήθηκε {time}",
+  "acknowledgedAt": "Επιβεβαιώθηκε {time} από {name}",
+  "resolvedAt": "Επιλύθηκε {time} από {name}",
+  "message": "Βαθμολογία κινδύνου {score}/100 ({severity}) — κύριος παράγοντας: {factor}."
+}

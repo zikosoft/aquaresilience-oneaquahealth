@@ -15,6 +15,10 @@ export function fetchStationTimeseries(stationId: string, hours = 48) {
     .then((r) => r.data)
 }
 
-export function fetchEnvironmentalSummary(hours = 48) {
-  return api.get<EnvironmentalSummary>('/environmental/summary', { params: { hours } }).then((r) => r.data)
+// Session 018: cityId is optional so every existing caller (and every
+// existing test) keeps working unchanged — see app/services/city_context.py.
+export function fetchEnvironmentalSummary(hours = 48, cityId?: string | null) {
+  return api
+    .get<EnvironmentalSummary>('/environmental/summary', { params: cityId ? { hours, city_id: cityId } : { hours } })
+    .then((r) => r.data)
 }

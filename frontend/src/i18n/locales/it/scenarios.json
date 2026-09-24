@@ -1,0 +1,34 @@
+{
+  "title": "Simulatore di Scenari",
+  "controls": {
+    "rainfall": "Regolazione delle precipitazioni",
+    "riverLevel": "Regolazione del livello del fiume",
+    "temperature": "Regolazione della temperatura"
+  },
+  "run": "Esegui simulazione",
+  "running": "Simulazione in corso…",
+  "current": "Attuale",
+  "projected": "Previsto",
+  "empty": "Regola i controlli ed esegui una simulazione per vedere il rischio previsto.",
+  "riskScore": "Punteggio di rischio",
+  "waterLevel": "Livello dell'acqua (mm)",
+  "precipitation": "Precipitazioni (24h, mm)",
+  "map": {
+    "current": "Attuale",
+    "projected": "Previsto",
+    "hint": "Mostra sulla mappa il rischio {view}."
+  },
+  "warning": {
+    "title": "Allerta prevista",
+    "wouldTrigger": "Questo scenario attiverebbe un'allerta",
+    "wouldNotTrigger": "Questo scenario non attiverebbe un'allerta",
+    "note": "Solo un'anteprima — una simulazione non crea alcuna allerta reale."
+  },
+  "ai": {
+    "title": "Spiegazione IA",
+    "recommendations": "Raccomandazioni di resilienza",
+    "confidence": "Affidabilità",
+    "unavailable": "Spiegazione IA non disponibile:"
+  },
+  "errorPrefix": "Simulazione non riuscita:"
+}

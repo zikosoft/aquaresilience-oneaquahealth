@@ -1,0 +1,24 @@
+{
+  "title": "Vroegtijdige Waarschuwingen",
+  "lifecycle": {
+    "active": "Actief",
+    "acknowledged": "Bevestigd",
+    "resolved": "Opgelost"
+  },
+  "empty": "Er zijn nog geen waarschuwingen geregistreerd.",
+  "severity": {
+    "low": "Laag",
+    "moderate": "Matig",
+    "high": "Hoog",
+    "critical": "Kritiek"
+  },
+  "actions": {
+    "acknowledge": "Bevestigen",
+    "resolve": "Oplossen"
+  },
+  "score": "Score: {score}/100",
+  "triggeredAt": "Geactiveerd {time}",
+  "acknowledgedAt": "Bevestigd {time} door {name}",
+  "resolvedAt": "Opgelost {time} door {name}",
+  "message": "Risicoscore {score}/100 ({severity}) — belangrijkste factor: {factor}."
+}

@@ -1,0 +1,24 @@
+{
+  "title": "Alertas Precoces",
+  "lifecycle": {
+    "active": "Ativo",
+    "acknowledged": "Reconhecido",
+    "resolved": "Resolvido"
+  },
+  "empty": "Ainda não foram registados alertas.",
+  "severity": {
+    "low": "Baixo",
+    "moderate": "Moderado",
+    "high": "Alto",
+    "critical": "Crítico"
+  },
+  "actions": {
+    "acknowledge": "Reconhecer",
+    "resolve": "Resolver"
+  },
+  "score": "Pontuação: {score}/100",
+  "triggeredAt": "Acionado {time}",
+  "acknowledgedAt": "Reconhecido {time} por {name}",
+  "resolvedAt": "Resolvido {time} por {name}",
+  "message": "Pontuação de risco {score}/100 ({severity}) — fator principal: {factor}."
+}

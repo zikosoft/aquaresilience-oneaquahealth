@@ -159,6 +159,29 @@ def test_environmental_summary_endpoint(client, admin_token):
         assert len(body[f"{key}_trend"]) == len(body[f"{key}_trend_timestamps"])
 
 
+def test_environmental_summary_is_honestly_empty_for_a_non_demo_city(client, admin_token, db_session):
+    """Session 018: ?city_id= for a consortium city with no live connector
+    must not silently return Toulouse's readings under a different city's
+    label — see app/services/city_context.py."""
+    from sqlalchemy import select
+
+    from app.models.geography import City
+    from app.seed.seed_geography import run as seed_geography_run
+
+    seed_geography_run()
+    ghent = db_session.execute(select(City).where(City.label_en == "Ghent")).scalar_one()
+
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    resp = client.get(f"/api/v1/environmental/summary?city_id={ghent.id}", headers=headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["data_available"] is False
+    assert body["monitored_stations"] == 0
+    assert body["water_level"] is None
+    assert body["water_level_trend"] == []
+    assert body["planned_data_source"] == "Waterinfo.be (VMM / MOW-HIC)"
+
+
 def test_environmental_summary_endpoint_custom_time_range(client, admin_token):
     # P2.1 (D017): the trend window is caller-selectable via `?hours=`.
     headers = {"Authorization": f"Bearer {admin_token}"}

@@ -1,0 +1,46 @@
+{
+  "title": "Resilienzkarte",
+  "loading": "Karte wird geladen…",
+  "styleUnavailable": "Kartenstil nicht verfügbar. Überprüfen Sie die konfigurierte Kachelquelle in den Einstellungen.",
+  "loadTimeout": "Das Laden der Karte dauert zu lange. Dies liegt meist an einem Netzwerk- oder Firewall-Problem beim Zugriff auf den Kachelserver — überprüfen Sie Ihre Verbindung und versuchen Sie, die Seite zu aktualisieren.",
+  "health": {
+    "fresh": "Aktuell",
+    "stale": "Veraltet",
+    "degraded": "Beeinträchtigt"
+  },
+  "station": {
+    "lastUpdated": "Zuletzt aktualisiert",
+    "risk": "Aktuelles Risiko"
+  },
+  "baseMap": {
+    "title": "Basiskarte",
+    "providers": {
+      "osm": "OpenStreetMap (Standard)",
+      "cyclosm": "CyclOSM (Radfahren)",
+      "humanitarian": "Humanitarian OSM"
+    },
+    "defaultBadge": "(Standard)"
+  },
+  "stationKind": {
+    "river_gauge": "Flusspegelstation",
+    "weather_point": "Wetterstation"
+  },
+  "legend": {
+    "title": "Legende",
+    "markersTitle": "Markierungen",
+    "healthTitle": "Datenaktualität",
+    "riskLayerTitle": "Risikoebene",
+    "riskLayerHint": "Der weiche farbige Schein um die Flusspegelstation zeigt das aktuelle plattformweite Risikoniveau. Die Deckkraft ist unter Einstellungen > Karte konfigurierbar."
+  },
+  "variable": {
+    "water_level_mm": "Wasserstand",
+    "precipitation_mm": "Niederschlag",
+    "soil_moisture_ratio": "Bodenfeuchte",
+    "temperature_c": "Temperatur",
+    "humidity_percent": "Luftfeuchtigkeit",
+    "wind_speed_kmh": "Windgeschwindigkeit",
+    "wind_direction_deg": "Windrichtung",
+    "surface_pressure_hpa": "Bodendruck",
+    "uv_index": "UV-Index"
+  }
+}

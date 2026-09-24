@@ -1,0 +1,62 @@
+{
+  "title": "Commandocentrum",
+  "kpi": {
+    "resilienceScore": "Veerkrachtscore",
+    "environmentalRisk": "Milieurisico",
+    "activeWarnings": "Actieve Waarschuwingen",
+    "monitoredZones": "Gemonitorde Zones",
+    "monitoredZonesTooltip": "Aantal actieve monitoringstations: {sources}",
+    "dataSources": "Gegevensbronnen",
+    "aiMonitoring": "AI-monitoring",
+    "comingInP2": "Beschikbaar vanaf P2",
+    "comingInP3": "Beschikbaar vanaf P3",
+    "factorsAvailable": "{available}/{total} risicofactoren beschikbaar"
+  },
+  "timeRange": {
+    "label": "Tijdsbereik",
+    "hoursShort": "{hours}u",
+    "limitedHistory": "Er zijn tot nu toe slechts {available}u aan geschiedenis geregistreerd — alles wordt getoond (u koos {requested}u). De grafieken vullen zich aan naarmate meer gegevens worden verzameld."
+  },
+  "waterLevel": {
+    "title": "Waterpeil — Garonne ({hours}u)"
+  },
+  "precipitation": {
+    "title": "Neerslag ({hours}u)"
+  },
+  "temperature": {
+    "title": "Temperatuur ({hours}u)"
+  },
+  "humidity": {
+    "title": "Luchtvochtigheid ({hours}u)"
+  },
+  "windSpeed": {
+    "title": "Windsnelheid ({hours}u)"
+  },
+  "windDirection": {
+    "title": "Windrichting ({hours}u)"
+  },
+  "surfacePressure": {
+    "title": "Luchtdruk ({hours}u)"
+  },
+  "uvIndex": {
+    "title": "UV-index ({hours}u)"
+  },
+  "situationBrief": {
+    "title": "AI-situatierapport",
+    "notAvailable": "Er is nog geen AI-situatierapport gegenereerd."
+  },
+  "timeline": {
+    "title": "Omgevingssignalen"
+  },
+  "currentWarning": {
+    "title": "Huidige Waarschuwing",
+    "none": "Geen actieve waarschuwingen",
+    "triggeredAt": "Geactiveerd {time}"
+  },
+  "factorContribution": {
+    "title": "Bijdrage van Risicofactoren"
+  },
+  "sourceHealth": {
+    "title": "Actualiteit van Bronnen"
+  }
+}

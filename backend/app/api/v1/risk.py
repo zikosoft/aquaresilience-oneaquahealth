@@ -13,7 +13,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -23,6 +23,7 @@ from app.core.errors import ConflictError, NotFoundError
 from app.models.risk import Warning, WarningStatus
 from app.models.user import User
 from app.schemas.risk import RiskFactorOut, RiskScoreOut, WarningOut
+from app.services.city_context import resolve_city
 from app.services.risk_engine import compute_risk, evaluate_and_persist_warnings
 
 router = APIRouter()
@@ -48,9 +49,24 @@ def _warning_out(w: Warning) -> WarningOut:
 
 @router.get("/current", response_model=RiskScoreOut)
 def get_current_risk(
+    # Session 018: the header's city selector. Omitted => today's unchanged
+    # single-city behavior (existing callers/tests are unaffected).
+    city_id: uuid.UUID | None = Query(default=None),
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("DASHBOARD", "VIEW")),
 ) -> RiskScoreOut:
+    city, has_data = resolve_city(db, city_id)
+    if not has_data:
+        return RiskScoreOut(
+            score=0.0,
+            severity="LOW",
+            factors=[],
+            factors_available=0,
+            factors_total=4,
+            computed_at=datetime.now(timezone.utc),
+            data_available=False,
+            planned_data_source=city.planned_data_source if city else None,
+        )
     result = compute_risk(db)
     evaluate_and_persist_warnings(db, result)
     return RiskScoreOut(

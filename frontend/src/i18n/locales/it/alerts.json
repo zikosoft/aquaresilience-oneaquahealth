@@ -1,0 +1,24 @@
+{
+  "title": "Allerte Precoci",
+  "lifecycle": {
+    "active": "Attiva",
+    "acknowledged": "Presa in carico",
+    "resolved": "Risolta"
+  },
+  "empty": "Nessuna allerta registrata finora.",
+  "severity": {
+    "low": "Bassa",
+    "moderate": "Moderata",
+    "high": "Alta",
+    "critical": "Critica"
+  },
+  "actions": {
+    "acknowledge": "Prendi in carico",
+    "resolve": "Risolvi"
+  },
+  "score": "Punteggio: {score}/100",
+  "triggeredAt": "Attivata {time}",
+  "acknowledgedAt": "Presa in carico {time} da {name}",
+  "resolvedAt": "Risolta {time} da {name}",
+  "message": "Punteggio di rischio {score}/100 ({severity}) — fattore principale: {factor}."
+}

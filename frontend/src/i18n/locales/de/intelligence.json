@@ -1,0 +1,31 @@
+{
+  "title": "KI-Intelligenz",
+  "status": {
+    "active": "KI-Überwachung aktiv",
+    "lastAnalysis": "Letzte Analyse",
+    "nextAnalysis": "Nächste Analyse",
+    "countdown": "Nächste in",
+    "dueNow": "Jetzt fällig",
+    "disabled": "KI-Anbieter nicht konfiguriert",
+    "never": "Nie",
+    "requestsToday": "Anfragen heute",
+    "refresh": "Jetzt aktualisieren",
+    "refreshing": "Analyse läuft…",
+    "errorPrefix": "Letzter Versuch fehlgeschlagen:",
+    "configureLink": "In den Einstellungen konfigurieren"
+  },
+  "brief": {
+    "drivers": "Einflussfaktoren",
+    "zonesToWatch": "Zu beobachtende Zonen",
+    "recommendations": "Empfehlungen",
+    "confidence": "Konfidenz",
+    "limitations": "Einschränkungen",
+    "generatedBy": "Erstellt von",
+    "triggeredBy": {
+      "scheduled": "Geplante Analyse",
+      "manual": "Manuelle Aktualisierung",
+      "event": "Automatische Warnung (Risikoereignis)"
+    }
+  },
+  "empty": "Noch kein KI-Lagebericht vorhanden. Konfigurieren Sie einen KI-Anbieter in den Einstellungen, um die geplante Analyse zu aktivieren."
+}

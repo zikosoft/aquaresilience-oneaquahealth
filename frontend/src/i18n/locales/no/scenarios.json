@@ -1,0 +1,34 @@
+{
+  "title": "Scenariosimulator",
+  "controls": {
+    "rainfall": "Nedbørjustering",
+    "riverLevel": "Elvenivåjustering",
+    "temperature": "Temperaturjustering"
+  },
+  "run": "Kjør simulering",
+  "running": "Kjører simulering…",
+  "current": "Nåværende",
+  "projected": "Anslått",
+  "empty": "Juster kontrollene og kjør en simulering for å se den anslåtte risikoen.",
+  "riskScore": "Risikoscore",
+  "waterLevel": "Vannstand (mm)",
+  "precipitation": "Nedbør (24t, mm)",
+  "map": {
+    "current": "Nåværende",
+    "projected": "Anslått",
+    "hint": "Viser {view} risiko på kartet."
+  },
+  "warning": {
+    "title": "Anslått varsel",
+    "wouldTrigger": "Dette scenarioet ville utløst et varsel",
+    "wouldNotTrigger": "Dette scenarioet ville ikke utløst et varsel",
+    "note": "Bare forhåndsvisning — ingen ekte varsel opprettes av en simulering."
+  },
+  "ai": {
+    "title": "KI-forklaring",
+    "recommendations": "Resiliensanbefalinger",
+    "confidence": "Tillit",
+    "unavailable": "KI-forklaring utilgjengelig:"
+  },
+  "errorPrefix": "Simuleringen mislyktes:"
+}
