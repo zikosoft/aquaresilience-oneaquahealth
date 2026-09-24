@@ -36,7 +36,14 @@ from app.services.connectors.hubeau import HubeauHydrometrieConnector
 from app.services.connectors.open_meteo import OpenMeteoConnector
 from app.services.ingestion_service import get_or_create_data_source
 
-BACKFILL_HOURS = 48
+# Session 017 (user request): the dashboard's duration selector offers
+# 48h/72h/96h/120h, so the backfill window is now 120h (5 days) — the
+# longest of those options — so every one of the 4 buttons shows genuinely
+# distinct data instead of 72h/96h/120h all silently repeating the same 48h
+# of history. The dashboard's own "limited history" notice
+# (CommandCenterView.vue, also added this session) stays in place as a
+# safety net for any window still wider than what's actually backfilled.
+BACKFILL_HOURS = 120
 DEMO_SEED = 20260921  # arbitrary but fixed: today's date at design time
 
 

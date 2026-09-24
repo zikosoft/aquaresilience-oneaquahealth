@@ -40,6 +40,9 @@
   "notifications": "Notifications",
   "profile": "Profil",
   "logout": "Se déconnecter",
+  "maintenance": {
+    "bannerMessage": "La plateforme est en mode maintenance. Vous pouvez toujours tout consulter — seul un administrateur peut effectuer des changements pour le moment."
+  },
   "riskFactors": {
     "rainfall": "Précipitations (24h)",
     "hydrology": "Niveau de la rivière",

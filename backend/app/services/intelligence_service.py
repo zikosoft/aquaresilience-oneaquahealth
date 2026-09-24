@@ -225,6 +225,28 @@ def should_run_scheduled_analysis(config: AIProviderConfig, now: datetime) -> bo
     return elapsed_minutes >= config.scheduled_analysis_interval_minutes
 
 
+# Session 017: the Settings > AI Provider "Event-triggered analysis" toggle
+# has existed since P3 (stored on AIProviderConfig, shown in the UI) but
+# nothing ever read it — flipping it changed nothing (user report). Wired
+# here: an "event" is the risk crossing into HIGH/CRITICAL (not the lower
+# MODERATE bar that merely opens a warning — that would fire far too often
+# to be a meaningful "event"), gated by the exact same cooldown/daily
+# ceiling as a human-requested manual refresh, so an event can never bypass
+# the same budget a person is held to.
+EVENT_TRIGGER_SEVERITIES = {"HIGH", "CRITICAL"}
+
+
+def should_run_event_triggered_analysis(
+    config: AIProviderConfig, warning_severity: str | None, now: datetime
+) -> bool:
+    if not config.event_triggered_enabled:
+        return False
+    if warning_severity not in EVENT_TRIGGER_SEVERITIES:
+        return False
+    ok, _reason = can_run_manual_analysis(config, now)
+    return ok
+
+
 def can_run_manual_analysis(config: AIProviderConfig, now: datetime) -> tuple[bool, str]:
     """Returns (ok, reason_if_not_ok). Manual/event-triggered refresh is
     gated by the cooldown (not the full scheduled interval — it's meant to

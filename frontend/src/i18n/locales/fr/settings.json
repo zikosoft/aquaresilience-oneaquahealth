@@ -86,8 +86,19 @@
     "riskLayerOpacity": "Opacité de la couche de risque",
     "riskLayerOpacityHint": "Opacité (0 à 100) du halo de niveau de risque affiché autour de la station de mesure de la rivière sur la carte. Réglez sur 0 pour le masquer."
   },
+  "alerts": {
+    "description": "Les alertes précoces suivent un cycle de vie fixe en 3 étapes — rien ici n'est configurable par l'utilisateur (les seuils de sévérité qui ouvrent une alerte se règlent dans Moteur de risque ci-dessus).",
+    "lifecycleTitle": "Cycle de vie",
+    "lifecycle": {
+      "active": "Créée automatiquement dès que le score de risque atteint MODÉRÉ ou plus.",
+      "acknowledged": "Un opérateur ou administrateur l'a vue et s'en occupe — défini depuis la page Alertes précoces.",
+      "resolved": "Automatiquement, une fois le score redescendu à FAIBLE — ou manuellement, à tout moment, par un opérateur ou administrateur."
+    },
+    "viewWarnings": "Voir les alertes précoces"
+  },
   "system": {
-    "maintenanceMode": "Mode maintenance"
+    "maintenanceMode": "Mode maintenance",
+    "maintenanceModeHint": "Une fois activé, seuls les administrateurs peuvent effectuer des changements n'importe où sur la plateforme (créer, modifier, prendre en compte une alerte, lancer un scénario, etc.) — tous les autres reçoivent un message clair en lecture seule. La consultation des données, la connexion et les contrôles de santé d'infrastructure ne sont jamais affectés. À utiliser avant une opération sensible (ex. restauration d'une sauvegarde) pour que personne d'autre n'écrive de données en même temps."
   },
   "saved": "Paramètres enregistrés."
 }

@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.errors import register_exception_handlers
+from app.core.maintenance import MaintenanceModeMiddleware
 from app.core.scheduler import start_scheduler, stop_scheduler
 
 
@@ -31,6 +32,13 @@ app = FastAPI(
     openapi_url="/openapi.json" if not settings.is_production else None,
     lifespan=lifespan,
 )
+
+# Session 017: maintenance-mode gate, added *before* CORS below so that
+# CORS ends up the outermost middleware (Starlette: the last one added via
+# add_middleware wraps everything else) — that way its headers are still
+# attached even to a 503 this gate short-circuits with, not just to normal
+# responses.
+app.add_middleware(MaintenanceModeMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

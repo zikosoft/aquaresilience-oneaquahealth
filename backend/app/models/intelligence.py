@@ -38,7 +38,7 @@ class SituationBrief(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     language: Mapped[str] = mapped_column(String(8), nullable=False)
-    triggered_by: Mapped[str] = mapped_column(String(16), nullable=False)  # "scheduled" | "manual"
+    triggered_by: Mapped[str] = mapped_column(String(16), nullable=False)  # "scheduled" | "manual" | "event"
 
     # --- validated structured output (Master Spec §18 JSON shape) ---
     situation: Mapped[str] = mapped_column(String(16), nullable=False)  # low|moderate|high|critical

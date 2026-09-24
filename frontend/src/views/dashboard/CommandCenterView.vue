@@ -51,6 +51,39 @@ const trendsLoading = ref(false)
 // chart titles never claim a range before the matching data has arrived.
 const effectiveHours = computed(() => summary.value?.trend_window_hours ?? selectedHours.value)
 
+// Session 017: user report — "quand on change de 48h/72h/96h/120h ils ne
+// changent pas". The duration selector and its refetch were already
+// correct (see onHoursChange below); the real cause was that the demo seed
+// only backfilled 48h of history — until the deployment had been running
+// past that point, a 72h/96h/120h request legitimately returned the exact
+// same rows as 48h. Fixed at the source: BACKFILL_HOURS in
+// seed_environmental.py now matches the selector's own longest option
+// (120h), so all 4 buttons show genuinely distinct data out of the box.
+// This notice stays as a general safety net regardless — e.g. right after
+// a fresh install/reset if BACKFILL_HOURS is ever tuned down again, or in
+// a real (non-demo) deployment before live ingestion has accumulated a
+// full window yet — computing the actual span of history available (from
+// the earliest timestamp any trend series returned) and saying so plainly
+// whenever it's shorter than what was selected.
+const actualDataSpanHours = computed<number | null>(() => {
+  const allTimestamps = [
+    ...(summary.value?.water_level_trend_timestamps ?? []),
+    ...(summary.value?.precipitation_trend_timestamps ?? []),
+    ...(summary.value?.temperature_trend_timestamps ?? []),
+    ...(summary.value?.humidity_trend_timestamps ?? []),
+  ]
+  if (allTimestamps.length === 0) return null
+  const earliest = allTimestamps.reduce((min, ts) => (ts < min ? ts : min), allTimestamps[0])
+  return (Date.now() - new Date(earliest).getTime()) / 3_600_000
+})
+
+const limitedHistoryNotice = computed<string | null>(() => {
+  const span = actualDataSpanHours.value
+  // A little slack for ingestion/backfill timing jitter before flagging it.
+  if (span === null || span >= effectiveHours.value - 2) return null
+  return t('dashboard.timeRange.limitedHistory', { available: Math.max(1, Math.round(span)), requested: effectiveHours.value })
+})
+
 async function load(): Promise<void> {
   loading.value = true
   errorMessage.value = null
@@ -365,6 +398,16 @@ const openWarningMessage = computed(() => {
         </v-btn>
       </v-btn-toggle>
     </div>
+
+    <v-alert
+      v-if="limitedHistoryNotice"
+      type="info"
+      variant="tonal"
+      density="compact"
+      class="mb-2"
+    >
+      {{ limitedHistoryNotice }}
+    </v-alert>
 
     <v-row
       dense

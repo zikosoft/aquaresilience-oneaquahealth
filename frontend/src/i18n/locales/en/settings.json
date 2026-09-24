@@ -86,8 +86,19 @@
     "riskLayerOpacity": "Risk layer opacity",
     "riskLayerOpacityHint": "Opacity (0-100) of the risk-level halo shown around the river gauge station on the map. Set to 0 to hide it."
   },
+  "alerts": {
+    "description": "Early Warnings follow a fixed 3-step lifecycle — nothing here is user-configurable (severity thresholds that open a warning are set in Risk Engine above).",
+    "lifecycleTitle": "Lifecycle",
+    "lifecycle": {
+      "active": "Created automatically the moment the risk score reaches MODERATE or above.",
+      "acknowledged": "An Operator or Administrator has seen it and is on it — set from the Early Warnings page.",
+      "resolved": "Automatically, once the score drops back to LOW — or manually, at any point, by an Operator or Administrator."
+    },
+    "viewWarnings": "View Early Warnings"
+  },
   "system": {
-    "maintenanceMode": "Maintenance mode"
+    "maintenanceMode": "Maintenance mode",
+    "maintenanceModeHint": "When enabled, only Administrators can make changes anywhere in the platform (creating, editing, acknowledging, running a scenario, etc.) — everyone else gets a clear read-only message. Viewing data, logging in and infra healthchecks are never affected. Use this before a risky change (e.g. restoring a backup) so no one else writes data mid-operation."
   },
   "saved": "Settings saved."
 }

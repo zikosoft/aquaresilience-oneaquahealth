@@ -260,13 +260,57 @@ const generalFields = computed(() => [
       </v-window-item>
 
       <v-window-item value="alerts">
-        <GenericSettingCard
-          category="alerts"
-          setting-key="alerts"
-          :title="t('settings.tabs.alerts')"
-          description="Early Warning lifecycle (Alerts implemented in P2)."
-          :fields="[{ path: 'lifecycle', label: t('alerts.title'), type: 'chips' }]"
-        />
+        <!-- Session 017: this used to be a GenericSettingCard with a
+             "chips" field bound to a fixed 3-value list and a Save button
+             next to it that saved nothing — the lifecycle is a fixed state
+             machine (app/services/risk_engine.py:evaluate_and_persist_warnings),
+             never user-editable, so an editable-looking card was actively
+             misleading (user report: "je vois un bouton enregistrer mais
+             je ne vois pas ce qu'on peut modifier"). Replaced with a plain
+             read-only reference card — same "no dead settings" precedent
+             as the Session 013 dead Scheduler tab / Session 015 dead
+             layers-placeholder removals. -->
+        <v-card
+          variant="flat"
+          border
+        >
+          <v-card-item>
+            <v-card-title class="text-subtitle-1 font-weight-bold">
+              {{ t('settings.tabs.alerts') }}
+            </v-card-title>
+            <v-card-subtitle class="text-wrap">
+              {{ t('settings.alerts.description') }}
+            </v-card-subtitle>
+          </v-card-item>
+          <v-card-text>
+            <div class="text-body-2 text-medium-emphasis mb-2">
+              {{ t('settings.alerts.lifecycleTitle') }}
+            </div>
+            <div
+              v-for="step in (['active', 'acknowledged', 'resolved'] as const)"
+              :key="step"
+              class="d-flex align-start ga-3 mb-3"
+            >
+              <v-chip
+                size="small"
+                variant="outlined"
+                class="flex-shrink-0"
+              >
+                {{ t(`alerts.lifecycle.${step}`) }}
+              </v-chip>
+              <span class="text-body-2 text-medium-emphasis">{{ t(`settings.alerts.lifecycle.${step}`) }}</span>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn
+              variant="outlined"
+              to="/alerts"
+            >
+              {{ t('settings.alerts.viewWarnings') }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
       </v-window-item>
 
       <v-window-item value="map">
@@ -368,6 +412,7 @@ const generalFields = computed(() => [
           category="system"
           setting-key="system"
           :title="t('settings.tabs.system')"
+          :description="t('settings.system.maintenanceModeHint')"
           :fields="[{ path: 'maintenance_mode', label: t('settings.system.maintenanceMode'), type: 'boolean' }]"
         />
       </v-window-item>

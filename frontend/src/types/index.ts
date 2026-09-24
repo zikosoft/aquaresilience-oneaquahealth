@@ -268,7 +268,7 @@ export interface SituationBrief {
   id: string
   generated_at: string
   language: string
-  triggered_by: 'scheduled' | 'manual'
+  triggered_by: 'scheduled' | 'manual' | 'event'
   situation: SituationLevel
   summary: string
   drivers: string[]

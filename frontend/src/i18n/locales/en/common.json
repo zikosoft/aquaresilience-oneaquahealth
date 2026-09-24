@@ -40,6 +40,9 @@
   "notifications": "Notifications",
   "profile": "Profile",
   "logout": "Log out",
+  "maintenance": {
+    "bannerMessage": "The platform is in maintenance mode. You can still view everything — only an Administrator can make changes right now."
+  },
   "riskFactors": {
     "rainfall": "Rainfall (24h)",
     "hydrology": "River level",

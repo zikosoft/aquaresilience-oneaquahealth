@@ -14,7 +14,8 @@
   },
   "timeRange": {
     "label": "Time range",
-    "hoursShort": "{hours}h"
+    "hoursShort": "{hours}h",
+    "limitedHistory": "Only {available}h of history recorded so far — showing all of it (you selected {requested}h). The charts will fill in as more data is ingested."
   },
   "waterLevel": {
     "title": "Water Level — Garonne ({hours}h)"

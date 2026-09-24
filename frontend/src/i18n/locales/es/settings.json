@@ -86,8 +86,19 @@
     "riskLayerOpacity": "Opacidad de la capa de riesgo",
     "riskLayerOpacityHint": "Opacidad (0-100) del halo de nivel de riesgo mostrado alrededor de la estación del río en el mapa. Ajuste a 0 para ocultarlo."
   },
+  "alerts": {
+    "description": "Las alertas tempranas siguen un ciclo de vida fijo de 3 pasos — nada aquí es configurable por el usuario (los umbrales de severidad que abren una alerta se ajustan en Motor de riesgo arriba).",
+    "lifecycleTitle": "Ciclo de vida",
+    "lifecycle": {
+      "active": "Creada automáticamente en cuanto el puntaje de riesgo alcanza MODERADO o superior.",
+      "acknowledged": "Un operador o administrador la ha visto y se está ocupando de ella — se define desde la página de Alertas tempranas.",
+      "resolved": "Automáticamente, una vez que el puntaje vuelve a BAJO — o manualmente, en cualquier momento, por un operador o administrador."
+    },
+    "viewWarnings": "Ver alertas tempranas"
+  },
   "system": {
-    "maintenanceMode": "Modo de mantenimiento"
+    "maintenanceMode": "Modo de mantenimiento",
+    "maintenanceModeHint": "Al activarlo, solo los administradores pueden hacer cambios en cualquier parte de la plataforma (crear, editar, reconocer una alerta, ejecutar un escenario, etc.) — todos los demás reciben un mensaje claro de solo lectura. Ver datos, iniciar sesión y las verificaciones de salud de infraestructura nunca se ven afectados. Úselo antes de una operación delicada (p. ej. restaurar una copia de seguridad) para que nadie más escriba datos mientras tanto."
   },
   "saved": "Configuración guardada."
 }

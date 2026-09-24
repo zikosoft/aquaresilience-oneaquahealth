@@ -462,6 +462,14 @@ async function initMap(): Promise<void> {
       clearLoadTimeout()
       initialStyleLoaded = true
       loading.value = false
+      // Session 017 (live-verified bug): MapLibre can fire 'error' for a
+      // single blocked/slow tile *before* 'load' resolves on the very first
+      // paint (race, not a real failure — the style itself loads fine right
+      // after). The 'error' handler below sets error.value on that first hit,
+      // but nothing ever cleared it again, so a map that went on to load
+      // successfully was left permanently hidden behind "Map style
+      // unavailable". A successful load always supersedes an earlier error.
+      error.value = null
       void addStationMarkers()
     })
     // 'style.load' fires on the initial load AND again after every
@@ -672,6 +680,21 @@ watch(
   and a `scoped` rule would silently never match them.
 -->
 <style>
+/* Session 017: MapLibre's popup chrome always has a white background
+   (maplibre-gl.css hardcodes `.maplibregl-popup-content { background:
+   #fff; }`, regardless of the app's own light/dark theme) — but its text
+   was left to inherit the app's own (theme-dependent) color, which in
+   dark mode is a near-white color cascaded down from Vuetify. Result:
+   near-white text on Maplibre's always-white popup, i.e. invisible until
+   you select it (user report: "je viens de les voir mais faut changer la
+   couleur"). Forcing a guaranteed-dark, always-legible color on the
+   popup's own content box (not just `.aq-station-popup`, so this also
+   covers MapLibre's own close button, a sibling of that div) fixes it in
+   both app themes, since the white background here never changes anyway. */
+.maplibregl-popup-content {
+  color: #1a1a1a;
+}
+
 .aq-station-marker {
   width: 22px;
   height: 22px;

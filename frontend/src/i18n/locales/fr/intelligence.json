@@ -23,7 +23,8 @@
     "generatedBy": "Généré par",
     "triggeredBy": {
       "scheduled": "Analyse programmée",
-      "manual": "Actualisation manuelle"
+      "manual": "Actualisation manuelle",
+      "event": "Alerte automatique (événement de risque)"
     }
   },
   "empty": "Aucune synthèse IA pour le moment. Configurez un fournisseur IA dans les Paramètres pour activer l'analyse programmée."

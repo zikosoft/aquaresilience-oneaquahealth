@@ -25,7 +25,12 @@ from app.core.database import SessionLocal
 from app.services.ai_provider_service import get_or_create_ai_config
 from app.services.connectors import get_connectors
 from app.services.ingestion_service import get_or_create_data_source, run_connector
-from app.services.intelligence_service import generate_situation_brief, get_default_language, should_run_scheduled_analysis
+from app.services.intelligence_service import (
+    generate_situation_brief,
+    get_default_language,
+    should_run_event_triggered_analysis,
+    should_run_scheduled_analysis,
+)
 from app.services.risk_engine import compute_risk, evaluate_and_persist_warnings
 
 logger = logging.getLogger(__name__)
@@ -50,7 +55,7 @@ def _tick() -> None:
         # even if nobody has the Command Center open (GET /risk/current does
         # the same idempotent evaluation on demand — see app.api.v1.risk).
         risk_result = compute_risk(db, now)
-        evaluate_and_persist_warnings(db, risk_result)
+        warning = evaluate_and_persist_warnings(db, risk_result)
 
         # P3: shared scheduled AI Situation Brief (Master Spec §19 — default
         # every 4h, one shared brief for all users, never a per-load LLM
@@ -59,9 +64,16 @@ def _tick() -> None:
         # failure mode is caught and recorded on the shared config), but
         # this call is still inside the tick's own try/except as defense in
         # depth — an AI outage must never affect ingestion/risk above.
+        #
+        # Session 017: event-triggered AI, checked only when the scheduled
+        # cadence isn't already due this tick — a HIGH/CRITICAL warning is
+        # treated as an "event" worth an unscheduled refresh (see
+        # should_run_event_triggered_analysis's own docstring for the gate).
         ai_config = get_or_create_ai_config(db)
         if should_run_scheduled_analysis(ai_config, now):
             asyncio.run(generate_situation_brief(db, language=get_default_language(db), triggered_by="scheduled"))
+        elif should_run_event_triggered_analysis(ai_config, warning.severity if warning else None, now):
+            asyncio.run(generate_situation_brief(db, language=get_default_language(db), triggered_by="event"))
     except Exception:  # noqa: BLE001 — a scheduler tick must never crash the process
         logger.exception("Ingestion scheduler tick failed")
     finally:

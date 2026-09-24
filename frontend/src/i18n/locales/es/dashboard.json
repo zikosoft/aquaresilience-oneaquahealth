@@ -14,7 +14,8 @@
   },
   "timeRange": {
     "label": "Rango temporal",
-    "hoursShort": "{hours} h"
+    "hoursShort": "{hours} h",
+    "limitedHistory": "Solo hay {available} h de historial registrado por ahora — se muestra todo (seleccionaste {requested} h). Los gráficos se completarán a medida que se ingieran más datos."
   },
   "waterLevel": {
     "title": "Nivel del agua — Garona ({hours} h)"
