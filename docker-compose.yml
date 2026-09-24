@@ -68,9 +68,19 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
+    # Real-machine finding while preparing the hackathon submission: `docker
+    # compose up -d` alone never seeded environmental data, only RBAC/users —
+    # a judge following the README's own quick start would see an empty
+    # Command Center/map until scheduled ingestion of the real APIs happened
+    # to succeed (which needs outbound network access this box may not
+    # have). seed_environmental.run() is explicitly documented as "safe to
+    # call every startup" (only fills a station with no existing data), so
+    # it's chained here to guarantee a populated, reliable demo on the exact
+    # command the README documents — no separate manual step to forget.
     command: >
       sh -c "alembic upgrade head &&
              python -m app.seed.seed_data &&
+             python -m app.seed.seed_environmental &&
              uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
   frontend:

@@ -90,9 +90,14 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
+    # Same reliable-demo fix as docker-compose.yml (dev): seed_environmental
+    # is a documented safe-every-startup no-op once real data exists, so
+    # it's chained here too — a public production demo URL for judges must
+    # never start with an empty Command Center/map.
     command: >
       sh -c "alembic upgrade head &&
              python -m app.seed.seed_data &&
+             python -m app.seed.seed_environmental &&
              uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers --forwarded-allow-ips='*'"
     # --forwarded-allow-ips='*' trusts X-Forwarded-* headers from ANY
     # upstream — safe only because this container is never reachable except
