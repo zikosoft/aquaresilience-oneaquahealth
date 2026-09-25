@@ -336,6 +336,20 @@ def test_viewer_can_view_but_not_trigger_analysis(client, db_session):
     assert resp.status_code == 403
 
 
+@pytest.mark.parametrize("language", ["en", "fr", "es", "pt", "no", "el", "de", "it", "nl"])
+def test_analyze_endpoint_accepts_all_9_ui_languages(client, admin_token, db_session, language):
+    """Session 019: found while wiring WOW #2 (Scenario Simulator) —
+    session 018 added 6 more UI languages but this endpoint's `language`
+    field validation was never updated, so a manual analysis request from
+    one of those 6 UI languages was rejected outright (422) instead of
+    degrading gracefully. Not configuring an AI provider here on purpose:
+    the point is that the request is *accepted* (never 422), regardless of
+    whether the deterministic ok=False "not configured" path follows."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    resp = client.post("/api/v1/intelligence/analyze", headers=headers, json={"language": language})
+    assert resp.status_code == 200
+
+
 def test_analyze_endpoint_end_to_end_with_fake_provider(client, admin_token, db_session, monkeypatch):
     # These two API-level tests go through `client`'s own DB session (a
     # separate connection from `isolated_db`'s SAVEPOINT above, so it can't

@@ -43,6 +43,20 @@ LANGUAGE_INSTRUCTIONS = {
     "en": "Respond in English.",
     "fr": "Réponds en français.",
     "es": "Responde en español.",
+    # Session 019: found while wiring WOW #2 (Scenario Simulator presets) —
+    # session 018 added 6 more UI languages (pt/no/el/de/it/nl) but this
+    # dict, and `ScenarioSimulateRequest.language`'s validation pattern,
+    # were never updated to match. Every AI call (P3 brief, P4 scenario
+    # explanation) was silently degrading those 6 languages to English, and
+    # the Scenario Simulator's `language` field would outright reject them
+    # (422) since its regex only allowed en/fr/es. Fixed at both call
+    # sites — see ScenarioSimulateRequest.language's pattern.
+    "pt": "Responde em português.",
+    "no": "Svar på norsk.",
+    "el": "Απάντησε στα ελληνικά.",
+    "de": "Antworte auf Deutsch.",
+    "it": "Rispondi in italiano.",
+    "nl": "Antwoord in het Nederlands.",
 }
 DEFAULT_LANGUAGE = "en"
 

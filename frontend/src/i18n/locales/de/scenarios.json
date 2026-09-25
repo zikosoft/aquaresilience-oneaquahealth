@@ -5,6 +5,12 @@
     "riverLevel": "Flusspegelanpassung",
     "temperature": "Temperaturanpassung"
   },
+  "presets": {
+    "title": "Presets mit einem Klick",
+    "lightRain": "Leichter Regen",
+    "severeStorm": "Schweres Unwetter",
+    "extremeFlood": "Extremes Hochwasser"
+  },
   "run": "Simulation ausführen",
   "running": "Simulation läuft…",
   "current": "Aktuell",

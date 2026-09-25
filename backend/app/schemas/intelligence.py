@@ -45,7 +45,12 @@ class TriggerAnalysisRequest(BaseModel):
     # user" to take a UI language from, but a manual click does, so the
     # frontend passes its own active locale here (Master Spec §19: "active
     # UI language passed to the AI").
-    language: str | None = Field(default=None, pattern="^(en|fr|es)$")
+    # Session 019: widened to all 9 UI languages — was still en|fr|es only
+    # from before session 018 added pt/no/el/de/it/nl, which meant a manual
+    # analysis request from one of those 6 UI languages was rejected (422)
+    # rather than degrading gracefully. See intelligence_service.py's
+    # LANGUAGE_INSTRUCTIONS for the matching fix.
+    language: str | None = Field(default=None, pattern="^(en|fr|es|pt|no|el|de|it|nl)$")
 
 
 class TriggerAnalysisResult(BaseModel):

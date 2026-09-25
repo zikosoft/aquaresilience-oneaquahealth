@@ -354,6 +354,9 @@ export interface ScenarioSimulateRequest {
   river_level_adjustment_pct: number
   language?: string
   include_ai_explanation?: boolean
+  // Session 019 — WOW #2: same city-selector honesty pattern as
+  // GET /risk/current. Omitted => today's unchanged single-city behavior.
+  city_id?: string | null
 }
 
 export interface ScenarioSimulateResponse {

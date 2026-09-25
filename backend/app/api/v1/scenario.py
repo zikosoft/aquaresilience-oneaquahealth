@@ -6,6 +6,8 @@ able to take the response down (see `scenario_service` module docstring).
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -19,6 +21,7 @@ from app.schemas.scenario import (
     ScenarioSimulateResponse,
     ScenarioWarningPreviewOut,
 )
+from app.services.city_context import resolve_city
 from app.services.risk_engine import RiskResult
 from app.services.scenario_service import explain_scenario, simulate_scenario
 
@@ -52,6 +55,38 @@ async def simulate(
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("SCENARIOS", "EXECUTE")),
 ) -> ScenarioSimulateResponse:
+    # Session 019 — WOW #2: same city-selector honesty pattern as
+    # GET /risk/current (see app/services/city_context.py). The one-click
+    # presets themselves are pure relative % adjustments (see the
+    # frontend's SCENARIO_PRESETS) — they need no per-city code at all;
+    # only the underlying data this endpoint projects from must stay
+    # honest for a city with no live connector.
+    city, has_data = resolve_city(db, payload.city_id)
+    if not has_data:
+        empty = RiskScoreOut(
+            score=0.0,
+            severity="LOW",
+            factors=[],
+            factors_available=0,
+            factors_total=4,
+            computed_at=datetime.now(timezone.utc),
+            data_available=False,
+            planned_data_source=city.planned_data_source if city else None,
+        )
+        return ScenarioSimulateResponse(
+            current=empty,
+            projected=empty,
+            rainfall_adjustment_pct=payload.rainfall_adjustment_pct,
+            river_level_adjustment_pct=payload.river_level_adjustment_pct,
+            water_level_mm_current=None,
+            water_level_mm_projected=None,
+            precipitation_24h_mm_current=None,
+            precipitation_24h_mm_projected=None,
+            projected_warning=ScenarioWarningPreviewOut(would_trigger=False, severity=None, message=None),
+            ai_explanation=None,
+            ai_explanation_error=None,
+        )
+
     scenario = simulate_scenario(db, payload.rainfall_adjustment_pct, payload.river_level_adjustment_pct)
 
     ai_explanation: ScenarioAIExplanationOut | None = None

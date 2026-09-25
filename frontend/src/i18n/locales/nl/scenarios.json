@@ -5,6 +5,12 @@
     "riverLevel": "Aanpassing rivierpeil",
     "temperature": "Aanpassing temperatuur"
   },
+  "presets": {
+    "title": "Eenklikspresets",
+    "lightRain": "Lichte regen",
+    "severeStorm": "Zware storm",
+    "extremeFlood": "Extreme overstroming"
+  },
   "run": "Simulatie uitvoeren",
   "running": "Simulatie wordt uitgevoerd…",
   "current": "Huidig",

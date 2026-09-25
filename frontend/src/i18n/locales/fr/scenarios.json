@@ -5,6 +5,12 @@
     "riverLevel": "Ajustement du niveau de la rivière",
     "temperature": "Ajustement de la température"
   },
+  "presets": {
+    "title": "Préréglages en un clic",
+    "lightRain": "Épisode de pluie légère",
+    "severeStorm": "Tempête sévère",
+    "extremeFlood": "Crue extrême"
+  },
   "run": "Lancer la simulation",
   "running": "Simulation en cours…",
   "current": "Actuel",

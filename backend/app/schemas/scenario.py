@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 from pydantic import BaseModel, Field
 
 from app.schemas.risk import RiskScoreOut
@@ -11,11 +13,15 @@ class ScenarioSimulateRequest(BaseModel):
     # Active UI language of the requesting viewer (same pattern as P3's
     # manual `/intelligence/analyze`) — used only for the optional AI
     # explanation; the deterministic projection itself has no language.
-    language: str | None = Field(default=None, pattern="^(en|fr|es)$")
+    language: str | None = Field(default=None, pattern="^(en|fr|es|pt|no|el|de|it|nl)$")
     # Lets the frontend re-run just the deterministic projection (e.g. while
     # a slider is being dragged) without spending an AI call every time —
     # only "Run Simulation" itself sends true.
     include_ai_explanation: bool = True
+    # Session 019: same city-selector honesty pattern as GET /risk/current —
+    # see app/services/city_context.py. Omitted => today's unchanged
+    # single-city (Toulouse) behavior.
+    city_id: uuid.UUID | None = None
 
 
 class ScenarioWarningPreviewOut(BaseModel):

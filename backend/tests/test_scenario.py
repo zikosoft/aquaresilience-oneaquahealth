@@ -426,3 +426,54 @@ def test_scenario_simulate_endpoint_can_skip_ai_explanation(client, admin_token,
     body = resp.json()
     assert body["ai_explanation"] is None
     assert body["ai_explanation_error"] is None  # explicitly skipped, not a failure
+
+
+def test_scenario_simulate_is_honestly_empty_for_a_non_demo_city(client, admin_token, db_session):
+    """Session 019 — WOW #2: the one-click presets are pure relative %
+    adjustments (see the frontend's SCENARIO_PRESETS), so they carry no
+    per-city assumption — but the endpoint must still refuse to silently
+    project Toulouse's real data under a different city's label, same as
+    every other dashboard-facing endpoint (see city_context.py)."""
+    from app.models.geography import City
+    from app.seed.seed_geography import run as seed_geography_run
+
+    seed_geography_run()
+    oslo = db_session.execute(select(City).where(City.label_en == "Oslo")).scalar_one()
+
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    resp = client.post(
+        "/api/v1/scenario/simulate",
+        headers=headers,
+        json={"rainfall_adjustment_pct": 100, "river_level_adjustment_pct": 60, "city_id": str(oslo.id)},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["current"]["data_available"] is False
+    assert body["projected"]["data_available"] is False
+    assert body["current"]["factors"] == []
+    assert body["water_level_mm_current"] is None
+    assert body["water_level_mm_projected"] is None
+    assert body["projected_warning"]["would_trigger"] is False
+    assert body["ai_explanation"] is None
+    assert body["ai_explanation_error"] is None
+    assert body["current"]["planned_data_source"] == "NVE HydAPI"
+    # The requested adjustments are still echoed back honestly — the UI's
+    # preset buttons/sliders stay in sync even though nothing was computed.
+    assert body["rainfall_adjustment_pct"] == 100
+    assert body["river_level_adjustment_pct"] == 60
+
+
+@pytest.mark.parametrize("language", ["en", "fr", "es", "pt", "no", "el", "de", "it", "nl"])
+def test_scenario_simulate_accepts_all_9_ui_languages(client, admin_token, db_session, language):
+    """Session 019: found while wiring WOW #2 — session 018 added 6 more UI
+    languages but this field's validation pattern was never updated, so a
+    scenario run from e.g. the Portuguese UI was rejected outright (422)
+    rather than degrading gracefully. See intelligence_service.py's
+    LANGUAGE_INSTRUCTIONS for the matching fix."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    resp = client.post(
+        "/api/v1/scenario/simulate",
+        headers=headers,
+        json={"rainfall_adjustment_pct": 10, "river_level_adjustment_pct": 10, "language": language, "include_ai_explanation": False},
+    )
+    assert resp.status_code == 200

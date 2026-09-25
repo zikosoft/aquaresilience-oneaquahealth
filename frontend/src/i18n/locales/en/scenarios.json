@@ -5,6 +5,12 @@
     "riverLevel": "River level adjustment",
     "temperature": "Temperature adjustment"
   },
+  "presets": {
+    "title": "One-click presets",
+    "lightRain": "Light Rain Event",
+    "severeStorm": "Severe Storm",
+    "extremeFlood": "Extreme Flood Event"
+  },
   "run": "Run simulation",
   "running": "Running simulation…",
   "current": "Current",

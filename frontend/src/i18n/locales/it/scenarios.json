@@ -5,6 +5,12 @@
     "riverLevel": "Regolazione del livello del fiume",
     "temperature": "Regolazione della temperatura"
   },
+  "presets": {
+    "title": "Preimpostazioni con un clic",
+    "lightRain": "Pioggia Leggera",
+    "severeStorm": "Tempesta Severa",
+    "extremeFlood": "Alluvione Estrema"
+  },
   "run": "Esegui simulazione",
   "running": "Simulazione in corso…",
   "current": "Attuale",

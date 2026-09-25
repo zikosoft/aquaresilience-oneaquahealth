@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import FactorContribution from '@/components/charts/FactorContribution.vue'
@@ -9,12 +9,26 @@ import ResilienceMap from '@/components/map/ResilienceMap.vue'
 import { fetchCurrentRisk } from '@/services/riskApi'
 import { simulateScenario } from '@/services/scenarioApi'
 import { useAuthStore } from '@/stores/auth'
+import { useCityStore } from '@/stores/city'
 import type { RiskScore, ScenarioSimulateResponse } from '@/types'
 import { factorTranslationKey, leadingFactorKey, severityColor } from '@/utils/risk'
 
 const { t, locale } = useI18n()
 const authStore = useAuthStore()
+const cityStore = useCityStore()
 const canRun = computed(() => authStore.can('SCENARIOS', 'EXECUTE'))
+
+// Session 019 — WOW #2: same city-selector honesty pattern as the Command
+// Center (see CommandCenterView.vue's own cityHasLiveData/cityLabel). A
+// scenario run against a city with no live connector would otherwise
+// silently project Toulouse's real data under that city's label.
+const cityHasLiveData = computed(() => cityStore.selectedCity?.has_live_data ?? true)
+const cityLabel = computed(() => {
+  const city = cityStore.selectedCity
+  if (!city) return ''
+  const byLocale: Record<string, string> = { en: city.label_en, fr: city.label_fr, es: city.label_es }
+  return byLocale[locale.value] ?? city.label_en
+})
 
 const rainfall = ref(0)
 const riverLevel = ref(0)
@@ -25,13 +39,58 @@ const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const mapView = ref<'current' | 'projected'>('current')
 
-onMounted(async () => {
+// Session 019 — WOW #2: one-click scenario presets. Deliberately just a
+// list of RELATIVE % adjustments (fed straight into the same
+// rainfall/riverLevel sliders "Run Simulation" already uses) — no absolute
+// mm thresholds, no city-specific tuning. Whichever city is selected in
+// the header, a preset applies the same relative "what if" to that city's
+// own current baseline, so this list never needs touching when another
+// city gets a live connector later (per the user's explicit request).
+interface ScenarioPreset {
+  key: string
+  icon: string
+  rainfallPct: number
+  riverPct: number
+}
+const SCENARIO_PRESETS: ScenarioPreset[] = [
+  { key: 'lightRain', icon: 'mdi-weather-rainy', rainfallPct: 30, riverPct: 10 },
+  { key: 'severeStorm', icon: 'mdi-weather-lightning-rainy', rainfallPct: 100, riverPct: 50 },
+  { key: 'extremeFlood', icon: 'mdi-waves-arrow-up', rainfallPct: 200, riverPct: 120 },
+]
+// Derived, not stored: a preset reads as "active" only while the sliders
+// still match its exact values — dragging a slider away from a preset (or
+// switching city, which resets the sliders) un-highlights it automatically
+// instead of tracking a separate, easily-stale "last clicked preset" flag.
+function isPresetActive(preset: ScenarioPreset): boolean {
+  return rainfall.value === preset.rainfallPct && riverLevel.value === preset.riverPct
+}
+
+async function loadCurrentRisk(): Promise<void> {
   try {
-    currentRisk.value = await fetchCurrentRisk()
+    currentRisk.value = await fetchCurrentRisk(cityStore.selectedCityId)
   } catch {
     // Non-fatal: the "Current" side simply stays empty until a simulation runs.
   }
+}
+
+onMounted(async () => {
+  await cityStore.load()
+  await loadCurrentRisk()
 })
+
+// Reload the "Current" side and drop any stale scenario result when the
+// header's city selector changes — a previous city's projection must never
+// linger on screen under a new city's label.
+watch(
+  () => cityStore.selectedCityId,
+  async () => {
+    result.value = null
+    rainfall.value = 0
+    riverLevel.value = 0
+    mapView.value = 'current'
+    await loadCurrentRisk()
+  },
+)
 
 async function runSimulation(): Promise<void> {
   loading.value = true
@@ -42,6 +101,7 @@ async function runSimulation(): Promise<void> {
       river_level_adjustment_pct: riverLevel.value,
       language: locale.value,
       include_ai_explanation: true,
+      city_id: cityStore.selectedCityId,
     })
     currentRisk.value = result.value.current
     mapView.value = 'projected'
@@ -50,6 +110,15 @@ async function runSimulation(): Promise<void> {
   } finally {
     loading.value = false
   }
+}
+
+// One click: set both sliders to the preset's values and run immediately —
+// this IS the "one-click" part of WOW #2, rather than making the operator
+// set the sliders then separately hit "Run Simulation".
+async function applyPreset(preset: ScenarioPreset): Promise<void> {
+  rainfall.value = preset.rainfallPct
+  riverLevel.value = preset.riverPct
+  await runSimulation()
 }
 
 const currentGaugeValue = computed(() => (currentRisk.value ? Math.round(currentRisk.value.score) : null))
@@ -112,6 +181,27 @@ const mapRiskOverride = computed<RiskScore | null>(() => {
       {{ errorMessage }}
     </v-alert>
 
+    <!-- Session 019 — WOW #2: same honesty banner as the Command Center
+         (see common.city.noLiveData) — a non-demo city has no real data
+         to run a scenario against, so the controls are disabled rather
+         than silently projecting Toulouse's numbers under its name. -->
+    <v-alert
+      v-if="!cityHasLiveData"
+      type="info"
+      variant="tonal"
+      density="compact"
+      class="mb-4"
+      :title="t('common.city.noLiveData.title', { city: cityLabel })"
+    >
+      <div>{{ t('common.city.noLiveData.body', { city: cityLabel }) }}</div>
+      <div
+        v-if="cityStore.selectedCity?.planned_data_source"
+        class="text-caption text-medium-emphasis mt-1"
+      >
+        {{ t('common.city.noLiveData.plannedSource', { source: cityStore.selectedCity.planned_data_source }) }}
+      </div>
+    </v-alert>
+
     <v-row dense>
       <v-col
         cols="12"
@@ -125,29 +215,53 @@ const mapRiskOverride = computed<RiskScore | null>(() => {
           <v-card-title class="text-subtitle-1 font-weight-bold px-0">
             {{ t('scenarios.title') }}
           </v-card-title>
+
+          <!-- Session 019 — WOW #2: one-click presets. Same relative %
+               adjustments regardless of the selected city (see
+               SCENARIO_PRESETS' comment above) — clicking one sets both
+               sliders and runs the simulation immediately. -->
+          <div class="text-caption text-medium-emphasis mb-1">
+            {{ t('scenarios.presets.title') }}
+          </div>
+          <div class="d-flex flex-wrap ga-2 mb-4">
+            <v-btn
+              v-for="preset in SCENARIO_PRESETS"
+              :key="preset.key"
+              size="small"
+              :variant="isPresetActive(preset) ? 'flat' : 'tonal'"
+              :color="isPresetActive(preset) ? 'primary' : undefined"
+              :prepend-icon="preset.icon"
+              :disabled="!canRun || !cityHasLiveData"
+              :loading="loading && isPresetActive(preset)"
+              @click="applyPreset(preset)"
+            >
+              {{ t(`scenarios.presets.${preset.key}`) }}
+            </v-btn>
+          </div>
+
           <v-slider
             v-model="rainfall"
             :label="t('scenarios.controls.rainfall')"
             min="-50"
-            max="100"
+            max="300"
             step="5"
             thumb-label
             class="mt-6"
-            :disabled="!canRun"
+            :disabled="!canRun || !cityHasLiveData"
           />
           <v-slider
             v-model="riverLevel"
             :label="t('scenarios.controls.riverLevel')"
             min="-50"
-            max="100"
+            max="300"
             step="5"
             thumb-label
-            :disabled="!canRun"
+            :disabled="!canRun || !cityHasLiveData"
           />
           <v-btn
             color="primary"
             block
-            :disabled="!canRun"
+            :disabled="!canRun || !cityHasLiveData"
             :loading="loading"
             class="mt-2"
             @click="runSimulation"

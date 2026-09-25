@@ -5,6 +5,12 @@
     "riverLevel": "Elvenivåjustering",
     "temperature": "Temperaturjustering"
   },
+  "presets": {
+    "title": "Ett-klikks forhåndsinnstillinger",
+    "lightRain": "Lett regnvær",
+    "severeStorm": "Kraftig storm",
+    "extremeFlood": "Ekstremflom"
+  },
   "run": "Kjør simulering",
   "running": "Kjører simulering…",
   "current": "Nåværende",
