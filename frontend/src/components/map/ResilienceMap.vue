@@ -386,6 +386,8 @@ function buildPopupContent(station: Station, risk: RiskScore | null): HTMLElemen
 }
 
 async function addStationMarkers(): Promise<void> {
+  // eslint-disable-next-line no-console -- temporary Session 021 diagnostic
+  console.log('[AQ-DIAG] addStationMarkers() called, map=', !!map, 'selectedCityId=', cityStore.selectedCityId, 'selectedCity=', cityStore.selectedCity?.label_en)
   if (!map) return
   clearStationMarkers()
   try {
@@ -407,6 +409,8 @@ async function addStationMarkers(): Promise<void> {
             return null
           }),
     ])
+    // eslint-disable-next-line no-console -- temporary Session 021 diagnostic
+    console.log('[AQ-DIAG] fetchStations resolved:', stations.length, 'stations for cityId=', cityStore.selectedCityId)
     lastGaugeLngLat = null
     lastRiskForLayer = null
     for (const station of stations) {
@@ -553,7 +557,9 @@ watch(
 // its name.
 watch(
   () => cityStore.selectedCityId,
-  () => {
+  (newId, oldId) => {
+    // eslint-disable-next-line no-console -- temporary Session 021 diagnostic
+    console.log('[AQ-DIAG] selectedCityId watcher fired:', oldId, '->', newId, 'map=', !!map, 'loading=', loading.value, 'resolvedCity=', cityStore.selectedCity?.label_en)
     const city = cityStore.selectedCity
     if (!map || !city) return
     map.flyTo({
