@@ -39,10 +39,24 @@ export const useCityStore = defineStore('city', () => {
     if (loaded.value) return
     try {
       cities.value = await fetchCities()
-      // First visit (nothing in localStorage yet): default to the live
-      // demo city, not just whichever city happens to sort first.
-      if (!selectedCityId.value) {
-        selectedCityId.value = demoCity.value?.id ?? cities.value[0]?.id ?? null
+      // Session 021 fix (user report): "la carte reste tout le temps
+      // pointée sur Toulouse" / "on ne voit plus les elements" — root
+      // cause was that `selectedCityId` (the raw id, read once from
+      // localStorage) never self-corrected when it stopped matching any
+      // currently-loaded city (e.g. a dev DB reset regenerates city UUIDs,
+      // orphaning whatever id was cached in the browser from before).
+      // `selectedCity` below already has a graceful fallback for exactly
+      // this case, so the header itself kept showing "Toulouse" — but
+      // every map/dashboard/scenario call reads `selectedCityId` directly
+      // (see its own doc comment), and that raw id was never healed to
+      // match, silently sending a city_id that matches nothing (→ 0
+      // stations, 0 markers) instead of the same fallback the header
+      // displays. Covers both "nothing in localStorage yet" (the original
+      // check) and "something's there but it's stale" (new).
+      if (!selectedCityId.value || !cities.value.some((c) => c.id === selectedCityId.value)) {
+        const fallbackId = demoCity.value?.id ?? cities.value[0]?.id ?? null
+        selectedCityId.value = fallbackId
+        if (fallbackId) localStorage.setItem(CITY_KEY, fallbackId)
       }
       loaded.value = true
     } catch {

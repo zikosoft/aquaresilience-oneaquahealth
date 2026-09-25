@@ -156,13 +156,25 @@ def list_stations(
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("MAP", "VIEW")),
 ) -> list[StationOut]:
+    # Session 021 fix (user-reported regression: map showing zero markers):
+    # this used to filter on the raw city_id directly — an id that doesn't
+    # match any City row (e.g. a browser's cached localStorage selection
+    # left over from before a dev DB reset regenerated city UUIDs) silently
+    # matched zero DataSource rows, i.e. zero stations, zero markers, with
+    # nothing distinguishing that from "this city genuinely has no
+    # stations". Every other city-scoped endpoint (environmental_summary,
+    # compute_risk, simulate_scenario, ...) already goes through
+    # resolve_city, which degrades an unrecognized id to the unscoped
+    # global view rather than erroring or silently returning nothing — this
+    # endpoint now matches that same, already-established convention.
+    city, _has_data = resolve_city(db, city_id)
     query = (
         select(Station, DataSource, ST_X(Station.geom), ST_Y(Station.geom))
         .join(DataSource, DataSource.id == Station.data_source_id)
         .order_by(Station.name)
     )
-    if city_id is not None:
-        query = query.where(DataSource.city_id == city_id)
+    if city is not None:
+        query = query.where(DataSource.city_id == city.id)
     rows = db.execute(query).all()
     station_ids = [row[0].id for row in rows]
     latest_by_station = _latest_readings_by_station(db, station_ids)
