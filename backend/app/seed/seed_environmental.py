@@ -19,6 +19,19 @@ surfaced to the frontend as a LIVE/CACHED/REPLAY-style badge.
 Run with:
     python -m app.seed.seed_environmental          # seed only if empty
     python -m app.seed.seed_environmental --reset   # wipe + reseed
+
+Session 020 (user request): deliberately NOT extended to the 3 new
+consortium-city connectors (Vienna/eHYD, Ghent/Waterinfo.be, Oslo/NVE
+HydAPI, see app/services/connectors/) the way Hub'Eau/Open-Meteo are
+here. Those 3 discover their real station identity (external_code,
+name, coordinates) dynamically at fetch time — unlike Hub'Eau's fixed
+`station_code="O200004001"` — so there is no station identity to seed a
+synthetic backfill against without risking a duplicate "fake" station
+next to whatever the live connector later actually finds (exactly what
+this module's own backfill design otherwise guarantees never happens).
+Those cities go live from real ingested readings only; `City.has_live_data`
+flips automatically the moment that first succeeds (see
+`ingestion_service.run_connector`), and stays honestly False until then.
 """
 from __future__ import annotations
 

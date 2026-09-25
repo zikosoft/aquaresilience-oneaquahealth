@@ -8,5 +8,15 @@
   },
   "empty": "Es sind noch keine Datenquellen verbunden.",
   "license": "Lizenz",
-  "lastError": "Letzter Fehler"
+  "lastError": "Letzter Fehler",
+  "unassignedCity": "Nicht zugeordnet",
+  "credentials": {
+    "configured": "API-Schlüssel konfiguriert",
+    "missing": "API-Schlüssel erforderlich",
+    "addKey": "API-Schlüssel hinzufügen",
+    "dialogTitle": "API-Schlüssel für {name}",
+    "dialogHint": "Wird verschlüsselt gespeichert und nach dem Speichern nie wieder angezeigt. Die nächste geplante Synchronisierung verwendet ihn automatisch.",
+    "apiKey": "API-Schlüssel",
+    "whereToGetKey": "Wo bekomme ich einen API-Schlüssel?"
+  }
 }

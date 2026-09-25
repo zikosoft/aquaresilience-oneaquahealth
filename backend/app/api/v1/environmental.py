@@ -14,11 +14,14 @@ from sqlalchemy.orm import Session
 from app.api.v1.deps import require_permission
 from app.core.database import get_db
 from app.core.errors import NotFoundError
-from app.models.environmental import DataSource, Measurement, MeasurementVariable, Station
+from app.core.security import encrypt_secret
+from app.models.environmental import DataSource, DataSourceProvider, Measurement, MeasurementVariable, Station
 from app.models.user import User
 from app.schemas.environmental import (
+    DataSourceCredentialsUpdate,
     EnvironmentalSummaryOut,
     LatestReadingOut,
+    SourceCityRef,
     SourceHealthOut,
     StationOut,
     StationTimeseriesOut,
@@ -29,6 +32,13 @@ from app.services.city_context import resolve_city
 from app.services.ingestion_service import compute_source_health
 
 router = APIRouter()
+
+# Session 020: the one provider whose connector genuinely cannot fetch
+# without a registered key (see NveHydapiConnector) — drives the
+# /sources page's "add API key" prompt. Kept here (not just on the
+# connector class) so this read-only endpoint doesn't need to import and
+# instantiate every connector just to know this one flag.
+_PROVIDERS_REQUIRING_API_KEY = {DataSourceProvider.NVE_HYDAPI.value}
 
 
 @router.get("/sources", response_model=list[SourceHealthOut])
@@ -53,9 +63,57 @@ def list_sources(
             last_success_at=s.last_success_at,
             consecutive_failures=s.consecutive_failures,
             last_error_message=s.last_error_message,
+            city=SourceCityRef.model_validate(s.city) if s.city is not None else None,
+            requires_api_key=s.provider in _PROVIDERS_REQUIRING_API_KEY,
+            is_key_configured=s.is_key_configured,
         )
         for s in sources
     ]
+
+
+@router.put("/sources/{source_id}/credentials", response_model=SourceHealthOut)
+def update_source_credentials(
+    source_id: uuid.UUID,
+    payload: DataSourceCredentialsUpdate,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("DATA_SOURCES", "EDIT")),
+) -> SourceHealthOut:
+    """Write-only secret storage — same pattern as PUT /settings/ai-provider/config
+    (app/api/v1/settings.py): encrypted via app.core.security.encrypt_secret,
+    never decrypted/echoed back here. Lets an admin paste in e.g. a free NVE
+    HydAPI key without a redeploy — the next scheduler tick picks it up via
+    get_connectors() (app/services/connectors/__init__.py)."""
+    source = db.get(DataSource, source_id)
+    if source is None:
+        raise NotFoundError(message="Data source not found")
+
+    source.encrypted_api_key = encrypt_secret(payload.api_key)
+    # A freshly-saved key deserves an immediate clean slate, not a stale
+    # failure state left over from before it was configured.
+    source.consecutive_failures = 0
+    source.last_error_message = None
+    db.commit()
+    db.refresh(source)
+
+    now = datetime.now(timezone.utc)
+    return SourceHealthOut(
+        id=source.id,
+        code=source.code,
+        name=source.name,
+        provider=source.provider,
+        kind=source.kind,
+        is_active=source.is_active,
+        license=source.license,
+        homepage_url=source.homepage_url,
+        health=compute_source_health(source, now).value,
+        last_attempt_at=source.last_attempt_at,
+        last_success_at=source.last_success_at,
+        consecutive_failures=source.consecutive_failures,
+        last_error_message=source.last_error_message,
+        city=SourceCityRef.model_validate(source.city) if source.city is not None else None,
+        requires_api_key=source.provider in _PROVIDERS_REQUIRING_API_KEY,
+        is_key_configured=source.is_key_configured,
+    )
 
 
 def _latest_readings_by_station(db: Session, station_ids: list[uuid.UUID]) -> dict[uuid.UUID, list[LatestReadingOut]]:

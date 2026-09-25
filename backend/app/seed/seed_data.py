@@ -200,6 +200,23 @@ def run() -> None:
     finally:
         db.close()
 
+    # P1.1 hotfix: countries/cities reference tables (D016) — schema
+    # foundation only, seeded with all 9 consortium cities (idempotent).
+    #
+    # Session 020: this MUST run before seed_environmental below —
+    # get_or_create_data_source (called by seed_environmental's own
+    # backfill) auto-links each DataSource to its City by label_en the
+    # moment the row is first created. Seeding environmental data first,
+    # while no City rows exist yet, left every DataSource permanently
+    # city-less in a fresh install (a live deployment's scheduler ticks
+    # again a few seconds later and self-heals it — see
+    # ingestion_service.get_or_create_data_source — but a test session's
+    # scheduler never runs at all, so the gap was caught by a failing test
+    # instead of surfacing on the /sources page).
+    from app.seed.seed_geography import run as seed_geography_run
+
+    seed_geography_run()
+
     # P1: deterministic environmental backfill, so the Command Center/map are
     # never empty on a fresh install — even before the live scheduler has had
     # a chance to run, and even if the deployment network can't reach the
@@ -207,12 +224,6 @@ def run() -> None:
     from app.seed.seed_environmental import run as seed_environmental_run
 
     seed_environmental_run()
-
-    # P1.1 hotfix: countries/cities reference tables (D016) — schema
-    # foundation only, seeded with France/Toulouse (idempotent).
-    from app.seed.seed_geography import run as seed_geography_run
-
-    seed_geography_run()
 
 
 if __name__ == "__main__":

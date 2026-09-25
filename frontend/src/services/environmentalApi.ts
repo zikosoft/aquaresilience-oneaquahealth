@@ -5,6 +5,14 @@ export function fetchSources() {
   return api.get<SourceHealth[]>('/environmental/sources').then((r) => r.data)
 }
 
+// Session 020: write-only — same pattern as the AI Provider settings'
+// api_key field. The backend never echoes the key back.
+export function updateSourceCredentials(sourceId: string, apiKey: string) {
+  return api
+    .put<SourceHealth>(`/environmental/sources/${sourceId}/credentials`, { api_key: apiKey })
+    .then((r) => r.data)
+}
+
 export function fetchStations() {
   return api.get<Station[]>('/environmental/stations').then((r) => r.data)
 }

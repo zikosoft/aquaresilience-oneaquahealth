@@ -8,5 +8,15 @@
   },
   "empty": "Aucune source de données connectée pour le moment.",
   "license": "Licence",
-  "lastError": "Dernière erreur"
+  "lastError": "Dernière erreur",
+  "unassignedCity": "Non assignée",
+  "credentials": {
+    "configured": "Clé API configurée",
+    "missing": "Clé API requise",
+    "addKey": "Ajouter une clé API",
+    "dialogTitle": "Clé API pour {name}",
+    "dialogHint": "Stockée chiffrée, jamais réaffichée une fois enregistrée. La prochaine synchronisation planifiée la prendra en compte automatiquement.",
+    "apiKey": "Clé API",
+    "whereToGetKey": "Où obtenir une clé API ?"
+  }
 }

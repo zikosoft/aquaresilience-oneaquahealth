@@ -8,5 +8,15 @@
   },
   "empty": "Ainda não há fontes de dados ligadas.",
   "license": "Licença",
-  "lastError": "Último erro"
+  "lastError": "Último erro",
+  "unassignedCity": "Não atribuída",
+  "credentials": {
+    "configured": "Chave de API configurada",
+    "missing": "Chave de API necessária",
+    "addKey": "Adicionar chave de API",
+    "dialogTitle": "Chave de API para {name}",
+    "dialogHint": "Armazenada de forma encriptada, nunca mais exibida após ser guardada. A próxima sincronização agendada irá utilizá-la automaticamente.",
+    "apiKey": "Chave de API",
+    "whereToGetKey": "Onde obtenho uma chave de API?"
+  }
 }

@@ -129,6 +129,15 @@ export interface ApiErrorEnvelope {
 
 export type SourceHealthStatus = 'fresh' | 'stale' | 'degraded'
 
+// Session 020: minimal city reference for grouping the /sources page —
+// mirrors app/schemas/environmental.py's SourceCityRef.
+export interface SourceCityRef {
+  id: string
+  label_en: string
+  label_fr: string
+  label_es: string
+}
+
 export interface SourceHealth {
   id: string
   code: string
@@ -143,6 +152,9 @@ export interface SourceHealth {
   last_success_at: string | null
   consecutive_failures: number
   last_error_message: string | null
+  city: SourceCityRef | null
+  requires_api_key: boolean
+  is_key_configured: boolean
 }
 
 export interface LatestReading {

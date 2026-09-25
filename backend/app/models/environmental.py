@@ -32,11 +32,20 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 from app.models.base import TimestampMixin, UUIDPrimaryKeyMixin
+from app.models.geography import City
 
 
 class DataSourceProvider(StrEnum):
     HUBEAU_HYDROMETRIE = "hubeau_hydrometrie"
     OPEN_METEO = "open_meteo"
+    # Session 020 (user request): 3 more consortium-city hydrology
+    # connectors. NVE_HYDAPI is the only one that genuinely requires a
+    # registered API key (see NveHydapiConnector.requires_api_key); eHYD
+    # and Waterinfo.be are keyless (Waterinfo.be accepts an optional token
+    # for higher-volume polling, but isn't gated on one).
+    NVE_HYDAPI = "nve_hydapi"
+    EHYD = "ehyd"
+    WATERINFO_BE = "waterinfo_be"
 
 
 class DataSourceKind(StrEnum):
@@ -88,7 +97,29 @@ class DataSource(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     last_error_message: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     consecutive_failures: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
+    # Session 020 (user request): every connector maps 1:1 to one city in
+    # this architecture (see app/services/connectors/), so the city
+    # association lives here rather than on Station — resolved and kept in
+    # sync automatically by `ingestion_service.get_or_create_data_source`
+    # (matched on connector.city == City.label_en), never hand-wired per
+    # city. Nullable because it's populated by that self-healing sync on the
+    # first ingestion tick, not required at row-creation time.
+    city_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("cities.id", ondelete="SET NULL"), nullable=True
+    )
+    # Same write-only-secret pattern as AIProviderConfig.encrypted_api_key
+    # (app/models/settings.py): encrypted at rest via
+    # app.core.security.encrypt_secret/decrypt_secret, never returned to the
+    # frontend once saved. Null for keyless connectors (Hub'Eau, Open-Meteo,
+    # eHYD, Waterinfo.be without a registered token).
+    encrypted_api_key: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+
     stations: Mapped[list["Station"]] = relationship(back_populates="data_source", cascade="all, delete-orphan")
+    city: Mapped["City | None"] = relationship()
+
+    @property
+    def is_key_configured(self) -> bool:
+        return bool(self.encrypted_api_key)
 
 
 class Station(UUIDPrimaryKeyMixin, TimestampMixin, Base):

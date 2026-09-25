@@ -6,6 +6,19 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class SourceCityRef(BaseModel):
+    """Minimal city reference for grouping the /sources page — just enough
+    to render a localized group header, not the full CityOut (map defaults
+    etc. aren't needed here)."""
+
+    id: uuid.UUID
+    label_en: str
+    label_fr: str
+    label_es: str
+
+    model_config = {"from_attributes": True}
+
+
 class SourceHealthOut(BaseModel):
     id: uuid.UUID
     code: str
@@ -20,8 +33,21 @@ class SourceHealthOut(BaseModel):
     last_success_at: datetime | None
     consecutive_failures: int
     last_error_message: str | None
+    # Session 020 (user request): dynamic city association (was previously
+    # only a free-text string on Station) + credential status, so /sources
+    # can group by city and prompt for a missing key without a second call.
+    city: SourceCityRef | None = None
+    requires_api_key: bool = False
+    is_key_configured: bool = False
 
     model_config = {"from_attributes": True}
+
+
+class DataSourceCredentialsUpdate(BaseModel):
+    """Write-only: same pattern as AIProviderConfigUpdate.api_key
+    (app/schemas/settings.py) — the stored key is never echoed back."""
+
+    api_key: str
 
 
 class LatestReadingOut(BaseModel):

@@ -42,7 +42,7 @@ def _tick() -> None:
     db = SessionLocal()
     try:
         now = datetime.now(timezone.utc)
-        for connector in get_connectors():
+        for connector in get_connectors(db):
             source = get_or_create_data_source(db, connector)
             db.commit()
             last_attempt = source.last_attempt_at

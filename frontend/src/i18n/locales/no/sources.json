@@ -8,5 +8,15 @@
   },
   "empty": "Ingen datakilder er koblet til ennå.",
   "license": "Lisens",
-  "lastError": "Siste feil"
+  "lastError": "Siste feil",
+  "unassignedCity": "Ikke tilordnet",
+  "credentials": {
+    "configured": "API-nøkkel konfigurert",
+    "missing": "API-nøkkel kreves",
+    "addKey": "Legg til API-nøkkel",
+    "dialogTitle": "API-nøkkel for {name}",
+    "dialogHint": "Lagres kryptert og vises aldri igjen etter lagring. Neste planlagte synkronisering tar den i bruk automatisk.",
+    "apiKey": "API-nøkkel",
+    "whereToGetKey": "Hvor får jeg en API-nøkkel?"
+  }
 }

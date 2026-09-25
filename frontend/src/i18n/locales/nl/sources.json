@@ -8,5 +8,15 @@
   },
   "empty": "Er zijn nog geen gegevensbronnen gekoppeld.",
   "license": "Licentie",
-  "lastError": "Laatste fout"
+  "lastError": "Laatste fout",
+  "unassignedCity": "Niet toegewezen",
+  "credentials": {
+    "configured": "API-sleutel geconfigureerd",
+    "missing": "API-sleutel vereist",
+    "addKey": "API-sleutel toevoegen",
+    "dialogTitle": "API-sleutel voor {name}",
+    "dialogHint": "Wordt versleuteld opgeslagen en na opslaan nooit meer getoond. De volgende geplande synchronisatie gebruikt hem automatisch.",
+    "apiKey": "API-sleutel",
+    "whereToGetKey": "Waar krijg ik een API-sleutel?"
+  }
 }

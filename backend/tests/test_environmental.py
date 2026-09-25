@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 from app.models.environmental import DataSource, DataSourceKind, DataSourceProvider, MeasurementVariable, StationKind
 from app.services.connectors.base import BaseConnector, ConnectorError, NormalizedReading
-from app.services.ingestion_service import SourceHealth, compute_source_health, run_connector
+from app.services.ingestion_service import SourceHealth, compute_source_health, get_or_create_data_source, run_connector
 
 
 class _FakeConnector(BaseConnector):
@@ -202,3 +202,111 @@ def test_environmental_endpoints_require_authentication(client):
     assert client.get("/api/v1/environmental/sources").status_code == 401
     assert client.get("/api/v1/environmental/stations").status_code == 401
     assert client.get("/api/v1/environmental/summary").status_code == 401
+
+
+# --- Session 020: DataSource <-> City association, dynamic has_live_data,
+# and the write-only credentials endpoint ---
+
+
+class _CityScopedConnector(BaseConnector):
+    """Minimal fake connector for exercising get_or_create_data_source's
+    city_id auto-link and run_connector's has_live_data flip, independent
+    of any real external API."""
+
+    provider = DataSourceProvider.HUBEAU_HYDROMETRIE
+    kind = DataSourceKind.HYDROLOGY
+    license = "test"
+    homepage_url = "http://example.invalid"
+    expected_interval_seconds = 300
+    stale_after_seconds = 3600
+
+    def __init__(self, source_code: str, city: str, fail: bool = False) -> None:
+        self.source_code = source_code
+        self.source_name = f"Test connector for {city}"
+        self.city = city
+        self.fail = fail
+
+    def fetch(self) -> list[NormalizedReading]:
+        if self.fail:
+            raise ConnectorError("simulated failure")
+        now = datetime.now(timezone.utc)
+        return [
+            NormalizedReading(
+                "CITYTEST1", "City Test Station", StationKind.RIVER_GAUGE, self.city, None, 1.0, 1.0,
+                MeasurementVariable.WATER_LEVEL_MM, 100.0, "mm", now,
+            )
+        ]
+
+
+def test_get_or_create_data_source_auto_links_city_id(db_session):
+    from sqlalchemy import select
+
+    from app.models.geography import City
+
+    toulouse = db_session.execute(select(City).where(City.label_en == "Toulouse")).scalar_one()
+    connector = _CityScopedConnector("test_city_link_source", "Toulouse")
+    source = get_or_create_data_source(db_session, connector)
+    assert source.city_id == toulouse.id
+
+
+def test_run_connector_flips_city_has_live_data_on_first_success_and_stays_flipped(db_session):
+    from sqlalchemy import select
+
+    from app.models.geography import City
+
+    # Athens has no connector anywhere in the app — safe to use as a
+    # standalone "was never live" city for this test.
+    connector = _CityScopedConnector("test_athens_source", "Athens")
+    result = run_connector(db_session, connector)
+    assert result["ok"] is True
+
+    athens = db_session.execute(select(City).where(City.label_en == "Athens")).scalar_one()
+    assert athens.has_live_data is True
+    assert athens.planned_data_source is None
+
+    # A later failure of the same source must not un-flip the city — same
+    # "fresh/stale/degraded", never a hard on/off, philosophy as source health.
+    failing_connector = _CityScopedConnector("test_athens_source", "Athens", fail=True)
+    fail_result = run_connector(db_session, failing_connector)
+    assert fail_result["ok"] is False
+    db_session.refresh(athens)
+    assert athens.has_live_data is True
+
+
+def test_update_source_credentials_encrypts_and_never_echoes_key(client, admin_token, db_session):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    sources = client.get("/api/v1/environmental/sources", headers=headers).json()
+    hubeau_id = next(s["id"] for s in sources if s["code"] == "hubeau_hydrometrie_toulouse_garonne")
+
+    resp = client.put(
+        f"/api/v1/environmental/sources/{hubeau_id}/credentials",
+        json={"api_key": "super-secret-key"},
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "api_key" not in body
+    assert "super-secret-key" not in resp.text
+    assert body["is_key_configured"] is True
+
+    source = db_session.query(DataSource).filter_by(code="hubeau_hydrometrie_toulouse_garonne").one()
+    assert source.encrypted_api_key is not None
+    assert source.encrypted_api_key != "super-secret-key"
+
+
+def test_update_source_credentials_404_for_unknown_source(client, admin_token):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    resp = client.put(
+        "/api/v1/environmental/sources/00000000-0000-0000-0000-000000000000/credentials",
+        json={"api_key": "x"},
+        headers=headers,
+    )
+    assert resp.status_code == 404
+
+
+def test_sources_endpoint_reports_city_and_requires_api_key(client, admin_token):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    sources = client.get("/api/v1/environmental/sources", headers=headers).json()
+    hubeau = next(s for s in sources if s["code"] == "hubeau_hydrometrie_toulouse_garonne")
+    assert hubeau["city"]["label_en"] == "Toulouse"
+    assert hubeau["requires_api_key"] is False

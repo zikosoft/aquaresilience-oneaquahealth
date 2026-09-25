@@ -8,5 +8,15 @@
   },
   "empty": "No data sources are connected yet.",
   "license": "License",
-  "lastError": "Last error"
+  "lastError": "Last error",
+  "unassignedCity": "Unassigned",
+  "credentials": {
+    "configured": "API key configured",
+    "missing": "API key required",
+    "addKey": "Add API key",
+    "dialogTitle": "API key for {name}",
+    "dialogHint": "Stored encrypted, never shown again once saved. The next scheduled sync picks it up automatically.",
+    "apiKey": "API key",
+    "whereToGetKey": "Where do I get an API key?"
+  }
 }
