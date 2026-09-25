@@ -56,6 +56,10 @@
   "factorContribution": {
     "title": "Contribution des facteurs de risque"
   },
+  "resilienceRadar": {
+    "title": "Radar de résilience",
+    "notAvailable": "Données insuffisantes"
+  },
   "sourceHealth": {
     "title": "Fraîcheur des sources"
   },

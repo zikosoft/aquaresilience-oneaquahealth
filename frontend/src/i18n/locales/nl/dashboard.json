@@ -56,6 +56,10 @@
   "factorContribution": {
     "title": "Bijdrage van Risicofactoren"
   },
+  "resilienceRadar": {
+    "title": "Veerkrachtradar",
+    "notAvailable": "Onvoldoende gegevens"
+  },
   "sourceHealth": {
     "title": "Actualiteit van Bronnen"
   },

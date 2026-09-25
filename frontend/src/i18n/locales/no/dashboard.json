@@ -56,6 +56,10 @@
   "factorContribution": {
     "title": "Bidrag fra risikofaktorer"
   },
+  "resilienceRadar": {
+    "title": "Robusthetsradar",
+    "notAvailable": "Ikke nok data"
+  },
   "sourceHealth": {
     "title": "Datakildenes friskhet"
   },

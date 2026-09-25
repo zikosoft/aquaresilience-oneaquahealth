@@ -56,6 +56,10 @@
   "factorContribution": {
     "title": "Contribuição dos Fatores de Risco"
   },
+  "resilienceRadar": {
+    "title": "Radar de Resiliência",
+    "notAvailable": "Dados insuficientes"
+  },
   "sourceHealth": {
     "title": "Frescura das Fontes"
   },

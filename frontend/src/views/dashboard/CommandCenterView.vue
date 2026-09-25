@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 
 import FactorContribution from '@/components/charts/FactorContribution.vue'
 import KpiSparkline from '@/components/charts/KpiSparkline.vue'
+import ResilienceRadar from '@/components/charts/ResilienceRadar.vue'
 import RiskGauge from '@/components/charts/RiskGauge.vue'
 import RiskTrajectoryChart from '@/components/charts/RiskTrajectoryChart.vue'
 import SignalsTimeline from '@/components/charts/SignalsTimeline.vue'
@@ -334,6 +335,23 @@ const environmentalRiskGaugeValue = computed(() => (risk.value ? Math.round(risk
 const factorContributionItems = computed(() =>
   risk.value
     ? risk.value.factors.map((f) => ({ factor: t(factorTranslationKey(f.key)), contribution: f.contribution }))
+    : null,
+)
+
+// Session 019 — WOW #3: Resilience Radar. Built from the exact same
+// risk.value.factors this same view already fetches per-city (see the
+// `load()`/`watch(cityStore.selectedCityId, load)` pair above) — no
+// separate fetch, no city-specific code, so it stays correct for whichever
+// city is selected without ever needing to be touched again (per the
+// user's explicit request). See ResilienceRadar.vue's own docstring for
+// why this uses normalized_value rather than contribution.
+const resilienceRadarItems = computed(() =>
+  risk.value
+    ? risk.value.factors.map((f) => ({
+        factor: t(factorTranslationKey(f.key)),
+        value: f.normalized_value !== null ? Math.round(f.normalized_value * 100) : 0,
+        available: f.available,
+      }))
     : null,
 )
 
@@ -744,7 +762,7 @@ const openWarningMessage = computed(() => {
     >
       <v-col
         cols="12"
-        md="6"
+        md="4"
       >
         <FactorContribution
           widget-id="factor-contribution"
@@ -756,7 +774,19 @@ const openWarningMessage = computed(() => {
       </v-col>
       <v-col
         cols="12"
-        md="6"
+        md="4"
+      >
+        <ResilienceRadar
+          widget-id="resilience-radar"
+          :title="t('dashboard.resilienceRadar.title')"
+          :items="resilienceRadarItems"
+          :loading="loading"
+          :empty-text="t('common.status.empty')"
+        />
+      </v-col>
+      <v-col
+        cols="12"
+        md="4"
       >
         <WidgetCard
           widget-id="source-health"

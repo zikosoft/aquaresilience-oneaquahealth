@@ -56,6 +56,10 @@
   "factorContribution": {
     "title": "Συμβολή Παραγόντων Κινδύνου"
   },
+  "resilienceRadar": {
+    "title": "Ραντάρ Ανθεκτικότητας",
+    "notAvailable": "Ανεπαρκή δεδομένα"
+  },
   "sourceHealth": {
     "title": "Φρεσκάδα Πηγών"
   },
