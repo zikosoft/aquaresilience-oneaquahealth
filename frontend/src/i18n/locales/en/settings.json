@@ -16,7 +16,7 @@
     "city": "City",
     "timezone": "Timezone",
     "dateFormat": "Date format",
-    "singleCityNotice": "Toulouse Métropole is the only city with a live data connector today. Use the city selector in the header to preview the other OneAquaHealth consortium cities the platform is already built to onboard."
+    "singleCityNotice": "Use the city selector in the header to switch between the OneAquaHealth consortium cities this platform is built to monitor. Not every city has a live data connector yet — the dashboard says so plainly when one doesn't."
   },
   "languages": {
     "defaultLocale": "Default language",

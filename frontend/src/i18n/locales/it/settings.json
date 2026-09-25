@@ -16,7 +16,7 @@
     "city": "Città",
     "timezone": "Fuso orario",
     "dateFormat": "Formato data",
-    "singleCityNotice": "Toulouse Métropole è oggi l'unica città con un connettore dati in tempo reale attivo. Usa il selettore di città nell'intestazione per esplorare le altre città del consorzio OneAquaHealth che la piattaforma è già pronta a integrare."
+    "singleCityNotice": "Usa il selettore di città nell'intestazione per passare tra le città del consorzio OneAquaHealth. Non tutte hanno ancora un connettore dati in tempo reale — la dashboard lo segnala chiaramente quando è così."
   },
   "languages": {
     "defaultLocale": "Lingua predefinita",

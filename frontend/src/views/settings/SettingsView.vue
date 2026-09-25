@@ -83,16 +83,15 @@ function countryDisplayName(iso2: string): string {
   }
 }
 
+// Session 020 (user request): the 'city' select field that used to live
+// here was removed — D016's single seeded "city" setting is dead now that
+// geography.City + the header's city selector (stores/city.ts) are the
+// real, multi-city source of truth (confirmed zero backend reads of this
+// setting's value). The read-only cities reference table further down
+// (still using localizedCityLabel/countryDisplayName) is kept — it's a
+// genuinely useful "what is this platform's own reference data" view, not
+// the dead setting.
 const generalFields = computed(() => [
-  {
-    path: 'city',
-    label: t('settings.general.city'),
-    type: 'select' as const,
-    options: cities.value.map((city) => ({
-      value: city.label_en.toLowerCase(),
-      label: `${localizedCityLabel(city)} (${countryDisplayName(city.country_iso2)})`,
-    })),
-  },
   { path: 'timezone', label: t('settings.general.timezone'), type: 'text' as const },
   { path: 'date_format', label: t('settings.general.dateFormat'), type: 'text' as const },
 ])

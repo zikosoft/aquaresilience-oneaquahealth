@@ -35,15 +35,38 @@ weighted average instead of silently under-counting to zero.
 """
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
-from app.models.environmental import Measurement, MeasurementVariable
+from app.models.environmental import DataSource, Measurement, MeasurementVariable, Station
 from app.models.risk import Warning, WarningStatus
 from app.models.settings import AppSetting
+
+
+def scope_measurements_to_city(query: Select, city_id: uuid.UUID | None) -> Select:
+    """Session 020 fix (live-caught correctness bug): every normalizer below
+    used to query Measurement with no station/city filter at all. That was
+    harmless while Toulouse was the only city with real ingested data, but
+    now that Vienna/Ghent (and soon Oslo) also ingest real measurements into
+    this same shared table, an unscoped scan silently blends multiple
+    cities' river levels/rainfall into one meaningless number — the
+    Dashboard, Map, Scenario Simulator and AI brief would all show that same
+    blended score for ANY city flagged has_live_data, not that city's own
+    reading. city_id=None (the default, and every call site before this
+    fix) preserves the exact old global-scan behavior byte-for-byte, so
+    existing tests/callers are unaffected; passing it scopes the query
+    through Station -> DataSource to that one city's own stations only."""
+    if city_id is None:
+        return query
+    return (
+        query.join(Station, Station.id == Measurement.station_id)
+        .join(DataSource, DataSource.id == Station.data_source_id)
+        .where(DataSource.city_id == city_id)
+    )
 
 # --- Documented fallback reference constants (see module docstring) ---
 RAINFALL_REFERENCE_MM_24H = 40.0
@@ -99,48 +122,51 @@ def _get_risk_engine_settings(db: Session) -> dict:
     return {"weights": weights, "thresholds": thresholds}
 
 
-def _normalize_rainfall(db: Session, now: datetime, multiplier: float = 1.0) -> float | None:
+def _normalize_rainfall(
+    db: Session, now: datetime, multiplier: float = 1.0, city_id: uuid.UUID | None = None
+) -> float | None:
     """`multiplier` defaults to 1.0 (unchanged, real-data behavior). P4's
     Scenario Simulator (`compute_projected_risk`) passes a
     `1 + rainfall_adjustment_pct/100` multiplier here to scale the actual
     observed 24h total by a hypothetical +X% — never a second, divergent
     computation path, just this same normalizer fed a scaled input."""
     since = now - timedelta(hours=24)
-    total = db.execute(
-        select(func.sum(Measurement.value)).where(
-            Measurement.variable == MeasurementVariable.PRECIPITATION_MM.value,
-            Measurement.observed_at >= since,
-        )
-    ).scalar_one_or_none()
+    query = select(func.sum(Measurement.value)).where(
+        Measurement.variable == MeasurementVariable.PRECIPITATION_MM.value,
+        Measurement.observed_at >= since,
+    )
+    total = db.execute(scope_measurements_to_city(query, city_id)).scalar_one_or_none()
     if total is None:
         return None
     adjusted = max(0.0, total * multiplier)
     return max(0.0, min(adjusted / RAINFALL_REFERENCE_MM_24H, 1.0))
 
 
-def _latest_water_level_mm(db: Session) -> float | None:
-    return db.execute(
+def _latest_water_level_mm(db: Session, city_id: uuid.UUID | None = None) -> float | None:
+    query = (
         select(Measurement.value)
         .where(Measurement.variable == MeasurementVariable.WATER_LEVEL_MM.value)
         .order_by(Measurement.observed_at.desc())
         .limit(1)
-    ).scalar_one_or_none()
+    )
+    return db.execute(scope_measurements_to_city(query, city_id)).scalar_one_or_none()
 
 
-def _normalize_hydrology(db: Session, now: datetime, multiplier: float = 1.0) -> float | None:
+def _normalize_hydrology(
+    db: Session, now: datetime, multiplier: float = 1.0, city_id: uuid.UUID | None = None
+) -> float | None:
     """See `_normalize_rainfall`'s docstring — same pattern, scaling the
     latest observed water level by a hypothetical river-level adjustment."""
-    latest = _latest_water_level_mm(db)
+    latest = _latest_water_level_mm(db, city_id)
     if latest is None:
         return None
     adjusted_latest = max(0.0, latest * multiplier)
     since = now - timedelta(days=HYDROLOGY_LOOKBACK_DAYS)
-    lo, hi = db.execute(
-        select(func.min(Measurement.value), func.max(Measurement.value)).where(
-            Measurement.variable == MeasurementVariable.WATER_LEVEL_MM.value,
-            Measurement.observed_at >= since,
-        )
-    ).one()
+    query = select(func.min(Measurement.value), func.max(Measurement.value)).where(
+        Measurement.variable == MeasurementVariable.WATER_LEVEL_MM.value,
+        Measurement.observed_at >= since,
+    )
+    lo, hi = db.execute(scope_measurements_to_city(query, city_id)).one()
     if lo is None or hi is None or hi <= lo:
         # Flat/degenerate range (e.g. a single reading so far): not enough
         # signal yet to place the current level on a relative scale.
@@ -148,36 +174,40 @@ def _normalize_hydrology(db: Session, now: datetime, multiplier: float = 1.0) ->
     return max(0.0, min((adjusted_latest - lo) / (hi - lo), 1.0))
 
 
-def _normalize_environmental(db: Session) -> float | None:
-    latest = db.execute(
+def _normalize_environmental(db: Session, city_id: uuid.UUID | None = None) -> float | None:
+    query = (
         select(Measurement.value)
         .where(Measurement.variable == MeasurementVariable.SOIL_MOISTURE_RATIO.value)
         .order_by(Measurement.observed_at.desc())
         .limit(1)
-    ).scalar_one_or_none()
+    )
+    latest = db.execute(scope_measurements_to_city(query, city_id)).scalar_one_or_none()
     if latest is None:
         return None
     return max(0.0, min(latest, 1.0))
 
 
-def _trend_window_rows(db: Session, now: datetime) -> list | None:
+def _trend_window_rows(db: Session, now: datetime, city_id: uuid.UUID | None = None) -> list | None:
     """Shared trailing-`TREND_WINDOW_HOURS` water-level rows, used by both
     `_normalize_trend` (the real score's 0..1 trend factor) and
     `_trend_rate_mm_per_hour` (P5's raw mm/h rate — see below) so the two
     can never read a different window or drift apart."""
     since = now - timedelta(hours=TREND_WINDOW_HOURS)
-    rows = db.execute(
+    query = (
         select(Measurement.value, Measurement.observed_at)
         .where(
             Measurement.variable == MeasurementVariable.WATER_LEVEL_MM.value,
             Measurement.observed_at >= since,
         )
         .order_by(Measurement.observed_at)
-    ).all()
+    )
+    rows = db.execute(scope_measurements_to_city(query, city_id)).all()
     return rows if len(rows) >= 2 else None
 
 
-def _normalize_trend(db: Session, now: datetime, level_multiplier: float = 1.0) -> float | None:
+def _normalize_trend(
+    db: Session, now: datetime, level_multiplier: float = 1.0, city_id: uuid.UUID | None = None
+) -> float | None:
     """`level_multiplier` defaults to 1.0 (unchanged, real-data behavior).
     P4 passes the same river-level multiplier used by `_normalize_hydrology`
     here too, applied to the *most recent* reading only: the implied rate of
@@ -185,7 +215,7 @@ def _normalize_trend(db: Session, now: datetime, level_multiplier: float = 1.0) 
     value by `last_ts`, rather than independently scaling the observed rate
     itself (which would wrongly make an already-falling trend fall faster
     under a "river level up" scenario)."""
-    rows = _trend_window_rows(db, now)
+    rows = _trend_window_rows(db, now, city_id)
     if rows is None:
         return None
     first_value, first_ts = rows[0]
@@ -198,14 +228,14 @@ def _normalize_trend(db: Session, now: datetime, level_multiplier: float = 1.0) 
     return max(0.0, min(rate / TREND_REFERENCE_MM_PER_HOUR, 1.0))
 
 
-def _trend_rate_mm_per_hour(db: Session, now: datetime) -> float | None:
+def _trend_rate_mm_per_hour(db: Session, now: datetime, city_id: uuid.UUID | None = None) -> float | None:
     """Raw (unnormalized, unclamped) mm/hour rate of rise over the same
     trailing window `_normalize_trend` uses — a real physical rate rather
     than a 0..1 score contribution. Used exclusively by
     `compute_risk_trajectory` (P5 — WOW: Predictive Risk Trajectory) to
     linearly extrapolate the water level forward; `_normalize_trend` still
     owns the real score's own factor value, untouched by this function."""
-    rows = _trend_window_rows(db, now)
+    rows = _trend_window_rows(db, now, city_id)
     if rows is None:
         return None
     first_value, first_ts = rows[0]
@@ -271,19 +301,24 @@ def _combine_factors(
     )
 
 
-def compute_risk(db: Session, now: datetime | None = None) -> RiskResult:
+def compute_risk(db: Session, now: datetime | None = None, city_id: uuid.UUID | None = None) -> RiskResult:
     """Deterministic: reads only stored measurements + Settings, no
-    randomness, no external calls, no AI. Same DB state -> same result."""
+    randomness, no external calls, no AI. Same DB state -> same result.
+
+    Session 020 fix: `city_id` scopes every normalizer to one city's own
+    stations (see `scope_measurements_to_city`). Defaulted to None so every existing
+    caller keeps its exact prior (global-scan) behavior unless it opts in —
+    see app/api/v1/risk.py for the one that now does."""
     now = now or datetime.now(timezone.utc)
     config = _get_risk_engine_settings(db)
     weights = config["weights"]
     thresholds = config["thresholds"]
 
     raw_values: dict[str, float | None] = {
-        "rainfall": _normalize_rainfall(db, now),
-        "hydrology": _normalize_hydrology(db, now),
-        "environmental": _normalize_environmental(db),
-        "trend": _normalize_trend(db, now),
+        "rainfall": _normalize_rainfall(db, now, city_id=city_id),
+        "hydrology": _normalize_hydrology(db, now, city_id=city_id),
+        "environmental": _normalize_environmental(db, city_id=city_id),
+        "trend": _normalize_trend(db, now, city_id=city_id),
     }
     return _combine_factors(raw_values, weights, thresholds, now)
 
@@ -293,6 +328,7 @@ def compute_projected_risk(
     rainfall_adjustment_pct: float,
     river_level_adjustment_pct: float,
     now: datetime | None = None,
+    city_id: uuid.UUID | None = None,
 ) -> RiskResult:
     """P4 — Scenario Simulator (Master Spec §20). Deterministic projection:
     the rainfall/hydrology/trend factors are recomputed from the exact same
@@ -311,10 +347,10 @@ def compute_projected_risk(
     river_multiplier = 1.0 + (river_level_adjustment_pct / 100.0)
 
     raw_values: dict[str, float | None] = {
-        "rainfall": _normalize_rainfall(db, now, multiplier=rainfall_multiplier),
-        "hydrology": _normalize_hydrology(db, now, multiplier=river_multiplier),
-        "environmental": _normalize_environmental(db),
-        "trend": _normalize_trend(db, now, level_multiplier=river_multiplier),
+        "rainfall": _normalize_rainfall(db, now, multiplier=rainfall_multiplier, city_id=city_id),
+        "hydrology": _normalize_hydrology(db, now, multiplier=river_multiplier, city_id=city_id),
+        "environmental": _normalize_environmental(db, city_id=city_id),
+        "trend": _normalize_trend(db, now, level_multiplier=river_multiplier, city_id=city_id),
     }
     return _combine_factors(raw_values, weights, thresholds, now)
 
@@ -343,6 +379,7 @@ def compute_risk_trajectory(
     db: Session,
     now: datetime | None = None,
     horizons_hours: tuple[int, ...] = TRAJECTORY_HORIZONS_HOURS,
+    city_id: uuid.UUID | None = None,
 ) -> RiskTrajectory:
     """P5 — Predictive Risk Trajectory (WOW feature; Track 6's "predictive
     dashboards" wording). Deterministic, and — per Stop Rule #7 — reuses the
@@ -374,9 +411,9 @@ def compute_risk_trajectory(
     weights = config["weights"]
     thresholds = config["thresholds"]
 
-    current = compute_risk(db, now)
-    raw_rate = _trend_rate_mm_per_hour(db, now)
-    latest_level = _latest_water_level_mm(db)
+    current = compute_risk(db, now, city_id=city_id)
+    raw_rate = _trend_rate_mm_per_hour(db, now, city_id)
+    latest_level = _latest_water_level_mm(db, city_id)
 
     if raw_rate is None or latest_level is None:
         basis = "insufficient_data"
@@ -387,7 +424,7 @@ def compute_risk_trajectory(
     effective_rate = raw_rate if (raw_rate is not None and raw_rate > 0) else 0.0
 
     # Held fixed across every horizon — see point 3 in the docstring above.
-    trend_value = _normalize_trend(db, now)
+    trend_value = _normalize_trend(db, now, city_id=city_id)
 
     points: list[TrajectoryPoint] = []
     for hours_ahead in horizons_hours:
@@ -408,9 +445,9 @@ def compute_risk_trajectory(
         projected_level = latest_level + effective_rate * hours_ahead
         level_multiplier = projected_level / latest_level
         raw_values: dict[str, float | None] = {
-            "rainfall": _normalize_rainfall(db, now),
-            "hydrology": _normalize_hydrology(db, now, multiplier=level_multiplier),
-            "environmental": _normalize_environmental(db),
+            "rainfall": _normalize_rainfall(db, now, city_id=city_id),
+            "hydrology": _normalize_hydrology(db, now, multiplier=level_multiplier, city_id=city_id),
+            "environmental": _normalize_environmental(db, city_id=city_id),
             "trend": trend_value,
         }
         result = _combine_factors(raw_values, weights, thresholds, now)

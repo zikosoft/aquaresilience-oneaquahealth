@@ -16,7 +16,7 @@
     "city": "Stad",
     "timezone": "Tijdzone",
     "dateFormat": "Datumnotatie",
-    "singleCityNotice": "Toulouse Métropole is momenteel de enige stad met een actieve live-gegevensconnector. Gebruik de stadskiezer in de koptekst om de andere steden van het OneAquaHealth-consortium te bekijken die het platform al klaar heeft staan om te integreren."
+    "singleCityNotice": "Gebruik de stadskiezer in de koptekst om te wisselen tussen de steden van het OneAquaHealth-consortium. Niet elke stad heeft al een actieve live-gegevensconnector — het dashboard geeft dit dan duidelijk aan."
   },
   "languages": {
     "defaultLocale": "Standaardtaal",

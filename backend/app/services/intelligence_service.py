@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import re
+import uuid
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 
@@ -36,8 +37,9 @@ from app.models.environmental import DataSource, Measurement, MeasurementVariabl
 from app.models.intelligence import SituationBrief
 from app.models.settings import AIProviderConfig, AppSetting
 from app.services.ai_provider_service import AIProviderError, get_or_create_ai_config, get_provider
+from app.services.city_context import get_primary_city_id
 from app.services.ingestion_service import compute_source_health
-from app.services.risk_engine import compute_risk, evaluate_and_persist_warnings
+from app.services.risk_engine import compute_risk, evaluate_and_persist_warnings, scope_measurements_to_city
 
 LANGUAGE_INSTRUCTIONS = {
     "en": "Respond in English.",
@@ -90,31 +92,39 @@ def get_default_language(db: Session) -> str:
     return locale if locale in LANGUAGE_INSTRUCTIONS else DEFAULT_LANGUAGE
 
 
-def build_environmental_snapshot(db: Session, now: datetime) -> dict:
+def build_environmental_snapshot(db: Session, now: datetime, city_id: uuid.UUID | None = None) -> dict:
     """Structured, JSON-serializable snapshot of "what's happening right
     now" — the only input the AI ever sees. Every value here is read from
-    already-ingested/-computed data, nothing is invented for the prompt."""
-    risk = compute_risk(db, now)
+    already-ingested/-computed data, nothing is invented for the prompt.
+
+    Session 020 fix: `city_id` scopes the risk score and readings to one
+    city's own stations — see `risk_engine.scope_measurements_to_city`.
+    `generate_situation_brief` always passes Toulouse's id
+    (`get_primary_city_id`): the prompt below already names Toulouse
+    Métropole explicitly, so this closes a real gap where, once Vienna/
+    Ghent also had live measurements, an unscoped scan could blend their
+    readings into what the AI was told was Toulouse's own situation."""
+    risk = compute_risk(db, now, city_id=city_id)
     warning = evaluate_and_persist_warnings(db, risk)
 
     def _latest(variable: MeasurementVariable) -> dict | None:
-        row = db.execute(
+        query = (
             select(Measurement)
             .where(Measurement.variable == variable.value)
             .order_by(Measurement.observed_at.desc())
             .limit(1)
-        ).scalar_one_or_none()
+        )
+        row = db.execute(scope_measurements_to_city(query, city_id)).scalar_one_or_none()
         if row is None:
             return None
         return {"value": row.value, "unit": row.unit, "observed_at": row.observed_at.isoformat()}
 
     since_24h = now - timedelta(hours=24)
-    precip_24h = db.execute(
-        select(func.sum(Measurement.value)).where(
-            Measurement.variable == MeasurementVariable.PRECIPITATION_MM.value,
-            Measurement.observed_at >= since_24h,
-        )
-    ).scalar_one_or_none()
+    precip_query = select(func.sum(Measurement.value)).where(
+        Measurement.variable == MeasurementVariable.PRECIPITATION_MM.value,
+        Measurement.observed_at >= since_24h,
+    )
+    precip_24h = db.execute(scope_measurements_to_city(precip_query, city_id)).scalar_one_or_none()
 
     sources = db.execute(select(DataSource)).scalars().all()
     active_sources = sum(1 for s in sources if s.is_active)
@@ -299,7 +309,13 @@ async def generate_situation_brief(
         db.commit()
         return BriefGenerationResult(ok=False, message=config.last_analysis_error)
 
-    snapshot, risk = build_environmental_snapshot(db, now)
+    # Session 020: the shared brief stays explicitly scoped to Toulouse
+    # (see get_primary_city_id and build_environmental_snapshot's own
+    # docstring) — this is the correctness fix, not a decision to widen the
+    # brief to every live city; that would multiply LLM calls against
+    # config.daily_request_ceiling per city and is a separate, larger
+    # change (see Settings > AI Provider / the AI Intelligence page note).
+    snapshot, risk = build_environmental_snapshot(db, now, city_id=get_primary_city_id(db))
     prompt = build_prompt(snapshot, language)
     provider = get_provider(config.provider, api_key=api_key, model=config.model)
 

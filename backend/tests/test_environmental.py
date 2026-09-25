@@ -111,6 +111,35 @@ def test_stations_endpoint_returns_seeded_stations_with_coordinates(client, admi
         assert isinstance(station["latest"], list)
 
 
+def test_stations_endpoint_filters_by_city_id(client, admin_token):
+    # Session 020 (user request): "quand on change la ville dans le
+    # dashboard il faut que la map change aussi" — the map now passes the
+    # selected city through to this endpoint.
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    cities = client.get("/api/v1/geography/cities", headers=headers).json()
+    toulouse_id = next(c["id"] for c in cities if c["label_en"] == "Toulouse")
+    barcelona_id = next(c["id"] for c in cities if c["label_en"] == "Barcelona")
+
+    unfiltered = client.get("/api/v1/environmental/stations", headers=headers).json()
+    toulouse_only = client.get(
+        f"/api/v1/environmental/stations?city_id={toulouse_id}", headers=headers
+    ).json()
+    barcelona_only = client.get(
+        f"/api/v1/environmental/stations?city_id={barcelona_id}", headers=headers
+    ).json()
+
+    # At least the 2 seeded Toulouse stations, and never more than the
+    # unfiltered/global list (other tests in this shared-DB suite may add
+    # their own scratch stations under other data sources — see e.g.
+    # test_get_or_create_data_source_auto_links_city_id above).
+    assert 2 <= len(toulouse_only) <= len(unfiltered)
+    assert {s["id"] for s in toulouse_only} <= {s["id"] for s in unfiltered}
+    # Barcelona has no connector at all (see connector_status == "none" in
+    # test_map_settings.py) — the map must honestly show no markers for it,
+    # never Toulouse's stations under Barcelona's name.
+    assert barcelona_only == []
+
+
 def test_station_timeseries_endpoint(client, admin_token):
     headers = {"Authorization": f"Bearer {admin_token}"}
     stations = client.get("/api/v1/environmental/stations", headers=headers).json()
@@ -272,6 +301,20 @@ def test_run_connector_flips_city_has_live_data_on_first_success_and_stays_flipp
     db_session.refresh(athens)
     assert athens.has_live_data is True
 
+    # Session 020: conftest's db_session fixture hits the one real,
+    # session-scoped test database with no per-test transaction
+    # rollback (see _prepare_schema) — a commit here is permanent for the
+    # rest of the suite. seed_geography.py used to (accidentally) paper
+    # over that by resetting has_live_data on every reseed; Session 020
+    # fixed that reset because it was also silently reverting Vienna/
+    # Ghent's real dynamically-flipped has_live_data on every container
+    # restart in production (see seed_geography.py's own comment). This
+    # test's own job is only to prove the flip-and-stays-flipped mechanism
+    # — it must clean up its own mutation rather than leaking a
+    # permanently "live" Athens into every test that runs after it.
+    athens.has_live_data = False
+    db_session.commit()
+
 
 def test_update_source_credentials_encrypts_and_never_echoes_key(client, admin_token, db_session):
     headers = {"Authorization": f"Bearer {admin_token}"}
@@ -292,6 +335,31 @@ def test_update_source_credentials_encrypts_and_never_echoes_key(client, admin_t
     source = db_session.query(DataSource).filter_by(code="hubeau_hydrometrie_toulouse_garonne").one()
     assert source.encrypted_api_key is not None
     assert source.encrypted_api_key != "super-secret-key"
+
+
+def test_update_source_credentials_clears_last_attempt_so_next_tick_is_immediately_due(client, admin_token, db_session):
+    """Live-caught bug: a source that had already failed once for lack of a
+    key keeps last_attempt_at from that failure. Without clearing it here,
+    the scheduler's own due-check (now - last_attempt_at >=
+    expected_interval_seconds, 900s for NVE) would skip the newly-keyed
+    source for up to 15 more minutes even though it's ready to retry."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    source = db_session.query(DataSource).filter_by(code="hubeau_hydrometrie_toulouse_garonne").one()
+    source.last_attempt_at = datetime.now(timezone.utc)
+    source.consecutive_failures = 2
+    source.last_error_message = "some earlier failure"
+    db_session.commit()
+
+    resp = client.put(
+        f"/api/v1/environmental/sources/{source.id}/credentials",
+        json={"api_key": "fresh-key"},
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    db_session.refresh(source)
+    assert source.last_attempt_at is None
+    assert source.consecutive_failures == 0
+    assert source.last_error_message is None
 
 
 def test_update_source_credentials_404_for_unknown_source(client, admin_token):

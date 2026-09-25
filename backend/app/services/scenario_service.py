@@ -25,6 +25,7 @@ deterministic, AI explains the result":
 from __future__ import annotations
 
 import json
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
@@ -37,7 +38,13 @@ from app.models.environmental import Measurement, MeasurementVariable
 from app.models.settings import AIProviderConfig
 from app.services import intelligence_service
 from app.services.ai_provider_service import AIProviderError, get_or_create_ai_config, get_provider
-from app.services.risk_engine import RiskResult, compute_projected_risk, compute_risk, describe_warning_outcome
+from app.services.risk_engine import (
+    RiskResult,
+    scope_measurements_to_city,
+    compute_projected_risk,
+    compute_risk,
+    describe_warning_outcome,
+)
 
 MAX_RECOMMENDATIONS = 5
 
@@ -64,23 +71,23 @@ class ScenarioExplanationResult:
     confidence: float | None = None
 
 
-def _latest_water_level_mm(db: Session) -> float | None:
-    return db.execute(
+def _latest_water_level_mm(db: Session, city_id: uuid.UUID | None = None) -> float | None:
+    query = (
         select(Measurement.value)
         .where(Measurement.variable == MeasurementVariable.WATER_LEVEL_MM.value)
         .order_by(Measurement.observed_at.desc())
         .limit(1)
-    ).scalar_one_or_none()
+    )
+    return db.execute(scope_measurements_to_city(query, city_id)).scalar_one_or_none()
 
 
-def _precipitation_24h_total_mm(db: Session, now: datetime) -> float | None:
+def _precipitation_24h_total_mm(db: Session, now: datetime, city_id: uuid.UUID | None = None) -> float | None:
     since = now - timedelta(hours=24)
-    total = db.execute(
-        select(func.sum(Measurement.value)).where(
-            Measurement.variable == MeasurementVariable.PRECIPITATION_MM.value,
-            Measurement.observed_at >= since,
-        )
-    ).scalar_one_or_none()
+    query = select(func.sum(Measurement.value)).where(
+        Measurement.variable == MeasurementVariable.PRECIPITATION_MM.value,
+        Measurement.observed_at >= since,
+    )
+    total = db.execute(scope_measurements_to_city(query, city_id)).scalar_one_or_none()
     return round(total, 1) if total is not None else None
 
 
@@ -89,16 +96,25 @@ def simulate_scenario(
     rainfall_adjustment_pct: float,
     river_level_adjustment_pct: float,
     now: datetime | None = None,
+    city_id: uuid.UUID | None = None,
 ) -> ScenarioResult:
     """Pure, deterministic, synchronous — no network call, no AI, safe to
     call as often as the UI wants (same reliability property as
-    `GET /risk/current`)."""
-    now = now or datetime.now(timezone.utc)
-    current = compute_risk(db, now)
-    projected = compute_projected_risk(db, rainfall_adjustment_pct, river_level_adjustment_pct, now)
+    `GET /risk/current`).
 
-    water_level = _latest_water_level_mm(db)
-    precipitation = _precipitation_24h_total_mm(db, now)
+    Session 020 fix: `city_id` (default None, unchanged global-scan
+    behavior) scopes both the risk computation and this module's own
+    water-level/precipitation readouts to one city — see
+    `app.services.risk_engine.scope_measurements_to_city` for why this matters now
+    that more than one city has real ingested measurements."""
+    now = now or datetime.now(timezone.utc)
+    current = compute_risk(db, now, city_id=city_id)
+    projected = compute_projected_risk(
+        db, rainfall_adjustment_pct, river_level_adjustment_pct, now, city_id=city_id
+    )
+
+    water_level = _latest_water_level_mm(db, city_id)
+    precipitation = _precipitation_24h_total_mm(db, now, city_id)
     river_multiplier = 1.0 + (river_level_adjustment_pct / 100.0)
     rainfall_multiplier = 1.0 + (rainfall_adjustment_pct / 100.0)
 

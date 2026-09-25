@@ -394,11 +394,15 @@ async function addStationMarkers(): Promise<void> {
     // P4: a non-null riskOverride (Scenario Simulator) skips the network
     // call entirely and uses the already-computed projected/current score
     // the caller passed in.
+    // Session 020 (user request): city-scoped, same honesty convention as
+    // the dashboard/scenario simulator — only the selected city's own
+    // stations/risk are shown, never another city's data under its name.
+    const cityId = cityStore.selectedCityId
     const [stations, risk] = await Promise.all([
-      fetchStations(),
+      fetchStations(cityId),
       props.riskOverride !== null && props.riskOverride !== undefined
         ? Promise.resolve(props.riskOverride)
-        : fetchCurrentRisk().catch((e) => {
+        : fetchCurrentRisk(cityId).catch((e) => {
             console.error('Failed to load current risk for map', e)
             return null
           }),
@@ -538,13 +542,15 @@ watch(
   },
 )
 
-// Session 018 (user request): fly to the newly selected city — a visual
-// recenter only. Station markers are never re-fetched here: the backend
-// has exactly one real station (Toulouse) regardless of which city is
-// centered, so nothing is fabricated for the other 8 — the map honestly
-// just won't show a marker nearby until that city has a connector of
-// its own (see the dashboard's "no live data" banner for the rest of
-// that story).
+// Session 018 (user request): fly to the newly selected city.
+// Session 020 (user request, live-caught gap): now that Vienna/Ghent (and
+// soon Oslo) have real stations too, this used to only recenter the camera
+// — the markers/risk ring underneath stayed whichever city loaded first,
+// so switching to e.g. Vienna still showed Toulouse's risk score. Markers
+// are now re-fetched city-scoped on every change (see addStationMarkers),
+// same honesty convention as the dashboard/scenario simulator: a city with
+// no connector yet just shows no markers, never another city's data under
+// its name.
 watch(
   () => cityStore.selectedCityId,
   () => {
@@ -554,6 +560,7 @@ watch(
       center: [envCenterLon ?? city.default_lon, envCenterLat ?? city.default_lat],
       zoom: envZoom ?? city.default_zoom,
     })
+    if (!loading.value) void addStationMarkers()
   },
 )
 </script>

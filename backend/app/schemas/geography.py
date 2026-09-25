@@ -19,6 +19,16 @@ class CityOut(BaseModel):
     # consortium city — see app/models/geography.py's module docstring.
     has_live_data: bool
     planned_data_source: str | None = None
+    # Session 020 (user request): 3-tier signal for the header's city
+    # selector, distinct from the plain has_live_data bool — "live" (real
+    # ingested data), "pending" (a connector is registered and has at least
+    # attempted a fetch — e.g. Oslo/NVE before its API key is configured —
+    # so it just needs a key/time, not code), or "none" (no connector has
+    # ever run for this city at all — e.g. Athens/Barcelona/Naples/Holon,
+    # and Coimbra which was explicitly not integrated this round). Computed
+    # from whether any DataSource row exists for the city, never hardcoded
+    # per-city in the frontend — see app/api/v1/geography.py.
+    connector_status: str = "none"
 
     model_config = {"from_attributes": True}
 

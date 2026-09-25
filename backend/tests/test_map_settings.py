@@ -48,6 +48,35 @@ def test_cities_endpoint_returns_the_seeded_toulouse_default(client, admin_token
     others_with_live_data = [c for c in cities if c["label_en"] != "Toulouse" and c["has_live_data"]]
     assert others_with_live_data == []
 
+    # Session 020: the 3-tier connector_status the header's city selector
+    # now reads — live (Toulouse) and none (Barcelona: no connector was
+    # ever built for it). "pending" is covered separately below: its
+    # DataSource row is normally only created by the background scheduler's
+    # first tick (disabled under pytest), not by this seed.
+    assert toulouse["connector_status"] == "live"
+    barcelona = next(c for c in cities if c["label_en"] == "Barcelona")
+    assert barcelona["connector_status"] == "none"
+
+
+def test_cities_endpoint_reports_pending_for_a_registered_but_keyless_connector(client, admin_token, db_session):
+    # Session 020: Oslo/NVE is registered unconditionally (see
+    # app/services/connectors/__init__.py's module docstring) precisely so
+    # its DataSource row — and with it this "pending" status — can exist
+    # before an API key is ever configured. That row is normally only
+    # created by the scheduler's first tick, so this test creates it the
+    # same way `run_connector`/the scheduler would.
+    from app.services.connectors.nve_hydapi import NveHydapiConnector
+    from app.services.ingestion_service import get_or_create_data_source
+
+    get_or_create_data_source(db_session, NveHydapiConnector(api_key=None))
+    db_session.commit()
+
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    cities = client.get("/api/v1/geography/cities", headers=headers).json()
+    oslo = next(c for c in cities if c["label_en"] == "Oslo")
+    assert oslo["connector_status"] == "pending"
+    assert oslo["has_live_data"] is False
+
 
 def test_viewer_can_read_cities_but_not_map_settings(client, db_session):
     role = db_session.execute(select(Role).where(Role.code == "VIEWER")).scalar_one()

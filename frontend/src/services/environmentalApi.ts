@@ -13,8 +13,14 @@ export function updateSourceCredentials(sourceId: string, apiKey: string) {
     .then((r) => r.data)
 }
 
-export function fetchStations() {
-  return api.get<Station[]>('/environmental/stations').then((r) => r.data)
+// Session 020 (user request): optional city_id so the map can show only the
+// selected city's own stations — "quand on change la ville dans le
+// dashboard il faut que la map change aussi". Omitted, unchanged global
+// list (same as every caller before this).
+export function fetchStations(cityId?: string | null) {
+  return api
+    .get<Station[]>('/environmental/stations', { params: cityId ? { city_id: cityId } : {} })
+    .then((r) => r.data)
 }
 
 export function fetchStationTimeseries(stationId: string, hours = 48) {

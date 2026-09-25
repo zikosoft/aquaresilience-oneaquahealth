@@ -16,7 +16,7 @@
     "city": "Stadt",
     "timezone": "Zeitzone",
     "dateFormat": "Datumsformat",
-    "singleCityNotice": "Toulouse Métropole ist derzeit die einzige Stadt mit einer aktiven Echtzeit-Datenquelle. Nutzen Sie den Stadtauswähler in der Kopfzeile, um die anderen Städte des OneAquaHealth-Konsortiums zu erkunden, die die Plattform bereits einbinden kann."
+    "singleCityNotice": "Verwenden Sie den Stadtauswähler in der Kopfzeile, um zwischen den Städten des OneAquaHealth-Konsortiums zu wechseln. Nicht jede Stadt hat bereits eine aktive Echtzeit-Datenquelle — das Dashboard weist deutlich darauf hin, wenn das der Fall ist."
   },
   "languages": {
     "defaultLocale": "Standardsprache",

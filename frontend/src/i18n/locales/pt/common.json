@@ -53,8 +53,13 @@
     "select": "Cidade",
     "noLiveData": {
       "title": "Ainda sem dados em tempo real para {city}",
-      "body": "Este projeto recolhe dados reais apenas para Toulouse. {city} é apresentada para mostrar a capacidade da plataforma de integrar as outras cidades do consórcio OneAquaHealth.",
+      "body": "Esta cidade ainda não tem um conetor de dados em tempo real. {city} é apresentada para mostrar a capacidade da plataforma de integrar as outras cidades do consórcio OneAquaHealth.",
       "plannedSource": "Conector candidato identificado: {source}"
+    },
+    "status": {
+      "live": "Dados em tempo real",
+      "pending": "Conetor pendente",
+      "none": "Ainda não integrada"
     }
   }
 }

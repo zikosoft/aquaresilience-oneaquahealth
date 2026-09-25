@@ -53,8 +53,13 @@
     "select": "Ciudad",
     "noLiveData": {
       "title": "Aún no hay datos en vivo para {city}",
-      "body": "Este despliegue ingiere datos reales solo para Toulouse. {city} se muestra para previsualizar la capacidad de la plataforma para incorporar las demás ciudades del consorcio OneAquaHealth.",
+      "body": "Esta ciudad aún no tiene un conector de datos en vivo. {city} se muestra para previsualizar la capacidad de la plataforma para incorporar las demás ciudades del consorcio OneAquaHealth.",
       "plannedSource": "Conector candidato identificado: {source}"
+    },
+    "status": {
+      "live": "Datos en vivo",
+      "pending": "Conector pendiente",
+      "none": "Aún no integrada"
     }
   }
 }

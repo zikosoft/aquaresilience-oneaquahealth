@@ -53,8 +53,13 @@
     "select": "By",
     "noLiveData": {
       "title": "Ingen sanntidsdata ennå for {city}",
-      "body": "Denne installasjonen henter kun ekte data for Toulouse. {city} vises for å illustrere plattformens beredskap til å ta i bruk de andre byene i OneAquaHealth-konsortiet.",
+      "body": "Denne byen har ikke en aktiv sanntids datakilde ennå. {city} vises for å illustrere plattformens beredskap til å ta i bruk de andre byene i OneAquaHealth-konsortiet.",
       "plannedSource": "Aktuell datakilde identifisert: {source}"
+    },
+    "status": {
+      "live": "Sanntidsdata",
+      "pending": "Datakilde ventende",
+      "none": "Ikke integrert ennå"
     }
   }
 }

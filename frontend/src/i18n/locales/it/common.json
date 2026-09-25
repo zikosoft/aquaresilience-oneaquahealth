@@ -53,8 +53,13 @@
     "select": "Città",
     "noLiveData": {
       "title": "Nessun dato in tempo reale ancora per {city}",
-      "body": "Questa distribuzione acquisisce dati reali solo per Tolosa. {city} viene mostrata per illustrare la capacità della piattaforma di integrare le altre città del consorzio OneAquaHealth.",
+      "body": "Questa città non ha ancora un connettore dati in tempo reale. {city} viene mostrata per illustrare la capacità della piattaforma di integrare le altre città del consorzio OneAquaHealth.",
       "plannedSource": "Connettore candidato individuato: {source}"
+    },
+    "status": {
+      "live": "Dati in tempo reale",
+      "pending": "Connettore in attesa",
+      "none": "Non ancora integrata"
     }
   }
 }

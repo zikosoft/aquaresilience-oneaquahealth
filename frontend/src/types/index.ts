@@ -65,9 +65,9 @@ export interface AppSetting {
 // P2.1: read-only geography reference data (D016). Session 018: now 9
 // OneAquaHealth consortium cities, not just Toulouse — `ResilienceMap.vue`,
 // the Settings > Map tab and the header's city selector (`stores/city.ts`)
-// all read this. `has_live_data` is true only for Toulouse (the one city
-// with an actual ingested connector); the other 8 are real, selectable
-// cities with no connector yet — see `app/services/city_context.py`.
+// all read this. Session 020: several more cities have real connectors now
+// (Vienna/Ghent live, Oslo pending a key), so `has_live_data` alone is no
+// longer "Toulouse vs. the rest" — see `connector_status` below.
 export interface City {
   id: string
   label_en: string
@@ -79,6 +79,11 @@ export interface City {
   default_zoom: number
   has_live_data: boolean
   planned_data_source: string | null
+  // Session 020: 3-tier signal for the header's city selector — 'live'
+  // (real ingested data), 'pending' (a connector is registered but hasn't
+  // gone live yet, e.g. Oslo awaiting its API key), or 'none' (no connector
+  // has ever run for this city). Computed server-side, never inferred here.
+  connector_status: 'live' | 'pending' | 'none'
 }
 
 // P4.1: 'carto_light'/'carto_dark' removed — CARTO's raster basemap tiles

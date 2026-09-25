@@ -23,7 +23,7 @@ from app.core.errors import ConflictError, NotFoundError
 from app.models.risk import Warning, WarningStatus
 from app.models.user import User
 from app.schemas.risk import RiskFactorOut, RiskScoreOut, RiskTrajectoryOut, TrajectoryPointOut, WarningOut
-from app.services.city_context import resolve_city
+from app.services.city_context import get_primary_city_id, resolve_city
 from app.services.risk_engine import compute_risk, compute_risk_trajectory, evaluate_and_persist_warnings
 
 router = APIRouter()
@@ -67,8 +67,19 @@ def get_current_risk(
             data_available=False,
             planned_data_source=city.planned_data_source if city else None,
         )
-    result = compute_risk(db)
-    evaluate_and_persist_warnings(db, result)
+    # Session 020 fix (live-caught correctness bug): this used to call
+    # compute_risk(db) unscoped even after resolving which city was
+    # selected — harmless while Toulouse was the only city with real data,
+    # but once Vienna/Ghent/Oslo also ingest real measurements, every city
+    # flagged has_live_data would show the exact same blended global score.
+    result = compute_risk(db, city_id=city.id if city else None)
+    # Early Warnings has no per-city column yet (see get_primary_city_id's
+    # docstring) — it stays keyed to Toulouse specifically regardless of
+    # which city is being previewed, so switching the header to e.g. Vienna
+    # can never overwrite/flap the one shared Warning row with Vienna's
+    # score. A future per-city Warning redesign would remove this guard.
+    if city is None or city.id == get_primary_city_id(db):
+        evaluate_and_persist_warnings(db, result)
     return RiskScoreOut(
         score=result.score,
         severity=result.severity,
@@ -113,7 +124,8 @@ def get_risk_trajectory(
             data_available=False,
             planned_data_source=city.planned_data_source if city else None,
         )
-    trajectory = compute_risk_trajectory(db, now)
+    # Session 020 fix — same city-scoping correctness fix as GET /current.
+    trajectory = compute_risk_trajectory(db, now, city_id=city.id if city else None)
     return RiskTrajectoryOut(
         current_score=trajectory.current.score,
         current_severity=trajectory.current.severity,

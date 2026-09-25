@@ -87,7 +87,12 @@ async def simulate(
             ai_explanation_error=None,
         )
 
-    scenario = simulate_scenario(db, payload.rainfall_adjustment_pct, payload.river_level_adjustment_pct)
+    scenario = simulate_scenario(
+        db,
+        payload.rainfall_adjustment_pct,
+        payload.river_level_adjustment_pct,
+        city_id=city.id if city else None,
+    )
 
     ai_explanation: ScenarioAIExplanationOut | None = None
     ai_explanation_error: str | None = None

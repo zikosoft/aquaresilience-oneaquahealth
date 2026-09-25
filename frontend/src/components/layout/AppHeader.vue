@@ -47,6 +47,13 @@ function cityLabel(city: { label_en: string; label_fr: string; label_es: string 
 function onCityChange(cityId: string): void {
   cityStore.selectCity(cityId)
 }
+
+// Session 020: see the v-list-item comment below for what each tier means.
+const CITY_STATUS_DOT: Record<'live' | 'pending' | 'none', string> = {
+  live: '🟢',
+  pending: '🟡',
+  none: '⚪',
+}
 onUnmounted(() => {
   if (healthTimer) clearInterval(healthTimer)
 })
@@ -88,7 +95,14 @@ async function onLogout(): Promise<void> {
 
     <v-app-bar-title class="d-flex align-center ga-2">
       <span class="font-weight-bold">{{ t('common.appName') }}</span>
-      <span class="text-medium-emphasis d-none d-sm-inline">| Toulouse Métropole</span>
+      <!-- Session 020 (user request): was hardcoded "| Toulouse Métropole" —
+           now follows the header's own city selector, same cityLabel()
+           helper the dropdown below already uses. Empty until cityStore
+           has resolved a selection (matches the dropdown's own guard). -->
+      <span
+        v-if="cityStore.selectedCity"
+        class="text-medium-emphasis d-none d-sm-inline"
+      >| {{ cityLabel(cityStore.selectedCity) }}</span>
       <v-chip
         size="small"
         :color="systemOnline ? 'success' : 'error'"
@@ -124,18 +138,28 @@ async function onLogout(): Promise<void> {
             <span class="d-none d-md-inline">{{ cityStore.selectedCity ? cityLabel(cityStore.selectedCity) : '' }}</span>
           </v-btn>
         </template>
-        <v-list min-width="220">
+        <v-list min-width="240">
+          <!-- Session 020 (user request): 3-tier treatment so the selector
+               itself is honest about which cities are real, not just the
+               dashboard banner after the fact — live (real data), pending
+               (a connector exists, e.g. Oslo awaiting its API key — needs
+               config, not code), none (no connector at all — dimmed, still
+               selectable to preview the platform's readiness). Driven by
+               City.connector_status from the backend, never guessed here. -->
           <v-list-item
             v-for="city in cityStore.cities"
             :key="city.id"
             :active="cityStore.selectedCityId === city.id"
+            :class="{ 'opacity-60': city.connector_status === 'none' }"
             @click="onCityChange(city.id)"
           >
             <template #prepend>
-              <span class="mr-2">{{ city.has_live_data ? '🟢' : '⚪' }}</span>
+              <span class="mr-2">{{ CITY_STATUS_DOT[city.connector_status] }}</span>
             </template>
             <v-list-item-title>{{ cityLabel(city) }}</v-list-item-title>
-            <v-list-item-subtitle>{{ city.country_iso2 }}</v-list-item-subtitle>
+            <v-list-item-subtitle>
+              {{ city.country_iso2 }} · {{ t(`common.city.status.${city.connector_status}`) }}
+            </v-list-item-subtitle>
           </v-list-item>
         </v-list>
       </v-menu>

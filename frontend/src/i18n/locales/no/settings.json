@@ -16,7 +16,7 @@
     "city": "By",
     "timezone": "Tidssone",
     "dateFormat": "Datoformat",
-    "singleCityNotice": "Toulouse Métropole er i dag den eneste byen med en sanntids datakilde. Bruk byvelgeren i toppmenyen for å forhåndsvise de andre byene i OneAquaHealth-konsortiet som plattformen allerede er klar til å ta i bruk."
+    "singleCityNotice": "Bruk byvelgeren i toppmenyen for å bytte mellom byene i OneAquaHealth-konsortiet. Ikke alle har en aktiv sanntids datakilde ennå — dashbordet viser dette tydelig når det er tilfelle."
   },
   "languages": {
     "defaultLocale": "Standardspråk",

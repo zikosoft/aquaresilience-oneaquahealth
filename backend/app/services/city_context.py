@@ -12,9 +12,30 @@ from __future__ import annotations
 
 import uuid
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.geography import City
+
+
+def get_primary_city_id(db: Session) -> uuid.UUID | None:
+    """Session 020: the platform's one designated 'primary' city for the
+    features that are still genuinely global/singleton rather than
+    per-city — the shared AI Situation Brief (SituationBrief has no city
+    column, Master Spec §19: "one shared stored brief for all users"), the
+    background scheduler's warning evaluation, and the Early Warnings
+    lifecycle itself (Warning has no city column either). Toulouse is that
+    city: the platform's original demo city and this hackathon's Track 6
+    subject (Toulouse Métropole). Falls back to None (today's unscoped
+    global-scan behavior in risk_engine._scope_to_city) if that row is ever
+    missing, rather than erroring out a scheduler tick or a brief refresh —
+    should never happen in practice since seed_geography always creates it.
+    Making Early Warnings/the AI brief genuinely per-city is a larger,
+    separate redesign (multiplying LLM calls and warning rows per live
+    city) — out of scope for this pass; see the Settings/AI Intelligence
+    docs for the current single-brief rationale."""
+    city = db.execute(select(City).where(City.label_en == "Toulouse")).scalar_one_or_none()
+    return city.id if city else None
 
 
 def resolve_city(db: Session, city_id: uuid.UUID | None) -> tuple[City | None, bool]:

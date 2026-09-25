@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.api.v1.deps import require_permission
 from app.core.database import get_db
+from app.models.environmental import DataSource
 from app.models.geography import City, Country
 from app.models.settings import AppSetting, SettingCategory
 from app.models.user import User
@@ -37,21 +38,37 @@ def _list_cities(db: Session) -> list[CityOut]:
     rows = db.execute(
         select(City, Country).join(Country, Country.id == City.country_id).order_by(City.label_en)
     ).all()
-    return [
-        CityOut(
-            id=city.id,
-            label_en=city.label_en,
-            label_fr=city.label_fr,
-            label_es=city.label_es,
-            country_iso2=country.iso2,
-            default_lon=city.default_lon,
-            default_lat=city.default_lat,
-            default_zoom=city.default_zoom,
-            has_live_data=city.has_live_data,
-            planned_data_source=city.planned_data_source,
+    # Session 020 (user request): cities with a registered connector that
+    # hasn't gone live yet (Oslo/NVE before a key is configured) read as
+    # "pending" rather than "none" in the header's 3-tier selector — derived
+    # from whether a DataSource row exists at all, never hardcoded per-city.
+    cities_with_a_connector = set(
+        db.execute(select(DataSource.city_id).where(DataSource.city_id.is_not(None)).distinct()).scalars().all()
+    )
+    result = []
+    for city, country in rows:
+        if city.has_live_data:
+            connector_status = "live"
+        elif city.id in cities_with_a_connector:
+            connector_status = "pending"
+        else:
+            connector_status = "none"
+        result.append(
+            CityOut(
+                id=city.id,
+                label_en=city.label_en,
+                label_fr=city.label_fr,
+                label_es=city.label_es,
+                country_iso2=country.iso2,
+                default_lon=city.default_lon,
+                default_lat=city.default_lat,
+                default_zoom=city.default_zoom,
+                has_live_data=city.has_live_data,
+                planned_data_source=city.planned_data_source,
+                connector_status=connector_status,
+            )
         )
-        for city, country in rows
-    ]
+    return result
 
 
 @router.get("/cities", response_model=list[CityOut])

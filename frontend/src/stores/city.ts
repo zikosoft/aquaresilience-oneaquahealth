@@ -10,10 +10,8 @@ const CITY_KEY = 'aquaresilience.city_id'
 // dashboard-facing view reads `selectedCity`/`selectedCityId` from here and
 // passes `city_id` to its API calls — the backend returns the exact same
 // response shape for any city (see app/services/city_context.py), just
-// with `data_available: false` for the 8 consortium cities that don't have
-// a live connector yet. Toulouse (the one real city) stays the default so
-// a fresh visit — and every existing screenshot/demo path — behaves
-// exactly as before.
+// with `data_available: false` for the consortium cities that don't have a
+// live connector yet.
 export const useCityStore = defineStore('city', () => {
   const cities = ref<City[]>([])
   const selectedCityId = ref<string | null>(localStorage.getItem(CITY_KEY))
@@ -24,7 +22,18 @@ export const useCityStore = defineStore('city', () => {
     return cities.value.find((c) => c.id === selectedCityId.value) ?? demoCity.value ?? cities.value[0]
   })
 
-  const demoCity = computed<City | null>(() => cities.value.find((c) => c.has_live_data) ?? null)
+  // Session 020 fix (live-caught): now that Vienna/Ghent are live too, this
+  // used to resolve to "whichever live city sorts first alphabetically" —
+  // Ghent, not Toulouse, for a brand new visitor with nothing in
+  // localStorage yet, quietly changing the app's own default landing city
+  // as a side effect of onboarding more cities, never a deliberate choice.
+  // Toulouse — this hackathon's actual demo subject, Track 6's flagship
+  // "Toulouse Métropole" city — now stays the explicit first choice
+  // whenever it's live, falling back to the old "first live city"
+  // behavior only if it somehow isn't (defensive, should never happen).
+  const demoCity = computed<City | null>(
+    () => cities.value.find((c) => c.has_live_data && c.label_en === 'Toulouse') ?? cities.value.find((c) => c.has_live_data) ?? null,
+  )
 
   async function load(): Promise<void> {
     if (loaded.value) return

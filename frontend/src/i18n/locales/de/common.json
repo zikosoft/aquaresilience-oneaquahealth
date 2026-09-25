@@ -53,8 +53,13 @@
     "select": "Stadt",
     "noLiveData": {
       "title": "Noch keine Echtzeitdaten für {city}",
-      "body": "Diese Bereitstellung erfasst echte Daten nur für Toulouse. {city} wird angezeigt, um zu zeigen, dass die Plattform bereit ist, die anderen Städte des OneAquaHealth-Konsortiums einzubinden.",
+      "body": "Diese Stadt hat noch keine aktive Echtzeit-Datenquelle. {city} wird angezeigt, um zu zeigen, dass die Plattform bereit ist, die anderen Städte des OneAquaHealth-Konsortiums einzubinden.",
       "plannedSource": "Identifizierter Kandidat für eine Datenquelle: {source}"
+    },
+    "status": {
+      "live": "Echtzeitdaten",
+      "pending": "Datenquelle ausstehend",
+      "none": "Noch nicht integriert"
     }
   }
 }

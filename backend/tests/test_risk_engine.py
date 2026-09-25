@@ -34,10 +34,12 @@ from app.services.risk_engine import compute_risk, compute_risk_trajectory, eval
 def isolated_db():
     """A DB session wrapping a real transaction that is ALWAYS rolled back
     at the end of the test, via the standard SQLAlchemy nested-SAVEPOINT
-    pattern — needed here specifically because the risk engine's queries
-    are deliberately global (this is a single-city, single-hydrology-station
-    deployment, so "the latest water level" etc. is meant to mean *the*
-    reading, not one scoped to a station id). The shared session-scoped
+    pattern — needed here because most of these tests never pass a
+    city_id, so the risk engine's queries run in their default global-scan
+    mode (Session 020: `city_id` now lets a caller scope to one city's own
+    stations — see `test_compute_risk_is_scoped_to_the_requested_city`
+    below — but the default/omitted behavior stays the original unscoped
+    scan, which is what most tests here rely on). The shared session-scoped
     `db_session` fixture from conftest.py seeds real P1 demo backfill data
     once for the whole test run, which would otherwise leak into and
     corrupt these tests' exact-value assertions (and vice versa: without
@@ -75,12 +77,13 @@ def isolated_db():
         connection.close()
 
 
-def _make_station(db_session, code: str = "risk_test_station") -> Station:
+def _make_station(db_session, code: str = "risk_test_station", city_id=None) -> Station:
     source = DataSource(
         code=f"src_{code}",
         name="Risk Test Source",
         provider=DataSourceProvider.HUBEAU_HYDROMETRIE.value,
         kind=DataSourceKind.HYDROLOGY.value,
+        city_id=city_id,
     )
     db_session.add(source)
     db_session.flush()
@@ -425,3 +428,83 @@ def test_warnings_endpoints_and_actions(client, admin_token, db_session):
         "/api/v1/risk/warnings/00000000-0000-0000-0000-000000000000/acknowledge", headers=headers
     )
     assert resp.status_code == 404
+
+
+def test_compute_risk_is_scoped_to_the_requested_city(isolated_db):
+    """Session 020 regression test for a live-caught correctness bug:
+    compute_risk used to scan Measurement globally with no station/city
+    filter at all. Harmless while only Toulouse had real data, but once a
+    second city also has real ingested measurements, an unscoped scan
+    blends both cities' water levels into one meaningless number — every
+    city flagged has_live_data would show the exact same (wrong) score.
+    This proves two cities' hydrology stays genuinely separate once a
+    city_id is passed, and that omitting city_id still reads BOTH (the
+    original global-scan behavior every pre-existing caller/test relies
+    on, preserved on purpose — see isolated_db's own docstring)."""
+    from sqlalchemy import select
+
+    from app.models.geography import City, Country
+
+    france = isolated_db.execute(select(Country).where(Country.iso2 == "FR")).scalar_one()
+    city_a = City(
+        country_id=france.id,
+        label_en="RiskTestCityA",
+        label_fr="RiskTestCityA",
+        label_es="RiskTestCityA",
+        default_lon=1.0,
+        default_lat=1.0,
+    )
+    city_b = City(
+        country_id=france.id,
+        label_en="RiskTestCityB",
+        label_fr="RiskTestCityB",
+        label_es="RiskTestCityB",
+        default_lon=2.0,
+        default_lat=2.0,
+    )
+    isolated_db.add_all([city_a, city_b])
+    isolated_db.flush()
+
+    station_a = _make_station(isolated_db, code="city_a_station", city_id=city_a.id)
+    station_b = _make_station(isolated_db, code="city_b_station", city_id=city_b.id)
+
+    now = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    # City A: a low, flat water level (a range of readings so the
+    # hydrology normalizer has a real min/max to place the latest one on).
+    for hours_ago, value in [(72, 100.0), (48, 100.0), (24, 100.0), (1, 110.0)]:
+        _add_measurement(
+            isolated_db, station_a, MeasurementVariable.WATER_LEVEL_MM, value, now - timedelta(hours=hours_ago)
+        )
+    # City B: a much higher water level — if these ever blend, City A's
+    # score would be pulled up by City B's much larger range/latest value.
+    for hours_ago, value in [(72, 900.0), (48, 900.0), (24, 900.0), (1, 990.0)]:
+        _add_measurement(
+            isolated_db, station_b, MeasurementVariable.WATER_LEVEL_MM, value, now - timedelta(hours=hours_ago)
+        )
+    isolated_db.commit()
+
+    result_a = compute_risk(isolated_db, now, city_id=city_a.id)
+    result_b = compute_risk(isolated_db, now, city_id=city_b.id)
+    result_global = compute_risk(isolated_db, now)
+
+    hydrology_a = next(f for f in result_a.factors if f.key == "hydrology")
+    hydrology_b = next(f for f in result_b.factors if f.key == "hydrology")
+    # Each city's own latest reading sits at the top of its OWN observed
+    # range — same relative position (~1.0), which would be impossible to
+    # tell apart from a blend. The real proof is the raw water level each
+    # one is actually keying off, not just the normalized 0..1 factor.
+    assert hydrology_a.available is True
+    assert hydrology_b.available is True
+
+    from app.services.risk_engine import _latest_water_level_mm
+
+    assert _latest_water_level_mm(isolated_db, city_a.id) == 110.0
+    assert _latest_water_level_mm(isolated_db, city_b.id) == 990.0
+    # Omitted city_id: the original global-scan behavior, seeing whichever
+    # row sorts last for a plain "ORDER BY observed_at DESC LIMIT 1" — in
+    # this case both cities' latest readings share the same observed_at
+    # hour, so this only asserts it's one of the two, never a fabricated
+    # third value — global scanning both cities is the documented (if now
+    # legacy-only) behavior, not a crash or silent zero.
+    assert _latest_water_level_mm(isolated_db) in (110.0, 990.0)
+    assert result_global is not None  # never raises when unscoped

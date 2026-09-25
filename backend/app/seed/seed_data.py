@@ -52,7 +52,12 @@ VIEWER_GRANTS_MODULES = ["DASHBOARD", "MAP", "ALERTS", "AI_INTELLIGENCE", "SCENA
 VIEWER_GRANTS_PERMISSIONS = ["VIEW"]
 
 DEFAULT_APP_SETTINGS = [
-    ("GENERAL", "general", {"city": "toulouse", "timezone": "Europe/Paris", "date_format": "YYYY-MM-DD"},
+    # Session 020: "city" dropped from this blob — it was a pre-multi-city
+    # placeholder (D016: one seeded city) never read anywhere server-side,
+    # now genuinely superseded by geography.City + the header's city
+    # selector (app/stores/city.ts). A pre-existing install's stored JSONB
+    # may still carry a harmless leftover "city" key; nothing reads it.
+    ("GENERAL", "general", {"timezone": "Europe/Paris", "date_format": "YYYY-MM-DD"},
      "General platform configuration."),
     ("LANGUAGES", "languages", {"default_locale": "en", "enabled_locales": ["en", "fr", "es"]},
      "Enabled UI languages and default locale."),

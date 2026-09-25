@@ -89,7 +89,17 @@ def update_source_credentials(
 
     source.encrypted_api_key = encrypt_secret(payload.api_key)
     # A freshly-saved key deserves an immediate clean slate, not a stale
-    # failure state left over from before it was configured.
+    # failure state left over from before it was configured. Resetting
+    # last_attempt_at too (not just the failure bookkeeping) is what
+    # actually matters here: the scheduler's `_tick()` only retries a
+    # source once `expected_interval_seconds` has elapsed since its LAST
+    # attempt (900s for NVE) — without this, a source that already failed
+    # once for lack of a key (creating that timestamp) stays "due" only on
+    # its old 15-minute clock even after the key is saved, so the very next
+    # 5-minute scheduler tick would otherwise skip it and silently sit on
+    # "degraded" for up to 15 more minutes. Live-caught: exactly the report
+    # "j'ai ajouté le key ... mais j'ai toujours status Degraded".
+    source.last_attempt_at = None
     source.consecutive_failures = 0
     source.last_error_message = None
     db.commit()
@@ -136,14 +146,23 @@ def _latest_readings_by_station(db: Session, station_ids: list[uuid.UUID]) -> di
 
 @router.get("/stations", response_model=list[StationOut])
 def list_stations(
+    # Session 020 (user request): "quand on change la ville dans le
+    # dashboard il faut que la map change aussi" — an optional filter so the
+    # map can show only the selected city's own stations rather than a
+    # permanently global list. Omitted, this stays the exact same unfiltered
+    # global query every existing caller already relies on.
+    city_id: uuid.UUID | None = Query(default=None),
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("MAP", "VIEW")),
 ) -> list[StationOut]:
-    rows = db.execute(
+    query = (
         select(Station, DataSource, ST_X(Station.geom), ST_Y(Station.geom))
         .join(DataSource, DataSource.id == Station.data_source_id)
         .order_by(Station.name)
-    ).all()
+    )
+    if city_id is not None:
+        query = query.where(DataSource.city_id == city_id)
+    rows = db.execute(query).all()
     station_ids = [row[0].id for row in rows]
     latest_by_station = _latest_readings_by_station(db, station_ids)
     now = datetime.now(timezone.utc)

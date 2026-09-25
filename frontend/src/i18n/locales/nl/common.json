@@ -53,8 +53,13 @@
     "select": "Stad",
     "noLiveData": {
       "title": "Nog geen live gegevens voor {city}",
-      "body": "Dit platform verzamelt echte gegevens uitsluitend voor Toulouse. {city} wordt getoond om te laten zien dat het platform klaar is om de andere steden van het OneAquaHealth-consortium te integreren.",
+      "body": "Deze stad heeft nog geen live gegevensconnector. {city} wordt getoond om te laten zien dat het platform klaar is om de andere steden van het OneAquaHealth-consortium te integreren.",
       "plannedSource": "Kandidaat-connector geïdentificeerd: {source}"
+    },
+    "status": {
+      "live": "Live gegevens",
+      "pending": "Connector in behandeling",
+      "none": "Nog niet geïntegreerd"
     }
   }
 }

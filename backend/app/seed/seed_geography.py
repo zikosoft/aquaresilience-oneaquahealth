@@ -89,11 +89,22 @@ def run() -> None:
                     )
                 )
             else:
-                # Keep an existing row's has_live_data/planned_data_source in
-                # sync with this table on every startup (idempotent update,
-                # not just idempotent insert) — e.g. Toulouse's row created
-                # before Session 018 defaulted to has_live_data=false.
-                city.has_live_data = has_live_data
+                # Session 020 fix (live-caught regression): has_live_data is
+                # no longer synced here on every startup. It used to be —
+                # originally to retroactively flip Toulouse's row from the
+                # column's false default right after the has_live_data
+                # migration — but once Vienna/Ghent/Oslo got real connectors,
+                # that same "sync from this static table" logic would silently
+                # flip them straight back to false on every container
+                # restart, because this CITIES list still says false for them
+                # (their true state is False-until-first-successful-ingestion,
+                # exactly like Toulouse originally was). has_live_data is now
+                # purely runtime state owned by ingestion_service.run_connector
+                # (see its own comment: "never un-flipped on a later
+                # failure") — this seed only supplies the honest starting
+                # value the FIRST time a city row is created, same as the
+                # actual live-data honesty pattern intends. planned_data_source
+                # is harmless descriptive text and stays synced.
                 city.planned_data_source = planned_source
         db.commit()
         print(f"Geography seed: OK ({len(CITIES)} cities across {len(COUNTRIES)} countries).", file=sys.stderr)

@@ -25,6 +25,7 @@ from app.core.database import SessionLocal
 from app.services.ai_provider_service import get_or_create_ai_config
 from app.services.connectors import get_connectors
 from app.services.ingestion_service import get_or_create_data_source, run_connector
+from app.services.city_context import get_primary_city_id
 from app.services.intelligence_service import (
     generate_situation_brief,
     get_default_language,
@@ -54,7 +55,11 @@ def _tick() -> None:
         # on every tick too, so warnings escalate/auto-resolve on their own
         # even if nobody has the Command Center open (GET /risk/current does
         # the same idempotent evaluation on demand — see app.api.v1.risk).
-        risk_result = compute_risk(db, now)
+        # Session 020: explicitly scoped to Toulouse (get_primary_city_id) —
+        # Warning has no per-city column yet, so this background tick must
+        # keep evaluating the one city it has always meant, not an
+        # unscoped blend across every now-live city's measurements.
+        risk_result = compute_risk(db, now, city_id=get_primary_city_id(db))
         warning = evaluate_and_persist_warnings(db, risk_result)
 
         # P3: shared scheduled AI Situation Brief (Master Spec §19 — default
