@@ -27,7 +27,7 @@ from app.models.environmental import (
     StationKind,
 )
 from app.models.risk import Warning, WarningStatus
-from app.services.risk_engine import compute_risk, evaluate_and_persist_warnings
+from app.services.risk_engine import compute_risk, compute_risk_trajectory, evaluate_and_persist_warnings
 
 
 @pytest.fixture()
@@ -193,6 +193,63 @@ def test_compute_risk_trend_factor_only_counts_rising_levels(isolated_db):
     assert trend_factor.normalized_value == 0.0
 
 
+def test_risk_trajectory_with_no_data_is_insufficient_and_flat(isolated_db):
+    trajectory = compute_risk_trajectory(isolated_db)
+    assert trajectory.basis == "insufficient_data"
+    assert trajectory.trend_rate_mm_per_hour is None
+    assert [p.hours_ahead for p in trajectory.points] == [1, 3, 6, 12]
+    assert all(p.score == trajectory.current.score == 0.0 for p in trajectory.points)
+    assert all(p.projected_water_level_mm is None for p in trajectory.points)
+
+
+def test_risk_trajectory_is_flat_for_a_falling_trend(isolated_db):
+    # Same falling-level fixture as the trend-factor test above: the honest
+    # trajectory for a falling/flat trend is flat, never a fabricated rise.
+    station = _make_station(isolated_db)
+    now = datetime.now(timezone.utc)
+    _add_measurement(isolated_db, station, MeasurementVariable.WATER_LEVEL_MM, 500.0, now - timedelta(hours=5))
+    _add_measurement(isolated_db, station, MeasurementVariable.WATER_LEVEL_MM, 400.0, now)
+    isolated_db.commit()
+
+    trajectory = compute_risk_trajectory(isolated_db, now)
+    assert trajectory.basis == "flat_or_falling"
+    assert trajectory.trend_rate_mm_per_hour == -20.0
+    assert all(p.score == trajectory.current.score for p in trajectory.points)
+
+
+def test_risk_trajectory_extrapolates_a_rising_trend_forward(isolated_db):
+    station = _make_station(isolated_db)
+    now = datetime.now(timezone.utc)
+    # Rising 60mm/h over the trailing window (100 -> 400 over 5h).
+    _add_measurement(isolated_db, station, MeasurementVariable.WATER_LEVEL_MM, 100.0, now - timedelta(hours=5))
+    _add_measurement(isolated_db, station, MeasurementVariable.WATER_LEVEL_MM, 400.0, now)
+    # A wide historical range so the hydrology factor is available and
+    # actually moves as the projected level rises further into it.
+    since = now - timedelta(days=10)
+    _add_measurement(isolated_db, station, MeasurementVariable.WATER_LEVEL_MM, 0.0, since)
+    _add_measurement(isolated_db, station, MeasurementVariable.WATER_LEVEL_MM, 2000.0, since + timedelta(hours=1))
+    isolated_db.commit()
+
+    trajectory = compute_risk_trajectory(isolated_db, now)
+    assert trajectory.basis == "rising_trend"
+    assert trajectory.trend_rate_mm_per_hour == 60.0
+    assert trajectory.current.score == compute_risk(isolated_db, now).score
+
+    levels = [p.projected_water_level_mm for p in trajectory.points]
+    assert levels == [460.0, 580.0, 760.0, 1120.0]  # 400 + 60*hours_ahead
+    scores = [p.score for p in trajectory.points]
+    # Strictly non-decreasing: a longer horizon never projects a lower score
+    # than a shorter one when the trend keeps rising.
+    assert scores == sorted(scores)
+    assert scores[-1] > trajectory.current.score
+
+    # The trend factor itself must be held fixed across every horizon (see
+    # compute_risk_trajectory's docstring, point 3) — recomputed per-point
+    # movement should come from hydrology only.
+    trend_factor_now = next(f for f in trajectory.current.factors if f.key == "trend")
+    assert trend_factor_now.available is True
+
+
 def test_severity_bucketing_matches_configured_thresholds(isolated_db):
     # Defaults: low=25, moderate=50, high=75.
     station = _make_station(isolated_db)
@@ -277,6 +334,40 @@ def test_risk_current_is_honestly_empty_for_a_non_demo_city(client, admin_token,
     assert body["data_available"] is False
     assert body["score"] == 0.0
     assert body["factors"] == []
+    assert body["planned_data_source"] == "NVE HydAPI"
+
+
+def test_risk_trajectory_endpoint_requires_dashboard_view(client, admin_token):
+    resp = client.get("/api/v1/risk/trajectory")
+    assert resp.status_code == 401
+
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    resp = client.get("/api/v1/risk/trajectory", headers=headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert 0.0 <= body["current_score"] <= 100.0
+    assert body["current_severity"] in ("LOW", "MODERATE", "HIGH", "CRITICAL")
+    assert len(body["points"]) == 4
+    assert [p["hours_ahead"] for p in body["points"]] == [1, 3, 6, 12]
+    assert body["basis"] in ("rising_trend", "flat_or_falling", "insufficient_data")
+    assert body["data_available"] is True
+
+
+def test_risk_trajectory_is_honestly_empty_for_a_non_demo_city(client, admin_token, db_session):
+    from sqlalchemy import select
+
+    from app.models.geography import City
+    from app.seed.seed_geography import run as seed_geography_run
+
+    seed_geography_run()
+    oslo = db_session.execute(select(City).where(City.label_en == "Oslo")).scalar_one()
+
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    resp = client.get(f"/api/v1/risk/trajectory?city_id={oslo.id}", headers=headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["data_available"] is False
+    assert body["points"] == []
     assert body["planned_data_source"] == "NVE HydAPI"
 
 

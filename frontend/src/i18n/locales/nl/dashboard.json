@@ -58,5 +58,15 @@
   },
   "sourceHealth": {
     "title": "Actualiteit van Bronnen"
+  },
+  "trajectory": {
+    "title": "Voorspellend risicotraject",
+    "now": "Nu",
+    "horizon": "+{hours} u",
+    "score": "Risicoscore",
+    "projectedLevel": "Verwacht waterpeil",
+    "basisRising": "Geëxtrapoleerd op basis van de huidige stijgende trend (~{rate} mm/u).",
+    "basisFlat": "Geen stijgende trend waargenomen — prognose blijft stabiel op het huidige niveau.",
+    "basisInsufficient": "Nog onvoldoende trendgegevens om te voorspellen."
   }
 }

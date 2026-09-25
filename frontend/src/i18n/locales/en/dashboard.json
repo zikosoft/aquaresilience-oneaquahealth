@@ -58,5 +58,15 @@
   },
   "sourceHealth": {
     "title": "Source Freshness"
+  },
+  "trajectory": {
+    "title": "Predictive Risk Trajectory",
+    "now": "Now",
+    "horizon": "+{hours}h",
+    "score": "Risk score",
+    "projectedLevel": "Projected water level",
+    "basisRising": "Extrapolated from the current rising trend (~{rate} mm/h).",
+    "basisFlat": "No rising trend observed — projection held flat at the current level.",
+    "basisInsufficient": "Not enough trend data yet to project forward."
   }
 }

@@ -58,5 +58,15 @@
   },
   "sourceHealth": {
     "title": "Freschezza delle Fonti"
+  },
+  "trajectory": {
+    "title": "Traiettoria di Rischio Predittiva",
+    "now": "Ora",
+    "horizon": "+{hours} h",
+    "score": "Punteggio di rischio",
+    "projectedLevel": "Livello dell'acqua previsto",
+    "basisRising": "Estrapolato dall'attuale tendenza in aumento (~{rate} mm/h).",
+    "basisFlat": "Nessuna tendenza in aumento osservata — proiezione mantenuta stabile al livello attuale.",
+    "basisInsufficient": "Dati di tendenza ancora insufficienti per una proiezione."
   }
 }

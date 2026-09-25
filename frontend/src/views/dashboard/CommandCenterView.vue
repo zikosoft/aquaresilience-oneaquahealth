@@ -5,16 +5,17 @@ import { useI18n } from 'vue-i18n'
 import FactorContribution from '@/components/charts/FactorContribution.vue'
 import KpiSparkline from '@/components/charts/KpiSparkline.vue'
 import RiskGauge from '@/components/charts/RiskGauge.vue'
+import RiskTrajectoryChart from '@/components/charts/RiskTrajectoryChart.vue'
 import SignalsTimeline from '@/components/charts/SignalsTimeline.vue'
 import SourceHealthBadge from '@/components/common/SourceHealthBadge.vue'
 import WidgetCard from '@/components/common/WidgetCard.vue'
 import ResilienceMap from '@/components/map/ResilienceMap.vue'
 import { extractApiErrorMessage } from '@/services/api'
 import { fetchEnvironmentalSummary, fetchSources } from '@/services/environmentalApi'
-import { acknowledgeWarning, fetchCurrentRisk, fetchWarnings, resolveWarning } from '@/services/riskApi'
+import { acknowledgeWarning, fetchCurrentRisk, fetchRiskTrajectory, fetchWarnings, resolveWarning } from '@/services/riskApi'
 import { useAuthStore } from '@/stores/auth'
 import { useCityStore } from '@/stores/city'
-import type { EarlyWarning, EnvironmentalSummary, RiskScore, SourceHealth } from '@/types'
+import type { EarlyWarning, EnvironmentalSummary, RiskScore, RiskTrajectory, SourceHealth } from '@/types'
 import { factorTranslationKey, leadingFactorKey, severityColor } from '@/utils/risk'
 
 const { t, locale } = useI18n()
@@ -42,6 +43,11 @@ const sources = ref<SourceHealth[]>([])
 // P2: deterministic risk score + early warnings (D008 — reused Settings >
 // Risk Engine weights/thresholds; see backend `app.services.risk_engine`).
 const risk = ref<RiskScore | null>(null)
+// Session 018 — WOW #4: Predictive Risk Trajectory (deterministic
+// extrapolation of the Risk Engine's own trend factor, see
+// risk_engine.compute_risk_trajectory). Fetched alongside the current
+// score; never blocks or fails the rest of the dashboard load.
+const trajectory = ref<RiskTrajectory | null>(null)
 const warnings = ref<EarlyWarning[]>([])
 const warningActionLoading = ref(false)
 
@@ -106,10 +112,11 @@ async function load(): Promise<void> {
   const cityId = cityStore.selectedCityId
   const hasLiveData = cityHasLiveData.value
   try {
-    const [summaryData, sourcesData, riskData, warningsData] = await Promise.all([
+    const [summaryData, sourcesData, riskData, trajectoryData, warningsData] = await Promise.all([
       fetchEnvironmentalSummary(selectedHours.value, cityId),
       fetchSources(),
       fetchCurrentRisk(cityId),
+      fetchRiskTrajectory(cityId),
       // See cityHasLiveData's comment above: warnings aren't city-scoped
       // server-side yet, so a non-demo city gets an honest empty list
       // instead of Toulouse's real warnings under the wrong label.
@@ -118,6 +125,7 @@ async function load(): Promise<void> {
     summary.value = summaryData
     sources.value = sourcesData
     risk.value = riskData
+    trajectory.value = trajectoryData
     warnings.value = warningsData
   } catch (e) {
     errorMessage.value = extractApiErrorMessage(e, t('common.status.error'))
@@ -608,6 +616,21 @@ const openWarningMessage = computed(() => {
           :title="t('dashboard.kpi.environmentalRisk')"
           :value="environmentalRiskGaugeValue"
           :label="t('dashboard.kpi.environmentalRisk')"
+          :loading="loading"
+          :empty-text="t('common.status.empty')"
+        />
+      </v-col>
+    </v-row>
+
+    <v-row
+      dense
+      class="mb-2"
+    >
+      <v-col cols="12">
+        <RiskTrajectoryChart
+          widget-id="risk-trajectory"
+          :title="t('dashboard.trajectory.title')"
+          :trajectory="trajectory"
           :loading="loading"
           :empty-text="t('common.status.empty')"
         />

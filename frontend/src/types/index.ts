@@ -272,6 +272,29 @@ export interface EarlyWarning {
   updated_at: string
 }
 
+// Session 018 — WOW #4: Predictive Risk Trajectory. Deterministic
+// extrapolation of the Risk Engine's own trend factor (never a second
+// model) — see `app/services/risk_engine.py::compute_risk_trajectory`.
+export interface TrajectoryPoint {
+  hours_ahead: number
+  projected_at: string
+  score: number
+  severity: RiskSeverity
+  projected_water_level_mm: number | null
+}
+
+export interface RiskTrajectory {
+  current_score: number
+  current_severity: RiskSeverity
+  points: TrajectoryPoint[]
+  trend_rate_mm_per_hour: number | null
+  basis: 'rising_trend' | 'flat_or_falling' | 'insufficient_data'
+  computed_at: string
+  // Same city-selector honesty convention as RiskScore/EnvironmentalSummary.
+  data_available: boolean
+  planned_data_source: string | null
+}
+
 // --- P3: AI Resilience Intelligence ---
 
 export type SituationLevel = 'low' | 'moderate' | 'high' | 'critical'

@@ -22,9 +22,9 @@ from app.core.database import get_db
 from app.core.errors import ConflictError, NotFoundError
 from app.models.risk import Warning, WarningStatus
 from app.models.user import User
-from app.schemas.risk import RiskFactorOut, RiskScoreOut, WarningOut
+from app.schemas.risk import RiskFactorOut, RiskScoreOut, RiskTrajectoryOut, TrajectoryPointOut, WarningOut
 from app.services.city_context import resolve_city
-from app.services.risk_engine import compute_risk, evaluate_and_persist_warnings
+from app.services.risk_engine import compute_risk, compute_risk_trajectory, evaluate_and_persist_warnings
 
 router = APIRouter()
 
@@ -86,6 +86,50 @@ def get_current_risk(
         factors_available=result.factors_available,
         factors_total=result.factors_total,
         computed_at=result.computed_at,
+    )
+
+
+@router.get("/trajectory", response_model=RiskTrajectoryOut)
+def get_risk_trajectory(
+    # Session 018 city-selector pattern, same as GET /risk/current.
+    city_id: uuid.UUID | None = Query(default=None),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("DASHBOARD", "VIEW")),
+) -> RiskTrajectoryOut:
+    """P5 — WOW: Predictive Risk Trajectory. Read-only, deterministic,
+    idempotent — safe to poll like `/risk/current`. Never touches the
+    Warning table (that stays `evaluate_and_persist_warnings`'s job on the
+    real, non-projected score)."""
+    city, has_data = resolve_city(db, city_id)
+    now = datetime.now(timezone.utc)
+    if not has_data:
+        return RiskTrajectoryOut(
+            current_score=0.0,
+            current_severity="LOW",
+            points=[],
+            trend_rate_mm_per_hour=None,
+            basis="insufficient_data",
+            computed_at=now,
+            data_available=False,
+            planned_data_source=city.planned_data_source if city else None,
+        )
+    trajectory = compute_risk_trajectory(db, now)
+    return RiskTrajectoryOut(
+        current_score=trajectory.current.score,
+        current_severity=trajectory.current.severity,
+        points=[
+            TrajectoryPointOut(
+                hours_ahead=p.hours_ahead,
+                projected_at=p.projected_at,
+                score=p.score,
+                severity=p.severity,
+                projected_water_level_mm=p.projected_water_level_mm,
+            )
+            for p in trajectory.points
+        ],
+        trend_rate_mm_per_hour=trajectory.trend_rate_mm_per_hour,
+        basis=trajectory.basis,
+        computed_at=trajectory.current.computed_at,
     )
 
 

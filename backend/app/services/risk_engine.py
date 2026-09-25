@@ -118,15 +118,19 @@ def _normalize_rainfall(db: Session, now: datetime, multiplier: float = 1.0) -> 
     return max(0.0, min(adjusted / RAINFALL_REFERENCE_MM_24H, 1.0))
 
 
-def _normalize_hydrology(db: Session, now: datetime, multiplier: float = 1.0) -> float | None:
-    """See `_normalize_rainfall`'s docstring — same pattern, scaling the
-    latest observed water level by a hypothetical river-level adjustment."""
-    latest = db.execute(
+def _latest_water_level_mm(db: Session) -> float | None:
+    return db.execute(
         select(Measurement.value)
         .where(Measurement.variable == MeasurementVariable.WATER_LEVEL_MM.value)
         .order_by(Measurement.observed_at.desc())
         .limit(1)
     ).scalar_one_or_none()
+
+
+def _normalize_hydrology(db: Session, now: datetime, multiplier: float = 1.0) -> float | None:
+    """See `_normalize_rainfall`'s docstring — same pattern, scaling the
+    latest observed water level by a hypothetical river-level adjustment."""
+    latest = _latest_water_level_mm(db)
     if latest is None:
         return None
     adjusted_latest = max(0.0, latest * multiplier)
@@ -156,14 +160,11 @@ def _normalize_environmental(db: Session) -> float | None:
     return max(0.0, min(latest, 1.0))
 
 
-def _normalize_trend(db: Session, now: datetime, level_multiplier: float = 1.0) -> float | None:
-    """`level_multiplier` defaults to 1.0 (unchanged, real-data behavior).
-    P4 passes the same river-level multiplier used by `_normalize_hydrology`
-    here too, applied to the *most recent* reading only: the implied rate of
-    rise is recomputed as if the water level ends up at that projected
-    value by `last_ts`, rather than independently scaling the observed rate
-    itself (which would wrongly make an already-falling trend fall faster
-    under a "river level up" scenario)."""
+def _trend_window_rows(db: Session, now: datetime) -> list | None:
+    """Shared trailing-`TREND_WINDOW_HOURS` water-level rows, used by both
+    `_normalize_trend` (the real score's 0..1 trend factor) and
+    `_trend_rate_mm_per_hour` (P5's raw mm/h rate — see below) so the two
+    can never read a different window or drift apart."""
     since = now - timedelta(hours=TREND_WINDOW_HOURS)
     rows = db.execute(
         select(Measurement.value, Measurement.observed_at)
@@ -173,7 +174,19 @@ def _normalize_trend(db: Session, now: datetime, level_multiplier: float = 1.0) 
         )
         .order_by(Measurement.observed_at)
     ).all()
-    if len(rows) < 2:
+    return rows if len(rows) >= 2 else None
+
+
+def _normalize_trend(db: Session, now: datetime, level_multiplier: float = 1.0) -> float | None:
+    """`level_multiplier` defaults to 1.0 (unchanged, real-data behavior).
+    P4 passes the same river-level multiplier used by `_normalize_hydrology`
+    here too, applied to the *most recent* reading only: the implied rate of
+    rise is recomputed as if the water level ends up at that projected
+    value by `last_ts`, rather than independently scaling the observed rate
+    itself (which would wrongly make an already-falling trend fall faster
+    under a "river level up" scenario)."""
+    rows = _trend_window_rows(db, now)
+    if rows is None:
         return None
     first_value, first_ts = rows[0]
     last_value, last_ts = rows[-1]
@@ -183,6 +196,24 @@ def _normalize_trend(db: Session, now: datetime, level_multiplier: float = 1.0) 
         return None
     rate = (adjusted_last_value - first_value) / hours_elapsed
     return max(0.0, min(rate / TREND_REFERENCE_MM_PER_HOUR, 1.0))
+
+
+def _trend_rate_mm_per_hour(db: Session, now: datetime) -> float | None:
+    """Raw (unnormalized, unclamped) mm/hour rate of rise over the same
+    trailing window `_normalize_trend` uses — a real physical rate rather
+    than a 0..1 score contribution. Used exclusively by
+    `compute_risk_trajectory` (P5 — WOW: Predictive Risk Trajectory) to
+    linearly extrapolate the water level forward; `_normalize_trend` still
+    owns the real score's own factor value, untouched by this function."""
+    rows = _trend_window_rows(db, now)
+    if rows is None:
+        return None
+    first_value, first_ts = rows[0]
+    last_value, last_ts = rows[-1]
+    hours_elapsed = (last_ts - first_ts).total_seconds() / 3600.0
+    if hours_elapsed <= 0:
+        return None
+    return (last_value - first_value) / hours_elapsed
 
 
 def _severity_for_score(score: float, thresholds: dict) -> str:
@@ -286,6 +317,119 @@ def compute_projected_risk(
         "trend": _normalize_trend(db, now, level_multiplier=river_multiplier),
     }
     return _combine_factors(raw_values, weights, thresholds, now)
+
+
+TRAJECTORY_HORIZONS_HOURS: tuple[int, ...] = (1, 3, 6, 12)
+
+
+@dataclass
+class TrajectoryPoint:
+    hours_ahead: int
+    projected_at: datetime
+    score: float
+    severity: str
+    projected_water_level_mm: float | None
+
+
+@dataclass
+class RiskTrajectory:
+    current: RiskResult
+    points: list[TrajectoryPoint]
+    trend_rate_mm_per_hour: float | None
+    basis: str  # "rising_trend" | "flat_or_falling" | "insufficient_data"
+
+
+def compute_risk_trajectory(
+    db: Session,
+    now: datetime | None = None,
+    horizons_hours: tuple[int, ...] = TRAJECTORY_HORIZONS_HOURS,
+) -> RiskTrajectory:
+    """P5 — Predictive Risk Trajectory (WOW feature; Track 6's "predictive
+    dashboards" wording). Deterministic, and — per Stop Rule #7 — reuses the
+    Risk Engine's own trend factor rather than building a second, separate
+    forecasting model:
+
+    1. Read the same trailing-`TREND_WINDOW_HOURS` rate of rise
+       (`_trend_rate_mm_per_hour`) that already backs the real score's
+       trend factor today — same window, same query, same data.
+    2. When that rate is genuinely rising (> 0), linearly extrapolate the
+       latest observed water level forward to each requested horizon and
+       re-run the exact same rainfall/hydrology/environmental normalizers
+       `compute_risk` uses, fed that projected level, combined by the exact
+       same `_combine_factors` step — a trajectory point can never diverge
+       from how the real score is computed.
+    3. The trend factor's own value is held fixed at its current observed
+       reading at every horizon rather than re-derived per horizon: it
+       already represents "the water is rising at this rate right now",
+       which is precisely the fact being extrapolated — recomputing it per
+       horizon would double-count the same signal. Rainfall and soil
+       moisture are likewise held at their last observed values: this
+       feature has no rainfall forecast input, so it never fabricates one.
+    4. A flat/falling or insufficient trend produces a flat trajectory
+       (every horizon repeats the current score) — "no basis to predict a
+       rise" is the honest output, never a fabricated one.
+    """
+    now = now or datetime.now(timezone.utc)
+    config = _get_risk_engine_settings(db)
+    weights = config["weights"]
+    thresholds = config["thresholds"]
+
+    current = compute_risk(db, now)
+    raw_rate = _trend_rate_mm_per_hour(db, now)
+    latest_level = _latest_water_level_mm(db)
+
+    if raw_rate is None or latest_level is None:
+        basis = "insufficient_data"
+    elif raw_rate <= 0:
+        basis = "flat_or_falling"
+    else:
+        basis = "rising_trend"
+    effective_rate = raw_rate if (raw_rate is not None and raw_rate > 0) else 0.0
+
+    # Held fixed across every horizon — see point 3 in the docstring above.
+    trend_value = _normalize_trend(db, now)
+
+    points: list[TrajectoryPoint] = []
+    for hours_ahead in horizons_hours:
+        projected_at = now + timedelta(hours=hours_ahead)
+
+        if latest_level is None or latest_level <= 0 or effective_rate == 0.0:
+            points.append(
+                TrajectoryPoint(
+                    hours_ahead=hours_ahead,
+                    projected_at=projected_at,
+                    score=current.score,
+                    severity=current.severity,
+                    projected_water_level_mm=(round(latest_level, 1) if latest_level is not None else None),
+                )
+            )
+            continue
+
+        projected_level = latest_level + effective_rate * hours_ahead
+        level_multiplier = projected_level / latest_level
+        raw_values: dict[str, float | None] = {
+            "rainfall": _normalize_rainfall(db, now),
+            "hydrology": _normalize_hydrology(db, now, multiplier=level_multiplier),
+            "environmental": _normalize_environmental(db),
+            "trend": trend_value,
+        }
+        result = _combine_factors(raw_values, weights, thresholds, now)
+        points.append(
+            TrajectoryPoint(
+                hours_ahead=hours_ahead,
+                projected_at=projected_at,
+                score=result.score,
+                severity=result.severity,
+                projected_water_level_mm=round(projected_level, 1),
+            )
+        )
+
+    return RiskTrajectory(
+        current=current,
+        points=points,
+        trend_rate_mm_per_hour=(round(raw_rate, 2) if raw_rate is not None else None),
+        basis=basis,
+    )
 
 
 def describe_warning_outcome(result: RiskResult) -> dict:

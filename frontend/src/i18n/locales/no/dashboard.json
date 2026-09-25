@@ -58,5 +58,15 @@
   },
   "sourceHealth": {
     "title": "Datakildenes friskhet"
+  },
+  "trajectory": {
+    "title": "Prediktiv risikotrajektorie",
+    "now": "Nå",
+    "horizon": "+{hours} t",
+    "score": "Risikoscore",
+    "projectedLevel": "Forventet vannstand",
+    "basisRising": "Ekstrapolert fra dagens stigende trend (~{rate} mm/t).",
+    "basisFlat": "Ingen stigende trend observert — prognosen holdes flat på dagens nivå.",
+    "basisInsufficient": "Ikke nok trenddata ennå til å projisere fremover."
   }
 }

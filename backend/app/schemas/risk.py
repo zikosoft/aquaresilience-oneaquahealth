@@ -32,6 +32,34 @@ class RiskScoreOut(BaseModel):
     planned_data_source: str | None = None
 
 
+class TrajectoryPointOut(BaseModel):
+    hours_ahead: int
+    projected_at: datetime
+    score: float  # 0..100
+    severity: str  # LOW | MODERATE | HIGH | CRITICAL
+    projected_water_level_mm: float | None
+
+
+class RiskTrajectoryOut(BaseModel):
+    """P5 — WOW: Predictive Risk Trajectory. Deterministic extrapolation of
+    the Risk Engine's own trend factor (`compute_risk_trajectory`) — never a
+    second model. `basis` tells the UI why the line looks the way it does:
+    "rising_trend" (a real extrapolated rise), "flat_or_falling" (no rising
+    trend observed, so the honest projection is flat), or
+    "insufficient_data" (not enough trend/hydrology data yet)."""
+
+    current_score: float
+    current_severity: str
+    points: list[TrajectoryPointOut]
+    trend_rate_mm_per_hour: float | None
+    basis: str
+    computed_at: datetime
+    # Session 018 city-selector pattern (see city_context.py): False + an
+    # empty `points` list for a non-demo city, same shape either way.
+    data_available: bool = True
+    planned_data_source: str | None = None
+
+
 class WarningOut(BaseModel):
     id: uuid.UUID
     severity: str

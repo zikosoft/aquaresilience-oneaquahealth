@@ -58,5 +58,15 @@
   },
   "sourceHealth": {
     "title": "Aktualität der Quellen"
+  },
+  "trajectory": {
+    "title": "Prädiktive Risikoprognose",
+    "now": "Jetzt",
+    "horizon": "+{hours} Std",
+    "score": "Risikowert",
+    "projectedLevel": "Prognostizierter Wasserstand",
+    "basisRising": "Extrapoliert aus dem aktuellen Anstiegstrend (~{rate} mm/h).",
+    "basisFlat": "Kein Anstiegstrend beobachtet — Prognose bleibt auf dem aktuellen Niveau stabil.",
+    "basisInsufficient": "Noch nicht genügend Trenddaten für eine Prognose."
   }
 }

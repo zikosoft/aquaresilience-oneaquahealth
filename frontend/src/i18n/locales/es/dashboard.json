@@ -58,5 +58,15 @@
   },
   "sourceHealth": {
     "title": "Frescura de las fuentes"
+  },
+  "trajectory": {
+    "title": "Trayectoria de riesgo predictiva",
+    "now": "Ahora",
+    "horizon": "+{hours} h",
+    "score": "Puntuación de riesgo",
+    "projectedLevel": "Nivel de agua proyectado",
+    "basisRising": "Extrapolado a partir de la tendencia al alza actual (~{rate} mm/h).",
+    "basisFlat": "No se observó tendencia al alza — proyección mantenida estable en el nivel actual.",
+    "basisInsufficient": "Aún no hay suficientes datos de tendencia para proyectar."
   }
 }
