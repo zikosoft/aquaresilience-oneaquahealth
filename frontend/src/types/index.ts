@@ -84,6 +84,11 @@ export interface City {
   // gone live yet, e.g. Oslo awaiting its API key), or 'none' (no connector
   // has ever run for this city). Computed server-side, never inferred here.
   connector_status: 'live' | 'pending' | 'none'
+  // Session 020 fix: true only for Toulouse — the one city Early Warnings
+  // and the shared AI Situation Brief actually track (neither has a
+  // per-city column yet). Distinct from has_live_data: Vienna/Ghent are
+  // live too but are NOT what those two features describe.
+  is_primary: boolean
 }
 
 // P4.1: 'carto_light'/'carto_dark' removed — CARTO's raster basemap tiles

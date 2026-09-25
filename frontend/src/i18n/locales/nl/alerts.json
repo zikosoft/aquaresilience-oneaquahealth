@@ -20,5 +20,6 @@
   "triggeredAt": "Geactiveerd {time}",
   "acknowledgedAt": "Bevestigd {time} door {name}",
   "resolvedAt": "Opgelost {time} door {name}",
-  "message": "Risicoscore {score}/100 ({severity}) — belangrijkste factor: {factor}."
+  "message": "Risicoscore {score}/100 ({severity}) — belangrijkste factor: {factor}.",
+  "primaryCityNotice": "Vroege waarschuwingen volgen momenteel alleen {city} — waarschuwingen voor andere steden zijn nog niet beschikbaar."
 }

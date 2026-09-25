@@ -20,5 +20,6 @@
   "triggeredAt": "Utløst {time}",
   "acknowledgedAt": "Bekreftet {time} av {name}",
   "resolvedAt": "Løst {time} av {name}",
-  "message": "Risikoscore {score}/100 ({severity}) — hovedfaktor: {factor}."
+  "message": "Risikoscore {score}/100 ({severity}) — hovedfaktor: {factor}.",
+  "primaryCityNotice": "Tidligvarsler følger for øyeblikket kun {city} — varsler for andre byer er ikke tilgjengelige ennå."
 }

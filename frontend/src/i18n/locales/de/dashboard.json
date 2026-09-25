@@ -51,7 +51,8 @@
   "currentWarning": {
     "title": "Aktuelle Warnung",
     "none": "Keine aktiven Warnungen",
-    "triggeredAt": "Ausgelöst {time}"
+    "triggeredAt": "Ausgelöst {time}",
+    "primaryCityOnly": "Frühwarnungen erfassen derzeit nur {city}."
   },
   "factorContribution": {
     "title": "Beitrag der Risikofaktoren"

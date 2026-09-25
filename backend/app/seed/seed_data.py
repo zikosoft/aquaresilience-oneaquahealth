@@ -59,8 +59,15 @@ DEFAULT_APP_SETTINGS = [
     # may still carry a harmless leftover "city" key; nothing reads it.
     ("GENERAL", "general", {"timezone": "Europe/Paris", "date_format": "YYYY-MM-DD"},
      "General platform configuration."),
-    ("LANGUAGES", "languages", {"default_locale": "en", "enabled_locales": ["en", "fr", "es"]},
-     "Enabled UI languages and default locale."),
+    # Session 021 fix (user report): was frozen to 3 locales while the
+    # header's language switcher (frontend/src/i18n/index.ts's
+    # SUPPORTED_LOCALES) has offered all 9 consortium locales since Session
+    # 018 — Settings > Languages' "enabled" chips and default-locale dropdown
+    # now start from the same full list.
+    ("LANGUAGES", "languages", {
+        "default_locale": "en",
+        "enabled_locales": ["en", "fr", "es", "pt", "no", "el", "de", "it", "nl"],
+    }, "Enabled UI languages and default locale."),
     ("DATA_SOURCES", "sources", {"sources": []}, "Configured environmental data sources (populated in P1)."),
     ("SCHEDULER", "scheduler", {"situation_brief_interval_hours": 4}, "Background scheduler cadence."),
     ("RISK_ENGINE", "risk_engine", {

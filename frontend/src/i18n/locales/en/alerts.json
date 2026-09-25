@@ -20,5 +20,6 @@
   "triggeredAt": "Triggered {time}",
   "acknowledgedAt": "Acknowledged {time} by {name}",
   "resolvedAt": "Resolved {time} by {name}",
-  "message": "Risk score {score}/100 ({severity}) — leading factor: {factor}."
+  "message": "Risk score {score}/100 ({severity}) — leading factor: {factor}.",
+  "primaryCityNotice": "Early Warnings currently track {city} only — warnings for other cities aren't available yet."
 }

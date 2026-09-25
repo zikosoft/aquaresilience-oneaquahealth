@@ -27,5 +27,6 @@
       "event": "Automatische Warnung (Risikoereignis)"
     }
   },
-  "empty": "Noch kein KI-Lagebericht vorhanden. Konfigurieren Sie einen KI-Anbieter in den Einstellungen, um die geplante Analyse zu aktivieren."
+  "empty": "Noch kein KI-Lagebericht vorhanden. Konfigurieren Sie einen KI-Anbieter in den Einstellungen, um die geplante Analyse zu aktivieren.",
+  "primaryCityNotice": "Diese Analyse beschreibt derzeit nur {city}, unabhängig von der in der Kopfzeile ausgewählten Stadt."
 }

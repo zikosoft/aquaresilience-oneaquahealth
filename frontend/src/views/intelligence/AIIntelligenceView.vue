@@ -4,12 +4,30 @@ import { useI18n } from 'vue-i18n'
 
 import { fetchIntelligenceStatus, fetchLatestBrief, triggerAnalysis } from '@/services/intelligenceApi'
 import { useAuthStore } from '@/stores/auth'
+import { useCityStore } from '@/stores/city'
 import type { AIIntelligenceStatus, SituationBrief } from '@/types'
 import { severityColor } from '@/utils/risk'
 
 const { t, locale } = useI18n()
 const authStore = useAuthStore()
+const cityStore = useCityStore()
 const canExecute = computed(() => authStore.can('AI_INTELLIGENCE', 'EXECUTE'))
+
+// Session 021 fix (user report): by design (Master Spec §19) the Situation
+// Brief is one shared analysis, not per-city — and since the segment-2 fix
+// it's deliberately pinned to Toulouse server-side (see
+// app/services/city_context.get_primary_city_id) rather than accidentally
+// blending whichever city happens to be selected. That's correct, but this
+// page said nothing about it, so selecting Vienna/Ghent and seeing a brief
+// about Toulouse looked like a bug. Only shown for a non-primary selection,
+// to avoid clutter for the common Toulouse case.
+const cityTracksIntelligence = computed(() => cityStore.selectedCity?.is_primary ?? true)
+const cityLabel = computed(() => {
+  const city = cityStore.selectedCity
+  if (!city) return ''
+  const byLocale: Record<string, string> = { en: city.label_en, fr: city.label_fr, es: city.label_es }
+  return byLocale[locale.value] ?? city.label_en
+})
 
 const status = ref<AIIntelligenceStatus | null>(null)
 const brief = ref<SituationBrief | null>(null)
@@ -79,6 +97,16 @@ onUnmounted(() => {
 
 <template>
   <div>
+    <v-alert
+      v-if="!cityTracksIntelligence"
+      type="info"
+      variant="tonal"
+      density="compact"
+      class="mb-4"
+    >
+      {{ t('intelligence.primaryCityNotice', { city: cityLabel }) }}
+    </v-alert>
+
     <v-card
       variant="flat"
       border

@@ -5,11 +5,26 @@ import { useI18n } from 'vue-i18n'
 import { extractApiErrorMessage } from '@/services/api'
 import { acknowledgeWarning, fetchWarnings, resolveWarning } from '@/services/riskApi'
 import { useAuthStore } from '@/stores/auth'
+import { useCityStore } from '@/stores/city'
 import type { EarlyWarning } from '@/types'
 import { factorTranslationKey, leadingFactorKey, severityColor } from '@/utils/risk'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const authStore = useAuthStore()
+const cityStore = useCityStore()
+
+// Session 021 fix (user report): this page had zero city-awareness — it
+// always listed the single shared Warnings row regardless of the header's
+// city selector, with nothing telling the user that Warnings only actually
+// track one city (see app/services/city_context.get_primary_city_id's
+// docstring). Same is_primary convention as CommandCenterView.vue.
+const cityTracksWarnings = computed(() => cityStore.selectedCity?.is_primary ?? true)
+const cityLabel = computed(() => {
+  const city = cityStore.selectedCity
+  if (!city) return ''
+  const byLocale: Record<string, string> = { en: city.label_en, fr: city.label_fr, es: city.label_es }
+  return byLocale[locale.value] ?? city.label_en
+})
 
 // i18n: rebuild the warning sentence client-side from structured fields
 // instead of displaying the backend's pre-rendered English message.
@@ -104,6 +119,16 @@ async function onResolve(id: string): Promise<void> {
         </template>
       </div>
     </v-card>
+
+    <v-alert
+      v-if="!cityTracksWarnings"
+      type="info"
+      variant="tonal"
+      density="compact"
+      class="mb-4"
+    >
+      {{ t('alerts.primaryCityNotice', { city: cityLabel }) }}
+    </v-alert>
 
     <v-alert
       v-if="errorMessage"

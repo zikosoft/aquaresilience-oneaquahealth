@@ -24,11 +24,7 @@ const authStore = useAuthStore()
 const cityStore = useCityStore()
 
 // Session 018 (user request): the header's city selector drives the whole
-// dashboard. Warnings have no city dimension in the backend yet (see
-// app/services/city_context.py's module docstring — deliberately scoped to
-// just risk/environmental for this pass), so rather than show Toulouse's
-// real warnings under a different city's label, they're simply left empty
-// for a non-demo city — same honesty rule as the risk/summary payloads.
+// dashboard.
 const cityHasLiveData = computed(() => cityStore.selectedCity?.has_live_data ?? true)
 const cityLabel = computed(() => {
   const city = cityStore.selectedCity
@@ -36,6 +32,13 @@ const cityLabel = computed(() => {
   const byLocale: Record<string, string> = { en: city.label_en, fr: city.label_fr, es: city.label_es }
   return byLocale[locale.value] ?? city.label_en
 })
+// Session 020 fix: Warnings have no city dimension in the backend yet (see
+// app/services/city_context.get_primary_city_id's docstring — deliberately
+// scoped to Toulouse only for this pass), so this must check `is_primary`,
+// NOT `has_live_data` — Vienna/Ghent are also live now but are not what the
+// one shared Warning row tracks. Without this distinction, selecting Vienna
+// would show Toulouse's real warning under Vienna's label.
+const cityTracksWarnings = computed(() => cityStore.selectedCity?.is_primary ?? true)
 
 const loading = ref(true)
 const errorMessage = ref<string | null>(null)
@@ -111,17 +114,18 @@ async function load(): Promise<void> {
   loading.value = true
   errorMessage.value = null
   const cityId = cityStore.selectedCityId
-  const hasLiveData = cityHasLiveData.value
+  const tracksWarnings = cityTracksWarnings.value
   try {
     const [summaryData, sourcesData, riskData, trajectoryData, warningsData] = await Promise.all([
       fetchEnvironmentalSummary(selectedHours.value, cityId),
       fetchSources(),
       fetchCurrentRisk(cityId),
       fetchRiskTrajectory(cityId),
-      // See cityHasLiveData's comment above: warnings aren't city-scoped
-      // server-side yet, so a non-demo city gets an honest empty list
-      // instead of Toulouse's real warnings under the wrong label.
-      hasLiveData ? fetchWarnings() : Promise.resolve([]),
+      // See cityTracksWarnings's comment above: warnings aren't city-scoped
+      // server-side yet (still pinned to Toulouse), so any other city —
+      // live or not — gets an honest empty list instead of Toulouse's real
+      // warnings under the wrong label.
+      tracksWarnings ? fetchWarnings() : Promise.resolve([]),
     ])
     summary.value = summaryData
     sources.value = sourcesData
@@ -162,7 +166,7 @@ async function reloadRisk(): Promise<void> {
   const cityId = cityStore.selectedCityId
   const [riskData, warningsData] = await Promise.all([
     fetchCurrentRisk(cityId),
-    cityHasLiveData.value ? fetchWarnings() : Promise.resolve([]),
+    cityTracksWarnings.value ? fetchWarnings() : Promise.resolve([]),
   ])
   risk.value = riskData
   warnings.value = warningsData
@@ -217,9 +221,17 @@ const openWarningsCount = computed(() => warnings.value.filter((w) => w.status !
 // this same view (no extra API call) so it always stays consistent with
 // the number actually shown — e.g. "2" -> "Hub'Eau Hydrométrie — Garonne à
 // Toulouse, Open-Meteo — Toulouse" (user request, P1.1 hotfix).
+// Session 020 fix: `sources` comes from fetchSources(), which — unlike
+// summary/risk/trajectory — is deliberately global (it backs the Settings >
+// Data Sources page, grouped by city, not this view). Filtering to the
+// selected city here is what keeps this tooltip's list of names consistent
+// with `summary.monitored_stations`, the number it's actually describing —
+// without this filter it would list every city's sources under any city's
+// KPI tile.
+const citySources = computed(() => sources.value.filter((s) => s.city?.id === cityStore.selectedCityId))
 const monitoredZonesTooltip = computed(() =>
-  sources.value.length
-    ? t('dashboard.kpi.monitoredZonesTooltip', { sources: sources.value.map((s) => s.name).join(', ') })
+  citySources.value.length
+    ? t('dashboard.kpi.monitoredZonesTooltip', { sources: citySources.value.map((s) => s.name).join(', ') })
     : null,
 )
 
@@ -367,6 +379,15 @@ const openWarningMessage = computed(() => {
     factor: factorKey ? t(factorTranslationKey(factorKey)) : '—',
   })
 })
+
+// Session 021 fix (user report): "no active warnings" used to read the same
+// whether Warnings genuinely had nothing to report for this city, or the
+// city simply isn't one Warnings track at all yet (Vienna/Ghent — see
+// cityTracksWarnings above). Distinguishing the two here so the panel never
+// silently implies "all clear" for a city Warnings can't actually see.
+const currentWarningEmptyText = computed(() =>
+  cityTracksWarnings.value ? t('dashboard.currentWarning.none') : t('dashboard.currentWarning.primaryCityOnly', { city: cityLabel.value })
+)
 </script>
 
 <template>
@@ -705,7 +726,7 @@ const openWarningMessage = computed(() => {
           :title="t('dashboard.currentWarning.title')"
           :loading="loading"
           :empty="!loading && !openWarning"
-          :empty-text="t('dashboard.currentWarning.none')"
+          :empty-text="currentWarningEmptyText"
           :min-height="340"
         >
           <template v-if="openWarning">
@@ -792,13 +813,13 @@ const openWarningMessage = computed(() => {
           widget-id="source-health"
           :title="t('dashboard.sourceHealth.title')"
           :loading="loading"
-          :empty="!loading && sources.length === 0"
+          :empty="!loading && citySources.length === 0"
           :empty-text="t('sources.empty')"
           :min-height="300"
         >
           <v-list density="compact">
             <v-list-item
-              v-for="source in sources"
+              v-for="source in citySources"
               :key="source.id"
             >
               <template #append>

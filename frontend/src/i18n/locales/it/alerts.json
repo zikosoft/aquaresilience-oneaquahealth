@@ -20,5 +20,6 @@
   "triggeredAt": "Attivata {time}",
   "acknowledgedAt": "Presa in carico {time} da {name}",
   "resolvedAt": "Risolta {time} da {name}",
-  "message": "Punteggio di rischio {score}/100 ({severity}) — fattore principale: {factor}."
+  "message": "Punteggio di rischio {score}/100 ({severity}) — fattore principale: {factor}.",
+  "primaryCityNotice": "Gli avvisi precoci al momento monitorano solo {city} — gli avvisi per le altre città non sono ancora disponibili."
 }

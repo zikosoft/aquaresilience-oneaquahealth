@@ -20,5 +20,6 @@
   "triggeredAt": "Acionado {time}",
   "acknowledgedAt": "Reconhecido {time} por {name}",
   "resolvedAt": "Resolvido {time} por {name}",
-  "message": "Pontuação de risco {score}/100 ({severity}) — fator principal: {factor}."
+  "message": "Pontuação de risco {score}/100 ({severity}) — fator principal: {factor}.",
+  "primaryCityNotice": "Os alertas antecipados atualmente só acompanham {city} — os alertas para outras cidades ainda não estão disponíveis."
 }

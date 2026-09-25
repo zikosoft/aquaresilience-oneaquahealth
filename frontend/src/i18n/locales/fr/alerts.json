@@ -20,5 +20,6 @@
   "triggeredAt": "Déclenchée {time}",
   "acknowledgedAt": "Prise en compte {time} par {name}",
   "resolvedAt": "Résolue {time} par {name}",
-  "message": "Score de risque {score}/100 ({severity}) — facteur principal : {factor}."
+  "message": "Score de risque {score}/100 ({severity}) — facteur principal : {factor}.",
+  "primaryCityNotice": "Les alertes précoces ne suivent actuellement que {city} — les alertes pour les autres villes ne sont pas encore disponibles."
 }

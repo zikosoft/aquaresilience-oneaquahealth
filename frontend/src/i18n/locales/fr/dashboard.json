@@ -51,7 +51,8 @@
   "currentWarning": {
     "title": "Alerte en cours",
     "none": "Aucune alerte active",
-    "triggeredAt": "Déclenchée {time}"
+    "triggeredAt": "Déclenchée {time}",
+    "primaryCityOnly": "Les alertes précoces ne suivent actuellement que {city}."
   },
   "factorContribution": {
     "title": "Contribution des facteurs de risque"

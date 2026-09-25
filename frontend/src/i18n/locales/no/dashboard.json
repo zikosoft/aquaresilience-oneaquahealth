@@ -51,7 +51,8 @@
   "currentWarning": {
     "title": "Gjeldende varsel",
     "none": "Ingen aktive varsler",
-    "triggeredAt": "Utløst {time}"
+    "triggeredAt": "Utløst {time}",
+    "primaryCityOnly": "Tidligvarsler følger for øyeblikket kun {city}."
   },
   "factorContribution": {
     "title": "Bidrag fra risikofaktorer"

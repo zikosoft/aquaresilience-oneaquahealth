@@ -29,6 +29,15 @@ class CityOut(BaseModel):
     # from whether any DataSource row exists for the city, never hardcoded
     # per-city in the frontend — see app/api/v1/geography.py.
     connector_status: str = "none"
+    # Session 020 fix: exposes app.services.city_context.get_primary_city_id
+    # to the frontend, so pages built around the still-genuinely-global
+    # features (Early Warnings, the shared AI Situation Brief — neither has
+    # a per-city column yet) can tell "this is Toulouse, the city those
+    # features track" apart from "this city merely also has live data"
+    # (Vienna/Ghent). Without this, has_live_data alone would make the
+    # frontend show Toulouse's warnings/brief under Vienna's or Ghent's
+    # label too, once more than one city went live.
+    is_primary: bool = False
 
     model_config = {"from_attributes": True}
 

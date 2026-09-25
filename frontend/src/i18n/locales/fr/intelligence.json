@@ -27,5 +27,6 @@
       "event": "Alerte automatique (événement de risque)"
     }
   },
-  "empty": "Aucune synthèse IA pour le moment. Configurez un fournisseur IA dans les Paramètres pour activer l'analyse programmée."
+  "empty": "Aucune synthèse IA pour le moment. Configurez un fournisseur IA dans les Paramètres pour activer l'analyse programmée.",
+  "primaryCityNotice": "Cette analyse décrit actuellement uniquement {city}, quelle que soit la ville sélectionnée dans l'en-tête."
 }

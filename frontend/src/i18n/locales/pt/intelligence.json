@@ -27,5 +27,6 @@
       "event": "Alerta automático (evento de risco)"
     }
   },
-  "empty": "Ainda não há Resumo de Situação por IA. Configure um fornecedor de IA nas Definições para ativar a análise programada."
+  "empty": "Ainda não há Resumo de Situação por IA. Configure um fornecedor de IA nas Definições para ativar a análise programada.",
+  "primaryCityNotice": "Esta análise atualmente descreve apenas {city}, independentemente da cidade selecionada no cabeçalho."
 }

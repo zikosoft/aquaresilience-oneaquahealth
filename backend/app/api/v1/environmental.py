@@ -30,6 +30,7 @@ from app.schemas.environmental import (
 )
 from app.services.city_context import resolve_city
 from app.services.ingestion_service import compute_source_health
+from app.services.risk_engine import scope_measurements_to_city
 
 router = APIRouter()
 
@@ -268,29 +269,49 @@ def environmental_summary(
             planned_data_source=city.planned_data_source if city else None,
         )
 
-    sources = db.execute(select(DataSource)).scalars().all()
+    # Session 020 fix (live-caught correctness bug, same class as
+    # risk_engine.compute_risk before its own Session 020 fix): every query
+    # below used to read globally — ALL sources, ALL stations, ALL cities'
+    # measurements — even after resolving which city was selected. Harmless
+    # while Toulouse was the only city with real data; now that Vienna/Ghent
+    # also ingest real measurements, the entire Command Center (KPI tiles,
+    # the big timeline, all 8 sparklines, Source Freshness) would show the
+    # exact same global numbers for ANY city, never that city's own.
+    scope_city_id = city.id if city else None
+    sources_query = select(DataSource)
+    if scope_city_id is not None:
+        sources_query = sources_query.where(DataSource.city_id == scope_city_id)
+    sources = db.execute(sources_query).scalars().all()
     active_sources = sum(1 for s in sources if s.is_active)
     fresh_sources = sum(1 for s in sources if compute_source_health(s, now).value == "fresh")
-    monitored_stations = db.execute(select(func.count(Station.id))).scalar_one()
+
+    stations_query = select(func.count(Station.id))
+    if scope_city_id is not None:
+        stations_query = stations_query.join(DataSource, DataSource.id == Station.data_source_id).where(
+            DataSource.city_id == scope_city_id
+        )
+    monitored_stations = db.execute(stations_query).scalar_one()
 
     def _latest(variable: MeasurementVariable) -> LatestReadingOut | None:
-        row = db.execute(
+        query = (
             select(Measurement)
             .where(Measurement.variable == variable.value)
             .order_by(Measurement.observed_at.desc())
             .limit(1)
-        ).scalar_one_or_none()
+        )
+        row = db.execute(scope_measurements_to_city(query, scope_city_id)).scalar_one_or_none()
         if row is None:
             return None
         return LatestReadingOut(variable=row.variable, value=row.value, unit=row.unit, observed_at=row.observed_at)
 
     def _trend(variable: MeasurementVariable, window_hours: int) -> tuple[list[float], list[str]]:
         since = now - timedelta(hours=window_hours)
-        rows = db.execute(
+        query = (
             select(Measurement)
             .where(Measurement.variable == variable.value, Measurement.observed_at >= since)
             .order_by(Measurement.observed_at)
-        ).scalars().all()
+        )
+        rows = db.execute(scope_measurements_to_city(query, scope_city_id)).scalars().all()
         return [r.value for r in rows], [r.observed_at.isoformat() for r in rows]
 
     water_trend_values, water_trend_ts = _trend(MeasurementVariable.WATER_LEVEL_MM, hours)

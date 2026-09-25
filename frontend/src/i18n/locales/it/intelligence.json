@@ -27,5 +27,6 @@
       "event": "Allerta automatica (evento di rischio)"
     }
   },
-  "empty": "Nessun Rapporto di Situazione IA ancora disponibile. Configura un fornitore IA nelle Impostazioni per abilitare l'analisi programmata."
+  "empty": "Nessun Rapporto di Situazione IA ancora disponibile. Configura un fornitore IA nelle Impostazioni per abilitare l'analisi programmata.",
+  "primaryCityNotice": "Questa analisi al momento descrive solo {city}, indipendentemente dalla città selezionata nell'intestazione."
 }

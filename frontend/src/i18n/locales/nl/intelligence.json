@@ -27,5 +27,6 @@
       "event": "Automatische waarschuwing (risico-gebeurtenis)"
     }
   },
-  "empty": "Nog geen AI-situatierapport. Configureer een AI-provider in Instellingen om geplande analyse in te schakelen."
+  "empty": "Nog geen AI-situatierapport. Configureer een AI-provider in Instellingen om geplande analyse in te schakelen.",
+  "primaryCityNotice": "Deze analyse beschrijft momenteel alleen {city}, ongeacht de in de koptekst geselecteerde stad."
 }

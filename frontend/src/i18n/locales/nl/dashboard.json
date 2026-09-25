@@ -51,7 +51,8 @@
   "currentWarning": {
     "title": "Huidige Waarschuwing",
     "none": "Geen actieve waarschuwingen",
-    "triggeredAt": "Geactiveerd {time}"
+    "triggeredAt": "Geactiveerd {time}",
+    "primaryCityOnly": "Vroege waarschuwingen volgen momenteel alleen {city}."
   },
   "factorContribution": {
     "title": "Bijdrage van Risicofactoren"

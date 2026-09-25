@@ -27,6 +27,7 @@ from app.models.geography import City, Country
 from app.models.settings import AppSetting, SettingCategory
 from app.models.user import User
 from app.schemas.geography import CityOut, MapConfigOut
+from app.services.city_context import get_primary_city_id
 
 router = APIRouter()
 
@@ -45,6 +46,7 @@ def _list_cities(db: Session) -> list[CityOut]:
     cities_with_a_connector = set(
         db.execute(select(DataSource.city_id).where(DataSource.city_id.is_not(None)).distinct()).scalars().all()
     )
+    primary_city_id = get_primary_city_id(db)
     result = []
     for city, country in rows:
         if city.has_live_data:
@@ -66,6 +68,7 @@ def _list_cities(db: Session) -> list[CityOut]:
                 has_live_data=city.has_live_data,
                 planned_data_source=city.planned_data_source,
                 connector_status=connector_status,
+                is_primary=city.id == primary_city_id,
             )
         )
     return result

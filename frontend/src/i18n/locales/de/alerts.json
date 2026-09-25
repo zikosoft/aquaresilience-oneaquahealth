@@ -20,5 +20,6 @@
   "triggeredAt": "Ausgelöst {time}",
   "acknowledgedAt": "Bestätigt {time} von {name}",
   "resolvedAt": "Behoben {time} von {name}",
-  "message": "Risiko-Score {score}/100 ({severity}) — ausschlaggebender Faktor: {factor}."
+  "message": "Risiko-Score {score}/100 ({severity}) — ausschlaggebender Faktor: {factor}.",
+  "primaryCityNotice": "Frühwarnungen erfassen derzeit nur {city} — Warnungen für andere Städte sind noch nicht verfügbar."
 }

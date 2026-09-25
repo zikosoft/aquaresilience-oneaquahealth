@@ -51,7 +51,8 @@
   "currentWarning": {
     "title": "Alerta Atual",
     "none": "Sem alertas ativos",
-    "triggeredAt": "Acionado {time}"
+    "triggeredAt": "Acionado {time}",
+    "primaryCityOnly": "Os alertas antecipados atualmente só acompanham {city}."
   },
   "factorContribution": {
     "title": "Contribuição dos Fatores de Risco"

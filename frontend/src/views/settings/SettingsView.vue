@@ -10,8 +10,16 @@ import SourceHealthBadge from '@/components/common/SourceHealthBadge.vue'
 import { extractApiErrorMessage } from '@/services/api'
 import { fetchSources } from '@/services/environmentalApi'
 import { fetchCities } from '@/services/geographyApi'
+import { SUPPORTED_LOCALES } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import type { City, SourceHealth } from '@/types'
+
+// Session 021 fix (user report): this dropdown used to hardcode en/fr/es,
+// even though the header's language switcher has offered all 9
+// SUPPORTED_LOCALES since Session 018 — someone picking a language here
+// could only ever see 3 of the 9 the app actually supports. Now sourced
+// from the same single list the header uses, so the two can't drift again.
+const languageOptions = SUPPORTED_LOCALES.map((l) => ({ value: l.code, label: `${l.flag} ${l.label}` }))
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -169,11 +177,7 @@ const generalFields = computed(() => [
               path: 'default_locale',
               label: t('settings.languages.defaultLocale'),
               type: 'select',
-              options: [
-                { value: 'en', label: 'English' },
-                { value: 'fr', label: 'Français' },
-                { value: 'es', label: 'Español' },
-              ],
+              options: languageOptions,
             },
             { path: 'enabled_locales', label: t('settings.languages.enabledLocales'), type: 'chips' },
           ]"

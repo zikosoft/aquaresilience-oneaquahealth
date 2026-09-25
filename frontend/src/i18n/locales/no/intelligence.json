@@ -27,5 +27,6 @@
       "event": "Automatisk varsel (risikohendelse)"
     }
   },
-  "empty": "Ingen KI-situasjonsrapport ennå. Konfigurer en KI-leverandør i Innstillinger for å aktivere planlagt analyse."
+  "empty": "Ingen KI-situasjonsrapport ennå. Konfigurer en KI-leverandør i Innstillinger for å aktivere planlagt analyse.",
+  "primaryCityNotice": "Denne analysen beskriver for øyeblikket kun {city}, uavhengig av byen valgt i toppmenyen."
 }
