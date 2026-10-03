@@ -12,8 +12,8 @@
 # Nothing about the existing dev workflow changes unless you add this
 # second -f: docker-compose.yml alone still works exactly as before
 # (:8080 / :8000 directly), and this override only adds a new
-# `reverse-proxy` service plus one extra env var on `frontend` for Vite's
-# HMR (see vite.config.ts and deploy/nginx/nginx.dev.conf for why).
+# `reverse-proxy` service plus two env vars on `frontend` (HMR + API base
+# URL — see below).
 #
 # This is dev-only plumbing — a plain unencrypted local proxy for
 # convenience, not a security boundary (unlike docker-compose.prod.yml /
@@ -23,6 +23,18 @@ services:
   frontend:
     environment:
       VITE_HMR_CLIENT_PORT: '80'
+      # The base dev file hardcodes VITE_API_BASE_URL to
+      # http://localhost:8000/api/v1 (correct for the plain :8080/:8000
+      # setup) — through this proxy that becomes a cross-origin call
+      # (page served from :80, API called on :8000 directly, bypassing
+      # nginx entirely) and the backend's dev CORS_ORIGINS doesn't even
+      # list port 80, so the browser blocks it with a CORS error. Clearing
+      # this to empty makes src/services/api.ts fall back to its own
+      # built-in relative default ('/api/v1' — see that file), which nginx
+      # then proxies to the backend same-origin, exactly like the
+      # production setup already does (see docker-compose.prod.yml's own
+      # comment on the same fallback) — no CORS involved at all.
+      VITE_API_BASE_URL: ''
 
   reverse-proxy:
     image: nginx:1.27-alpine

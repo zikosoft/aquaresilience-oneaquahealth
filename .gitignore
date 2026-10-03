@@ -47,3 +47,12 @@ Thumbs.db
 
 # --- Alembic (keep versions, ignore local db files) ---
 *.sqlite3
+
+# --- Claude session sync artifacts (never part of the project itself) ---
+_sync/
+/*.tar.gz
+frontend/*.tsbuildinfo
+*.tsbuildinfo
+Claude outputs/
+208442a6-AquaResilience_Master_Spec_Priority_Blocks.md
+fda3f576-AquaResilience_Development_Progress_Priority_Blocks.md

@@ -58,7 +58,11 @@ function onLocaleChange(code: AppLocale): void {
              above the card, right-aligned, visually detached from both the
              logo and the form. Moved inside the card's own header row, next
              to the logo/name, so it reads as one coherent group with the
-             form right below it instead of a stray control above the page. -->
+             form right below it instead of a stray control above the page.
+             Session 023 (user request): split into two rows now that the
+             logo is a real image — row 1 is the logo alone (125px tall,
+             centered), row 2 is the tagline (left) + language picker
+             (right), instead of logo and language sharing the top row. -->
         <v-card
           width="420"
           max-width="94vw"
@@ -66,8 +70,13 @@ function onLocaleChange(code: AppLocale): void {
           elevation="4"
         >
           <v-card-item>
-            <div class="d-flex align-center justify-space-between mb-1">
-              <BrandLogo :height="44" />
+            <div class="d-flex justify-center mb-2">
+              <BrandLogo :height="125" />
+            </div>
+            <div class="d-flex align-center justify-space-between">
+              <v-card-subtitle class="text-wrap pa-0">
+                {{ t('auth.login.subtitle') }}
+              </v-card-subtitle>
               <v-menu>
                 <template #activator="{ props: menuProps }">
                   <v-btn
@@ -92,9 +101,6 @@ function onLocaleChange(code: AppLocale): void {
                 </v-list>
               </v-menu>
             </div>
-            <v-card-subtitle class="text-wrap">
-              {{ t('auth.login.subtitle') }}
-            </v-card-subtitle>
           </v-card-item>
 
           <v-card-text>
