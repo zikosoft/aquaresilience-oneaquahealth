@@ -213,6 +213,7 @@ export interface EnvironmentalSummary {
   // echoes back the effective window actually used, for chart titles.
   trend_window_hours: number
   water_level: LatestReading | null
+  water_level_river_name: string | null
   water_level_trend: number[]
   water_level_trend_timestamps: string[]
   precipitation_24h_total_mm: number | null
@@ -324,6 +325,7 @@ export type SituationLevel = 'low' | 'moderate' | 'high' | 'critical'
 export interface SituationBrief {
   id: string
   generated_at: string
+  city_id: string | null
   language: string
   triggered_by: 'scheduled' | 'manual' | 'event'
   situation: SituationLevel

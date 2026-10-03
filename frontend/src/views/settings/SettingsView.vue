@@ -168,6 +168,18 @@ const generalFields = computed(() => [
       </v-window-item>
 
       <v-window-item value="languages">
+        <!-- Session 022 (user request): "Enabled Languages" removed — it
+             never actually restricted anything (the header's language
+             switcher always offers the full fixed SUPPORTED_LOCALES list
+             from src/i18n/index.ts, and the backend's scheduled AI brief
+             only ever reads default_locale — see
+             intelligence_service.get_default_language), so it was a
+             confusing, inert control. The 9 supported languages are a
+             locked set (see SUPPORTED_LOCALES's own comment); this tab now
+             only ever does what it actually can do: choose which one is
+             the default. Any `enabled_locales` value already stored on
+             this setting is left as-is (harmless, unread by anything) —
+             only the editable field is removed. -->
         <GenericSettingCard
           category="languages"
           setting-key="languages"
@@ -179,7 +191,6 @@ const generalFields = computed(() => [
               type: 'select',
               options: languageOptions,
             },
-            { path: 'enabled_locales', label: t('settings.languages.enabledLocales'), type: 'chips' },
           ]"
         />
       </v-window-item>

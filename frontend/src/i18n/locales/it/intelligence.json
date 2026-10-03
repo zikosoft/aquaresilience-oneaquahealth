@@ -21,6 +21,7 @@
     "confidence": "Affidabilità",
     "limitations": "Limitazioni",
     "generatedBy": "Generato da",
+    "generatedInLanguage": "Generato in {language}",
     "triggeredBy": {
       "scheduled": "Analisi programmata",
       "manual": "Aggiornamento manuale",
@@ -28,5 +29,5 @@
     }
   },
   "empty": "Nessun Rapporto di Situazione IA ancora disponibile. Configura un fornitore IA nelle Impostazioni per abilitare l'analisi programmata.",
-  "primaryCityNotice": "Questa analisi al momento descrive solo {city}, indipendentemente dalla città selezionata nell'intestazione."
+  "emptyForCity": "Nessun Rapporto di Situazione IA ancora disponibile per {city}. Clicca su Aggiorna ora per generarne uno."
 }

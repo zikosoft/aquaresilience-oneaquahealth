@@ -18,7 +18,8 @@
     "limitedHistory": "Apenas {available}h de histórico registadas até agora — a mostrar tudo (selecionou {requested}h). Os gráficos preencher-se-ão à medida que mais dados forem recolhidos."
   },
   "waterLevel": {
-    "title": "Nível da Água — Garonne ({hours}h)"
+    "titleGeneric": "Nível da Água ({hours}h)",
+    "titleWithRiver": "Nível da Água — {river} ({hours}h)"
   },
   "precipitation": {
     "title": "Precipitação ({hours}h)"
@@ -43,7 +44,10 @@
   },
   "situationBrief": {
     "title": "Resumo de Situação IA",
-    "notAvailable": "Ainda não foi gerado nenhum resumo de situação por IA."
+    "notAvailable": "Ainda não foi gerado nenhum resumo de situação por IA.",
+    "emptyForCity": "Ainda não foi gerado nenhum resumo de situação por IA para {city}.",
+    "generateNow": "Gerar agora",
+    "viewFull": "Ver análise completa"
   },
   "timeline": {
     "title": "Sinais Ambientais"

@@ -1,13 +1,22 @@
 """P3 — AI Resilience Intelligence.
 
 `SituationBrief` is an append-only history of AI-generated analyses. There is
-always exactly one *current* brief — the most recent row by `generated_at` —
-which is the "one shared stored brief for all users" the Master Spec asks
-for (§19): every viewer sees the same brief, generated on a shared schedule,
-never a per-user/per-load LLM call. Keeping history (rather than a single
-mutable row) costs nothing extra and gives "last analysis" a real audit
-trail for free, matching the same append-only pattern already used for
+always exactly one *current* brief per city — the most recent row by
+`generated_at` for a given `city_id` — satisfying the Master Spec §19 intent
+("one shared stored brief for all users", "do not call the LLM on every
+dashboard load", 6 analyses/day) at the city level rather than a single
+platform-wide row: every viewer looking at the same city sees the same
+brief, still generated on a shared schedule/budget (see
+`AIProviderConfig.daily_request_ceiling`, unchanged), never a per-user/
+per-load LLM call. Keeping history (rather than a single mutable row) costs
+nothing extra and gives "last analysis" a real audit trail for free,
+matching the same append-only pattern already used for
 `Measurement`/`Warning`.
+
+Session 022 (user request): widened from a single Toulouse-only row to one
+per city — see `app.services.intelligence_service.generate_situation_brief`
+and `pick_next_scheduled_city_id` for how the shared daily budget is now
+rotated across cities instead of multiplied by them.
 
 Scheduling/usage-control state (last run, last error, today's request count)
 lives on `AIProviderConfig` itself (see `app.models.settings`) rather than
@@ -17,10 +26,11 @@ place `scheduled_analysis_interval_minutes`/`daily_request_ceiling`/
 """
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, String, Text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import DateTime, Float, ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -37,6 +47,14 @@ class SituationBrief(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "situation_briefs"
 
     generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    # Session 022: nullable only to keep any pre-migration row (generated
+    # before this column existed) valid — every row created from here on
+    # always sets it (see generate_situation_brief). ON DELETE SET NULL
+    # rather than CASCADE: a city record going away should never silently
+    # delete the AI's own audit history.
+    city_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("cities.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     language: Mapped[str] = mapped_column(String(8), nullable=False)
     triggered_by: Mapped[str] = mapped_column(String(16), nullable=False)  # "scheduled" | "manual" | "event"
 

@@ -29,6 +29,7 @@ from app.services.city_context import get_primary_city_id
 from app.services.intelligence_service import (
     generate_situation_brief,
     get_default_language,
+    pick_next_scheduled_city_id,
     should_run_event_triggered_analysis,
     should_run_scheduled_analysis,
 )
@@ -63,22 +64,47 @@ def _tick() -> None:
         warning = evaluate_and_persist_warnings(db, risk_result)
 
         # P3: shared scheduled AI Situation Brief (Master Spec §19 — default
-        # every 4h, one shared brief for all users, never a per-load LLM
-        # call). `should_run_scheduled_analysis` is the interval/ceiling
-        # gate; `generate_situation_brief` never raises on its own (every
-        # failure mode is caught and recorded on the shared config), but
-        # this call is still inside the tick's own try/except as defense in
-        # depth — an AI outage must never affect ingestion/risk above.
+        # every 4h, 6 analyses/day total, never a per-load LLM call).
+        # `should_run_scheduled_analysis` is the interval/ceiling gate — it
+        # still governs the exact same shared daily budget, unchanged.
+        # `generate_situation_brief` never raises on its own (every failure
+        # mode is caught and recorded on the shared config), but this call
+        # is still inside the tick's own try/except as defense in depth —
+        # an AI outage must never affect ingestion/risk above.
+        #
+        # Session 022 (user request): each scheduled slot now analyzes one
+        # live city at a time, chosen by `pick_next_scheduled_city_id`
+        # (whichever live city's own brief is most overdue) — over several
+        # ticks every live city gets its own refreshed brief, at the same
+        # total LLM-call cost as the old single-Toulouse-only behavior.
         #
         # Session 017: event-triggered AI, checked only when the scheduled
         # cadence isn't already due this tick — a HIGH/CRITICAL warning is
         # treated as an "event" worth an unscheduled refresh (see
         # should_run_event_triggered_analysis's own docstring for the gate).
+        # This stays scoped to the primary city (Toulouse): the risk/warning
+        # evaluation just above is itself still Toulouse-only (Warning has
+        # no per-city column yet — see get_primary_city_id's docstring), so
+        # there is no other city's "event" to react to here yet.
         ai_config = get_or_create_ai_config(db)
         if should_run_scheduled_analysis(ai_config, now):
-            asyncio.run(generate_situation_brief(db, language=get_default_language(db), triggered_by="scheduled"))
+            asyncio.run(
+                generate_situation_brief(
+                    db,
+                    language=get_default_language(db),
+                    triggered_by="scheduled",
+                    city_id=pick_next_scheduled_city_id(db),
+                )
+            )
         elif should_run_event_triggered_analysis(ai_config, warning.severity if warning else None, now):
-            asyncio.run(generate_situation_brief(db, language=get_default_language(db), triggered_by="event"))
+            asyncio.run(
+                generate_situation_brief(
+                    db,
+                    language=get_default_language(db),
+                    triggered_by="event",
+                    city_id=get_primary_city_id(db),
+                )
+            )
     except Exception:  # noqa: BLE001 — a scheduler tick must never crash the process
         logger.exception("Ingestion scheduler tick failed")
     finally:

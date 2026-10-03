@@ -34,6 +34,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import decrypt_secret
 from app.models.environmental import DataSource, Measurement, MeasurementVariable, Station
+from app.models.geography import City
 from app.models.intelligence import SituationBrief
 from app.models.settings import AIProviderConfig, AppSetting
 from app.services.ai_provider_service import AIProviderError, get_or_create_ai_config, get_provider
@@ -167,7 +168,7 @@ def build_environmental_snapshot(db: Session, now: datetime, city_id: uuid.UUID 
     }, risk
 
 
-PROMPT_TEMPLATE = """You are the AI Resilience Intelligence layer of AquaResilience, a flood-resilience monitoring platform for Toulouse Métropole. You are an interpretive decision-support layer, NOT the source of truth for risk — the numeric risk score below was already computed deterministically; never contradict it or invent a different number.
+PROMPT_TEMPLATE = """You are the AI Resilience Intelligence layer of AquaResilience, a flood-resilience monitoring platform. You are currently analyzing {city_label}. You are an interpretive decision-support layer, NOT the source of truth for risk — the numeric risk score below was already computed deterministically; never contradict it or invent a different number.
 
 Current environmental snapshot (JSON):
 {snapshot_json}
@@ -187,12 +188,13 @@ Based ONLY on this snapshot, respond with a single JSON object with EXACTLY thes
 Respond with ONLY the JSON object — no markdown code fences, no extra commentary before or after it."""
 
 
-def build_prompt(snapshot: dict, language: str) -> str:
+def build_prompt(snapshot: dict, language: str, city_label: str) -> str:
     return PROMPT_TEMPLATE.format(
         snapshot_json=json.dumps(snapshot, indent=2),
         max_items=MAX_LIST_ITEMS,
         max_limitations=MAX_LIMITATIONS,
         language_instruction=LANGUAGE_INSTRUCTIONS.get(language, LANGUAGE_INSTRUCTIONS[DEFAULT_LANGUAGE]),
+        city_label=city_label,
     )
 
 
@@ -271,6 +273,37 @@ def should_run_event_triggered_analysis(
     return ok
 
 
+def pick_next_scheduled_city_id(db: Session) -> uuid.UUID | None:
+    """Session 022: which city the next *scheduled* tick should analyze.
+
+    The shared daily budget (`AIProviderConfig.daily_request_ceiling`,
+    default 6/day — Master Spec §19) stays completely unchanged: this just
+    decides WHICH city's prompt is built for the next of those 6 calls,
+    rotating across every city that actually has live data (no point
+    spending a precious scheduled slot analyzing a city with nothing real
+    to say). The city whose own latest brief is oldest (or that has never
+    had one at all, which sorts first) goes next — a self-balancing round
+    robin that needs no extra state of its own, since `situation_briefs`
+    already records everything it needs. Manual, per-city "Generate now"
+    clicks are unaffected by this — they always target whatever city the
+    viewer has selected.
+    """
+    live_cities = db.execute(select(City).where(City.has_live_data.is_(True))).scalars().all()
+    if not live_cities:
+        return get_primary_city_id(db)
+
+    live_city_ids = [c.id for c in live_cities]
+    latest_by_city = dict(
+        db.execute(
+            select(SituationBrief.city_id, func.max(SituationBrief.generated_at))
+            .where(SituationBrief.city_id.in_(live_city_ids))
+            .group_by(SituationBrief.city_id)
+        ).all()
+    )
+    never_generated = datetime.min.replace(tzinfo=timezone.utc)
+    return min(live_cities, key=lambda c: latest_by_city.get(c.id) or never_generated).id
+
+
 def can_run_manual_analysis(config: AIProviderConfig, now: datetime) -> tuple[bool, str]:
     """Returns (ok, reason_if_not_ok). Manual/event-triggered refresh is
     gated by the cooldown (not the full scheduled interval — it's meant to
@@ -290,11 +323,23 @@ def can_run_manual_analysis(config: AIProviderConfig, now: datetime) -> tuple[bo
 
 
 async def generate_situation_brief(
-    db: Session, language: str | None = None, triggered_by: str = "scheduled"
+    db: Session,
+    language: str | None = None,
+    triggered_by: str = "scheduled",
+    city_id: uuid.UUID | None = None,
 ) -> BriefGenerationResult:
     """Never raises. Every failure path records `last_analysis_error` on the
     shared config and returns ok=False instead — callers (scheduler tick,
-    manual endpoint) must never let this take down anything else."""
+    manual endpoint) must never let this take down anything else.
+
+    Session 022 (user request): `city_id` is the city this brief analyzes —
+    omitting it (background/legacy callers) falls back to the platform's
+    primary city (Toulouse), preserving the original default. The shared
+    daily budget (`config.daily_request_ceiling`) is still charged exactly
+    once per call regardless of which city it's for — see
+    `pick_next_scheduled_city_id` for how the scheduler spends that budget
+    across cities instead of multiplying it by them.
+    """
     config = get_or_create_ai_config(db)
     now = datetime.now(timezone.utc)
     language = language if language in LANGUAGE_INSTRUCTIONS else DEFAULT_LANGUAGE
@@ -309,14 +354,16 @@ async def generate_situation_brief(
         db.commit()
         return BriefGenerationResult(ok=False, message=config.last_analysis_error)
 
-    # Session 020: the shared brief stays explicitly scoped to Toulouse
-    # (see get_primary_city_id and build_environmental_snapshot's own
-    # docstring) — this is the correctness fix, not a decision to widen the
-    # brief to every live city; that would multiply LLM calls against
-    # config.daily_request_ceiling per city and is a separate, larger
-    # change (see Settings > AI Provider / the AI Intelligence page note).
-    snapshot, risk = build_environmental_snapshot(db, now, city_id=get_primary_city_id(db))
-    prompt = build_prompt(snapshot, language)
+    effective_city_id = city_id if city_id is not None else get_primary_city_id(db)
+    city = db.get(City, effective_city_id) if effective_city_id is not None else None
+    # "Toulouse Métropole" as a fallback label only matters if effective_city_id
+    # somehow resolves to no row at all (get_primary_city_id itself already
+    # falls back to None rather than erroring) — should never happen in
+    # practice since seed_geography always creates Toulouse.
+    city_label = city.label_en if city is not None else "Toulouse Métropole"
+
+    snapshot, risk = build_environmental_snapshot(db, now, city_id=effective_city_id)
+    prompt = build_prompt(snapshot, language, city_label)
     provider = get_provider(config.provider, api_key=api_key, model=config.model)
 
     # Every real outbound attempt counts against today's ceiling and resets
@@ -352,6 +399,7 @@ async def generate_situation_brief(
 
     brief = SituationBrief(
         generated_at=now,
+        city_id=effective_city_id,
         language=language,
         triggered_by=triggered_by,
         # Deliberately NOT payload.situation: the prompt asks the AI to

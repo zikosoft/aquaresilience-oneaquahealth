@@ -21,6 +21,7 @@
     "confidence": "Confiance",
     "limitations": "Limites",
     "generatedBy": "Généré par",
+    "generatedInLanguage": "Généré en {language}",
     "triggeredBy": {
       "scheduled": "Analyse programmée",
       "manual": "Actualisation manuelle",
@@ -28,5 +29,5 @@
     }
   },
   "empty": "Aucune synthèse IA pour le moment. Configurez un fournisseur IA dans les Paramètres pour activer l'analyse programmée.",
-  "primaryCityNotice": "Cette analyse décrit actuellement uniquement {city}, quelle que soit la ville sélectionnée dans l'en-tête."
+  "emptyForCity": "Aucune synthèse IA pour {city} pour le moment. Cliquez sur Actualiser maintenant pour en générer une."
 }

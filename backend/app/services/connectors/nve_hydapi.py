@@ -109,11 +109,33 @@ class NveHydapiConnector(BaseConnector):
 
         # Prefer a station that actually exposes a water-level series —
         # some active stations only carry e.g. groundwater or snow depth.
-        for station in stations:
-            series_list = station.get("seriesList") or []
-            has_water_level = any(str(s.get("parameter")) == WATER_LEVEL_PARAMETER for s in series_list)
-            if has_water_level and station.get("stationId"):
-                return station
+        #
+        # Session 022 fix (user report, live-caught on the map): a
+        # municipality ("CouncilName") can be a large administrative area —
+        # Oslo kommune reaches well past downtown into Groruddalen/Ellingsrud
+        # — so "the first active, water-level-capable station NVE happens to
+        # list" could be a real gauge many km from the city's own reference
+        # point (self.default_lon/lat, what the weather point uses), making
+        # the two markers on the map look like two unrelated cities. The
+        # reading itself was never wrong — just an arbitrary pick among
+        # several equally-valid real stations. Now picks the closest such
+        # station to the city's own point instead of the first one in
+        # whatever order the API returned them, still a real, unmodified
+        # station — never fabricated or moved.
+        candidates = [
+            s
+            for s in stations
+            if s.get("stationId")
+            and any(str(series.get("parameter")) == WATER_LEVEL_PARAMETER for series in (s.get("seriesList") or []))
+        ]
+        if candidates:
+            def _squared_distance_to_city(s: dict) -> float:
+                lon, lat = s.get("longitude"), s.get("latitude")
+                if lon is None or lat is None:
+                    return float("inf")
+                return (float(lon) - self.default_lon) ** 2 + (float(lat) - self.default_lat) ** 2
+
+            return min(candidates, key=_squared_distance_to_city)
         # Fall back to the first active station even without a confirmed
         # water-level series listing — still worth surfacing rather than
         # failing outright, since seriesList isn't always populated.

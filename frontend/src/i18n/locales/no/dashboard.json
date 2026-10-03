@@ -18,7 +18,8 @@
     "limitedHistory": "Bare {available}t historikk registrert så langt — viser alt (du valgte {requested}t). Diagrammene fylles ut etter hvert som mer data samles inn."
   },
   "waterLevel": {
-    "title": "Vannstand — Garonne ({hours}t)"
+    "titleGeneric": "Vannstand ({hours}t)",
+    "titleWithRiver": "Vannstand — {river} ({hours}t)"
   },
   "precipitation": {
     "title": "Nedbør ({hours}t)"
@@ -43,7 +44,10 @@
   },
   "situationBrief": {
     "title": "KI-situasjonsrapport",
-    "notAvailable": "Ingen KI-situasjonsrapport er generert ennå."
+    "notAvailable": "Ingen KI-situasjonsrapport er generert ennå.",
+    "emptyForCity": "Ingen KI-situasjonsrapport er generert ennå for {city}.",
+    "generateNow": "Generer nå",
+    "viewFull": "Se full analyse"
   },
   "timeline": {
     "title": "Miljøsignaler"

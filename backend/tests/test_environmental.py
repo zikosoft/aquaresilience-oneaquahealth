@@ -171,6 +171,10 @@ def test_environmental_summary_endpoint(client, admin_token):
     body = resp.json()
     assert body["monitored_stations"] >= 2
     assert body["water_level"] is not None
+    # Session 022 (user report, live-caught): the water level chart title
+    # used to hardcode "Garonne" for every city — real per-city river name
+    # now comes from the station behind the latest reading.
+    assert body["water_level_river_name"] == "Garonne"
     assert body["temperature"] is not None
     assert body["humidity"] is not None
     assert body["trend_window_hours"] == 48  # default
@@ -207,8 +211,84 @@ def test_environmental_summary_is_honestly_empty_for_a_non_demo_city(client, adm
     assert body["data_available"] is False
     assert body["monitored_stations"] == 0
     assert body["water_level"] is None
+    assert body["water_level_river_name"] is None
     assert body["water_level_trend"] == []
     assert body["planned_data_source"] == "Waterinfo.be (VMM / MOW-HIC)"
+
+
+class _FakeAthensConnector(BaseConnector):
+    """A second city's water-level reading, used only to prove
+    `water_level_river_name` is genuinely scoped per city rather than
+    always reflecting whichever reading was ingested most recently. Athens
+    has no connector anywhere in the real app — same "safe to use as a
+    standalone city" choice already made by
+    test_run_connector_flips_city_has_live_data_on_first_success_and_stays_flipped
+    below, for the same reason: nothing else in this suite assumes
+    anything about its has_live_data state, unlike Oslo/Vienna/Ghent which
+    the "honestly empty for a non-demo city" tests rely on staying live-data-
+    free."""
+
+    source_code = "test_fake_athens_source"
+    source_name = "Test Fake Athens Source"
+    provider = DataSourceProvider.EHYD
+    kind = DataSourceKind.HYDROLOGY
+    license = "test"
+    homepage_url = "http://example.invalid"
+    expected_interval_seconds = 300
+    stale_after_seconds = 3600
+    city = "Athens"
+
+    def fetch(self) -> list[NormalizedReading]:
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        return [
+            NormalizedReading(
+                "FAKE-ATHENS1", "Fake Athens Station", StationKind.RIVER_GAUGE, "Athens", "Kifisos", 23.73, 37.98,
+                MeasurementVariable.WATER_LEVEL_MM, 150.0, "mm", now,
+            )
+        ]
+
+
+def test_environmental_summary_river_name_is_scoped_per_city(client, admin_token, db_session):
+    """Session 022 (user report, live-caught): the water level chart title
+    used to show "Garonne" for every city, including Vienna/Oslo. Ingests a
+    real-shaped second city's reading with its own river name and asserts
+    the summary endpoint returns ITS river name for that city, while
+    Toulouse's own summary still correctly says Garonne."""
+    from sqlalchemy import select
+
+    from app.models.geography import City
+
+    run_connector(db_session, _FakeAthensConnector())
+    try:
+        athens = db_session.execute(select(City).where(City.label_en == "Athens")).scalar_one()
+        toulouse = db_session.execute(select(City).where(City.label_en == "Toulouse")).scalar_one()
+
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        athens_resp = client.get(f"/api/v1/environmental/summary?city_id={athens.id}", headers=headers)
+        assert athens_resp.status_code == 200
+        assert athens_resp.json()["water_level_river_name"] == "Kifisos"
+
+        toulouse_resp = client.get(f"/api/v1/environmental/summary?city_id={toulouse.id}", headers=headers)
+        assert toulouse_resp.status_code == 200
+        assert toulouse_resp.json()["water_level_river_name"] == "Garonne"
+    finally:
+        # Same cleanup obligation as the Athens flip test below (db_session
+        # commits for real, with no per-test rollback) — never leak a
+        # permanently "live" Athens or its fake station/measurements into
+        # tests that run after this one.
+        from app.models.environmental import Measurement, Station
+
+        source = db_session.query(DataSource).filter_by(code="test_fake_athens_source").one_or_none()
+        if source is not None:
+            db_session.query(Measurement).filter(
+                Measurement.station_id.in_(db_session.query(Station.id).filter_by(data_source_id=source.id))
+            ).delete(synchronize_session=False)
+            db_session.query(Station).filter_by(data_source_id=source.id).delete(synchronize_session=False)
+            db_session.delete(source)
+        athens = db_session.execute(select(City).where(City.label_en == "Athens")).scalar_one_or_none()
+        if athens is not None:
+            athens.has_live_data = False
+        db_session.commit()
 
 
 def test_environmental_summary_endpoint_custom_time_range(client, admin_token):

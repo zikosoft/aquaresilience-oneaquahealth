@@ -21,6 +21,7 @@
     "confidence": "Betrouwbaarheid",
     "limitations": "Beperkingen",
     "generatedBy": "Gegenereerd door",
+    "generatedInLanguage": "Gegenereerd in het {language}",
     "triggeredBy": {
       "scheduled": "Geplande analyse",
       "manual": "Handmatige vernieuwing",
@@ -28,5 +29,5 @@
     }
   },
   "empty": "Nog geen AI-situatierapport. Configureer een AI-provider in Instellingen om geplande analyse in te schakelen.",
-  "primaryCityNotice": "Deze analyse beschrijft momenteel alleen {city}, ongeacht de in de koptekst geselecteerde stad."
+  "emptyForCity": "Nog geen AI-situatierapport voor {city}. Klik op Nu vernieuwen om er een te genereren."
 }

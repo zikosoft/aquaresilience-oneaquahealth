@@ -11,12 +11,22 @@ import SignalsTimeline from '@/components/charts/SignalsTimeline.vue'
 import SourceHealthBadge from '@/components/common/SourceHealthBadge.vue'
 import WidgetCard from '@/components/common/WidgetCard.vue'
 import ResilienceMap from '@/components/map/ResilienceMap.vue'
+import { SUPPORTED_LOCALES } from '@/i18n'
 import { extractApiErrorMessage } from '@/services/api'
 import { fetchEnvironmentalSummary, fetchSources } from '@/services/environmentalApi'
+import { fetchIntelligenceStatus, fetchLatestBrief, triggerAnalysis } from '@/services/intelligenceApi'
 import { acknowledgeWarning, fetchCurrentRisk, fetchRiskTrajectory, fetchWarnings, resolveWarning } from '@/services/riskApi'
 import { useAuthStore } from '@/stores/auth'
 import { useCityStore } from '@/stores/city'
-import type { EarlyWarning, EnvironmentalSummary, RiskScore, RiskTrajectory, SourceHealth } from '@/types'
+import type {
+  AIIntelligenceStatus,
+  EarlyWarning,
+  EnvironmentalSummary,
+  RiskScore,
+  RiskTrajectory,
+  SituationBrief,
+  SourceHealth,
+} from '@/types'
 import { factorTranslationKey, leadingFactorKey, severityColor } from '@/utils/risk'
 
 const { t, locale } = useI18n()
@@ -55,6 +65,65 @@ const trajectory = ref<RiskTrajectory | null>(null)
 const warnings = ref<EarlyWarning[]>([])
 const warningActionLoading = ref(false)
 
+// Session 022 (user request): the AI Situation Brief widget now follows the
+// selected city (see services/intelligenceApi.ts + backend
+// generate_situation_brief) instead of a hardcoded empty card. Loaded and
+// errored independently from the rest of the dashboard (`load()` below) —
+// Master Spec §19's "if AI fails: dashboard works" gate means a brief
+// fetch/generation problem must never surface as the dashboard's own
+// errorMessage or block its other widgets.
+const brief = ref<SituationBrief | null>(null)
+const briefLoading = ref(true)
+const briefGenerating = ref(false)
+const briefMessage = ref<string | null>(null)
+const canGenerateBrief = computed(() => authStore.can('AI_INTELLIGENCE', 'EXECUTE'))
+const briefLanguageLabel = computed(() => {
+  if (!brief.value) return null
+  return SUPPORTED_LOCALES.find((l) => l.code === brief.value?.language)?.label ?? brief.value.language
+})
+const briefLanguageMismatch = computed(() => !!brief.value && brief.value.language !== locale.value)
+
+// AI provider configuration/budget is global (one shared AIProviderConfig —
+// see backend's intelligence_service), unlike `brief` above which is
+// per-city — used only to drive the "AI Monitoring" KPI tile below.
+const aiStatus = ref<AIIntelligenceStatus | null>(null)
+
+async function loadBrief(): Promise<void> {
+  briefLoading.value = true
+  try {
+    const [briefResp, statusResp] = await Promise.all([
+      fetchLatestBrief(cityStore.selectedCityId),
+      fetchIntelligenceStatus(),
+    ])
+    brief.value = briefResp
+    aiStatus.value = statusResp
+  } catch {
+    // Best-effort only — the rest of the dashboard must stay usable even if
+    // this one call fails (Master Spec §19: "if AI fails, dashboard works").
+    brief.value = null
+    aiStatus.value = null
+  } finally {
+    briefLoading.value = false
+  }
+}
+
+async function onGenerateBrief(): Promise<void> {
+  briefGenerating.value = true
+  briefMessage.value = null
+  try {
+    const result = await triggerAnalysis(locale.value, cityStore.selectedCityId)
+    if (result.ok && result.brief) {
+      brief.value = result.brief
+    } else if (!result.ok) {
+      briefMessage.value = result.message
+    }
+  } catch (e) {
+    briefMessage.value = extractApiErrorMessage(e, t('common.status.error'))
+  } finally {
+    briefGenerating.value = false
+  }
+}
+
 // P2.1 (D017): dashboard chart time-range selector. Saved as a per-viewer
 // preference in localStorage (D017 says "saved and reused across sessions",
 // not that it must be server-side) — best-effort only, never load-bearing.
@@ -76,6 +145,20 @@ const trendsLoading = ref(false)
 // Echoes back the window the currently-loaded summary actually used, so
 // chart titles never claim a range before the matching data has arrived.
 const effectiveHours = computed(() => summary.value?.trend_window_hours ?? selectedHours.value)
+
+// Session 022 (user report, live-caught): this chart's title used to
+// hardcode "Garonne" (Toulouse's own river) regardless of the selected
+// city — still showing "Garonne" while viewing Vienna, say. The real river
+// name now comes from the backend (summary.water_level_river_name, read
+// from the actual station behind the latest reading — see
+// app/api/v1/environmental.py), falling back to a river-less generic title
+// only when the selected city genuinely has none on file.
+const waterLevelChartTitle = computed(() => {
+  const river = summary.value?.water_level_river_name
+  return river
+    ? t('dashboard.waterLevel.titleWithRiver', { river, hours: effectiveHours.value })
+    : t('dashboard.waterLevel.titleGeneric', { hours: effectiveHours.value })
+})
 
 // Session 017: user report — "quand on change de 48h/72h/96h/120h ils ne
 // changent pas". The duration selector and its refetch were already
@@ -141,6 +224,7 @@ async function load(): Promise<void> {
 
 // Reload everything when the header's city selector changes.
 watch(() => cityStore.selectedCityId, load)
+watch(() => cityStore.selectedCityId, loadBrief)
 
 async function onHoursChange(hours: number | undefined): Promise<void> {
   if (hours === undefined || hours === selectedHours.value) return
@@ -203,7 +287,7 @@ onMounted(async () => {
   // the first fetch, so a returning viewer's chosen city applies
   // immediately instead of flashing Toulouse's data first.
   await cityStore.load()
-  await load()
+  await Promise.all([load(), loadBrief()])
 })
 
 // The engine keeps at most one non-RESOLVED warning open at a time (see
@@ -282,7 +366,21 @@ const kpis = computed(() => [
     caption: null,
     tooltip: null,
   },
-  { key: 'aiMonitoring', icon: 'mdi-creation-outline', value: null, caption: t('dashboard.kpi.comingInP3'), tooltip: null },
+  {
+    key: 'aiMonitoring',
+    icon: 'mdi-creation-outline',
+    // Session 022 (user report): this tile used to be a permanent "—
+    // Available from P3" stub, never wired up once P3 actually shipped.
+    // `aiStatus` (is_configured) is global/shared across every city — see
+    // its own comment above — but `brief` is this city's own latest
+    // analysis, so "last analysis" genuinely reflects the selected city,
+    // not whichever city happened to be analyzed most recently overall.
+    value: briefLoading.value ? null : t(aiStatus.value?.is_configured ? 'intelligence.status.active' : 'intelligence.status.disabled'),
+    caption: !briefLoading.value && aiStatus.value?.is_configured && brief.value
+      ? new Date(brief.value.generated_at).toLocaleString()
+      : null,
+    tooltip: null,
+  },
 ])
 
 // --- Big timeline: water level (primary axis) + precipitation (secondary axis) ---
@@ -295,7 +393,7 @@ const timelineSeries = computed(() => {
   if (!summary.value) return []
   return [
     {
-      name: t('dashboard.waterLevel.title', { hours: effectiveHours.value }),
+      name: waterLevelChartTitle.value,
       values: summary.value.water_level_trend,
       color: '#0B5FA5',
     },
@@ -521,7 +619,7 @@ const currentWarningEmptyText = computed(() =>
       >
         <KpiSparkline
           widget-id="kpi-water-level"
-          :title="t('dashboard.waterLevel.title', { hours: effectiveHours })"
+          :title="waterLevelChartTitle"
           :values="waterLevelSparkValues"
           :labels="waterLevelSparkLabels"
           :loading="loading || trendsLoading"
@@ -693,10 +791,114 @@ const currentWarningEmptyText = computed(() =>
         <WidgetCard
           widget-id="situation-brief"
           :title="t('dashboard.situationBrief.title')"
-          :empty="true"
-          :empty-text="t('dashboard.situationBrief.notAvailable')"
+          :loading="briefLoading"
           :min-height="440"
-        />
+        >
+          <template v-if="!brief">
+            <div class="flex-grow-1 d-flex flex-column align-center justify-center text-medium-emphasis pa-4">
+              <v-icon
+                icon="mdi-database-off-outline"
+                size="32"
+                class="mb-2"
+              />
+              <span class="text-body-2 text-center mb-3">
+                {{ t('dashboard.situationBrief.emptyForCity', { city: cityLabel }) }}
+              </span>
+              <v-btn
+                v-if="canGenerateBrief"
+                size="small"
+                variant="tonal"
+                color="primary"
+                :loading="briefGenerating"
+                prepend-icon="mdi-creation-outline"
+                @click="onGenerateBrief"
+              >
+                {{ t('dashboard.situationBrief.generateNow') }}
+              </v-btn>
+              <router-link
+                v-else
+                :to="{ name: 'intelligence' }"
+                class="text-caption mt-1"
+              >
+                {{ t('dashboard.situationBrief.viewFull') }}
+              </router-link>
+              <span
+                v-if="briefMessage"
+                class="text-caption text-medium-emphasis mt-2"
+              >
+                {{ briefMessage }}
+              </span>
+            </div>
+          </template>
+          <template v-else-if="brief">
+            <div class="d-flex align-center ga-2 flex-wrap mb-2">
+              <v-chip
+                :color="severityColor(brief.risk_severity_snapshot)"
+                variant="flat"
+                size="small"
+              >
+                {{ t(`alerts.severity.${brief.situation}`) }}
+              </v-chip>
+              <span class="text-caption text-medium-emphasis">
+                {{ t('intelligence.brief.confidence') }}: {{ Math.round(brief.confidence * 100) }}%
+              </span>
+              <v-chip
+                v-if="briefLanguageMismatch"
+                size="small"
+                variant="outlined"
+                color="medium-emphasis"
+              >
+                {{ t('intelligence.brief.generatedInLanguage', { language: briefLanguageLabel }) }}
+              </v-chip>
+              <v-spacer />
+              <v-btn
+                v-if="canGenerateBrief"
+                size="small"
+                variant="text"
+                :loading="briefGenerating"
+                icon="mdi-refresh"
+                @click="onGenerateBrief"
+              />
+            </div>
+
+            <p class="text-body-2 mb-3">
+              {{ brief.summary }}
+            </p>
+
+            <div
+              v-if="brief.recommendations.length"
+              class="mb-2"
+            >
+              <div class="text-caption font-weight-bold mb-1">
+                {{ t('intelligence.brief.recommendations') }}
+              </div>
+              <ul class="text-caption text-medium-emphasis pl-4">
+                <li
+                  v-for="(item, i) in brief.recommendations.slice(0, 3)"
+                  :key="i"
+                >
+                  {{ item }}
+                </li>
+              </ul>
+            </div>
+
+            <span
+              v-if="briefMessage"
+              class="text-caption text-medium-emphasis"
+            >
+              {{ briefMessage }}
+            </span>
+
+            <v-spacer />
+            <v-divider class="my-2" />
+            <div class="text-caption text-medium-emphasis d-flex align-center justify-space-between">
+              <router-link :to="{ name: 'intelligence' }">
+                {{ t('dashboard.situationBrief.viewFull') }}
+              </router-link>
+              <span>{{ new Date(brief.generated_at).toLocaleString() }}</span>
+            </div>
+          </template>
+        </WidgetCard>
       </v-col>
     </v-row>
 

@@ -254,6 +254,7 @@ def environmental_summary(
             fresh_sources=0,
             trend_window_hours=hours,
             water_level=None,
+            water_level_river_name=None,
             water_level_trend=[],
             water_level_trend_timestamps=[],
             precipitation_24h_total_mm=None,
@@ -326,6 +327,25 @@ def environmental_summary(
         rows = db.execute(scope_measurements_to_city(query, scope_city_id)).scalars().all()
         return [r.value for r in rows], [r.observed_at.isoformat() for r in rows]
 
+    def _water_level_river_name() -> str | None:
+        # Deliberately not reusing scope_measurements_to_city here — it
+        # already joins Station itself, and this query needs to select a
+        # Station column too; joining Station a second time on the same
+        # unaliased table would produce invalid SQL. Same city-scoping
+        # logic as the sources/stations queries just above, applied by hand.
+        query = (
+            select(Station.river_name)
+            .join(Measurement, Measurement.station_id == Station.id)
+            .where(Measurement.variable == MeasurementVariable.WATER_LEVEL_MM.value)
+            .order_by(Measurement.observed_at.desc())
+            .limit(1)
+        )
+        if scope_city_id is not None:
+            query = query.join(DataSource, DataSource.id == Station.data_source_id).where(
+                DataSource.city_id == scope_city_id
+            )
+        return db.execute(query).scalar_one_or_none()
+
     water_trend_values, water_trend_ts = _trend(MeasurementVariable.WATER_LEVEL_MM, hours)
     precip_trend_values, precip_trend_ts = _trend(MeasurementVariable.PRECIPITATION_MM, hours)
     temp_trend_values, temp_trend_ts = _trend(MeasurementVariable.TEMPERATURE_C, hours)
@@ -348,6 +368,7 @@ def environmental_summary(
         fresh_sources=fresh_sources,
         trend_window_hours=hours,
         water_level=_latest(MeasurementVariable.WATER_LEVEL_MM),
+        water_level_river_name=_water_level_river_name(),
         water_level_trend=water_trend_values,
         water_level_trend_timestamps=water_trend_ts,
         precipitation_24h_total_mm=precipitation_24h_total,

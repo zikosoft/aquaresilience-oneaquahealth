@@ -18,7 +18,8 @@
     "limitedHistory": "Er zijn tot nu toe slechts {available}u aan geschiedenis geregistreerd — alles wordt getoond (u koos {requested}u). De grafieken vullen zich aan naarmate meer gegevens worden verzameld."
   },
   "waterLevel": {
-    "title": "Waterpeil — Garonne ({hours}u)"
+    "titleGeneric": "Waterpeil ({hours}u)",
+    "titleWithRiver": "Waterpeil — {river} ({hours}u)"
   },
   "precipitation": {
     "title": "Neerslag ({hours}u)"
@@ -43,7 +44,10 @@
   },
   "situationBrief": {
     "title": "AI-situatierapport",
-    "notAvailable": "Er is nog geen AI-situatierapport gegenereerd."
+    "notAvailable": "Er is nog geen AI-situatierapport gegenereerd.",
+    "emptyForCity": "Er is nog geen AI-situatierapport gegenereerd voor {city}.",
+    "generateNow": "Nu genereren",
+    "viewFull": "Volledige analyse bekijken"
   },
   "timeline": {
     "title": "Omgevingssignalen"

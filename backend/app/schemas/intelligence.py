@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 class SituationBriefOut(BaseModel):
     id: uuid.UUID
     generated_at: datetime
+    city_id: uuid.UUID | None = None
     language: str
     triggered_by: str
     situation: str
@@ -51,6 +52,11 @@ class TriggerAnalysisRequest(BaseModel):
     # rather than degrading gracefully. See intelligence_service.py's
     # LANGUAGE_INSTRUCTIONS for the matching fix.
     language: str | None = Field(default=None, pattern="^(en|fr|es|pt|no|el|de|it|nl)$")
+    # Session 022 (user request): which city to analyze — defaults to the
+    # platform's primary city (Toulouse) server-side when omitted, same as
+    # before this field existed. The frontend always sends the viewer's
+    # currently selected city explicitly.
+    city_id: uuid.UUID | None = None
 
 
 class TriggerAnalysisResult(BaseModel):

@@ -182,11 +182,23 @@ async function resolveMapConfig(): Promise<{ style: string | StyleSpecification;
     // remains the fallback if the store hasn't resolved yet for some
     // reason, same as before this change).
     const city = cityStore.selectedCity ?? config.cities[0]
-    const center: [number, number] = [
-      envCenterLon ?? city?.default_lon ?? FALLBACK_CENTER[0],
-      envCenterLat ?? city?.default_lat ?? FALLBACK_CENTER[1],
-    ]
-    const zoom = envZoom ?? city?.default_zoom ?? FALLBACK_ZOOM
+    // Session 021 fix (user report: "ça se remet toujours sur Toulouse" —
+    // every city switch flew back to the exact same point). envCenterLon/
+    // Lat/Zoom are a deployment-level escape hatch for when there's no
+    // resolved city at all to center on (see FALLBACK_CENTER, used in the
+    // catch branch below and when configuredStyleUrl is set) — .env ships
+    // them set to Toulouse's own coordinates as that safety-net default.
+    // This used to prefer the env vars with `envCenterLon ?? city.default_lon`
+    // even when `city` WAS resolved, so a real, successfully-loaded city
+    // never got a say: the map always centered on the env var's point
+    // (Toulouse) no matter which city was actually selected. Once a city is
+    // resolved, its own coordinates are what "honor the city selector"
+    // means — the env override now only kicks in via FALLBACK_CENTER/ZOOM,
+    // when city resolution itself fails.
+    const center: [number, number] = city
+      ? [city.default_lon, city.default_lat]
+      : [envCenterLon ?? FALLBACK_CENTER[0], envCenterLat ?? FALLBACK_CENTER[1]]
+    const zoom = city ? city.default_zoom : (envZoom ?? FALLBACK_ZOOM)
     return { style, center, zoom }
   } catch (e) {
     // Never let a Settings/geography fetch failure keep the map from
@@ -386,8 +398,6 @@ function buildPopupContent(station: Station, risk: RiskScore | null): HTMLElemen
 }
 
 async function addStationMarkers(): Promise<void> {
-  // eslint-disable-next-line no-console -- temporary Session 021 diagnostic
-  console.log('[AQ-DIAG] addStationMarkers() called, map=', !!map, 'selectedCityId=', cityStore.selectedCityId, 'selectedCity=', cityStore.selectedCity?.label_en)
   if (!map) return
   clearStationMarkers()
   try {
@@ -409,8 +419,6 @@ async function addStationMarkers(): Promise<void> {
             return null
           }),
     ])
-    // eslint-disable-next-line no-console -- temporary Session 021 diagnostic
-    console.log('[AQ-DIAG] fetchStations resolved:', stations.length, 'stations for cityId=', cityStore.selectedCityId)
     lastGaugeLngLat = null
     lastRiskForLayer = null
     for (const station of stations) {
@@ -557,14 +565,34 @@ watch(
 // its name.
 watch(
   () => cityStore.selectedCityId,
-  (newId, oldId) => {
-    // eslint-disable-next-line no-console -- temporary Session 021 diagnostic
-    console.log('[AQ-DIAG] selectedCityId watcher fired:', oldId, '->', newId, 'map=', !!map, 'loading=', loading.value, 'resolvedCity=', cityStore.selectedCity?.label_en)
+  () => {
     const city = cityStore.selectedCity
     if (!map || !city) return
+    // Session 021 fix (user report, confirmed via diagnostic logging: the
+    // city/station data pipeline was already 100% correct — selectCity(),
+    // this watcher, and fetchStations() all fired with the right city and
+    // the right station count every time). The one thing never visibly
+    // moved: the camera itself. Root cause — MapLibre/Mapbox GL's flyTo()
+    // (and easeTo()) is a silent no-op, no animation AND no instant jump,
+    // whenever the OS/browser's prefers-reduced-motion is set, UNLESS
+    // `essential: true` is passed. On a machine with that accessibility
+    // setting on, every city switch was updating the markers correctly but
+    // leaving the viewport exactly where it was — so a newly selected
+    // city's markers could easily be off-screen entirely, looking exactly
+    // like "the map never updates / stays on the previous city".
+    //
+    // Session 021 fix #2 (same report, next symptom): the animation now
+    // ran, but always landed on the exact same point — `city` here is
+    // guaranteed non-null (guarded above), yet `envCenterLon ?? city...`
+    // meant the deployment-escape-hatch env vars (set in .env to Toulouse's
+    // own coordinates, see resolveMapConfig's comment above) always won
+    // over the real, resolved, non-Toulouse city. Once `city` is known —
+    // which it always is here — its own coordinates are the destination,
+    // full stop.
     map.flyTo({
-      center: [envCenterLon ?? city.default_lon, envCenterLat ?? city.default_lat],
-      zoom: envZoom ?? city.default_zoom,
+      center: [city.default_lon, city.default_lat],
+      zoom: city.default_zoom,
+      essential: true,
     })
     if (!loading.value) void addStationMarkers()
   },

@@ -10,9 +10,17 @@ scheduler (or a prior manual trigger) already produced, satisfying the P3
 gate "no unnecessary LLM call on dashboard load". Only `POST /analyze`
 calls out, and it is rate-limited by `can_run_manual_analysis` (cooldown +
 daily ceiling) independently of the scheduler's own interval gate.
+
+Session 022 (user request): `city_id` on `GET /brief` and `POST /analyze`
+lets the brief follow the viewer's selected city instead of always being
+about Toulouse — see `app.services.intelligence_service.
+generate_situation_brief`. `resolve_city` degrades an unrecognized/stale id
+the same way every other city-scoped endpoint does; omitting it keeps the
+original default (the primary city).
 """
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends
@@ -30,6 +38,7 @@ from app.schemas.intelligence import (
     TriggerAnalysisResult,
 )
 from app.services.ai_provider_service import get_or_create_ai_config
+from app.services.city_context import get_primary_city_id, resolve_city
 from app.services.intelligence_service import can_run_manual_analysis, generate_situation_brief
 
 router = APIRouter()
@@ -37,10 +46,19 @@ router = APIRouter()
 
 @router.get("/brief", response_model=SituationBriefOut | None)
 def get_latest_brief(
+    city_id: uuid.UUID | None = None,
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("AI_INTELLIGENCE", "VIEW")),
 ) -> SituationBriefOut | None:
-    brief = db.execute(select(SituationBrief).order_by(SituationBrief.generated_at.desc()).limit(1)).scalar_one_or_none()
+    # resolve_city degrades both "omitted" and "unrecognized/stale" the same
+    # way (city=None) — either way, fall back to the primary city rather
+    # than an ambiguous "most recent brief across every city" scan.
+    city, _has_data = resolve_city(db, city_id)
+    effective_city_id = city.id if city is not None else get_primary_city_id(db)
+    query = select(SituationBrief).order_by(SituationBrief.generated_at.desc()).limit(1)
+    if effective_city_id is not None:
+        query = query.where(SituationBrief.city_id == effective_city_id)
+    brief = db.execute(query).scalar_one_or_none()
     return brief
 
 
@@ -82,5 +100,9 @@ async def trigger_analysis(
     if not ok:
         return TriggerAnalysisResult(ok=False, message=reason)
 
-    result = await generate_situation_brief(db, language=payload.language, triggered_by="manual")
+    city, _has_data = resolve_city(db, payload.city_id)
+    effective_city_id = city.id if city is not None else get_primary_city_id(db)
+    result = await generate_situation_brief(
+        db, language=payload.language, triggered_by="manual", city_id=effective_city_id
+    )
     return TriggerAnalysisResult(ok=result.ok, message=result.message, brief=result.brief)

@@ -19,21 +19,24 @@ from app.models.geography import City
 
 
 def get_primary_city_id(db: Session) -> uuid.UUID | None:
-    """Session 020: the platform's one designated 'primary' city for the
-    features that are still genuinely global/singleton rather than
-    per-city — the shared AI Situation Brief (SituationBrief has no city
-    column, Master Spec §19: "one shared stored brief for all users"), the
-    background scheduler's warning evaluation, and the Early Warnings
-    lifecycle itself (Warning has no city column either). Toulouse is that
-    city: the platform's original demo city and this hackathon's Track 6
-    subject (Toulouse Métropole). Falls back to None (today's unscoped
-    global-scan behavior in risk_engine._scope_to_city) if that row is ever
-    missing, rather than erroring out a scheduler tick or a brief refresh —
-    should never happen in practice since seed_geography always creates it.
-    Making Early Warnings/the AI brief genuinely per-city is a larger,
-    separate redesign (multiplying LLM calls and warning rows per live
-    city) — out of scope for this pass; see the Settings/AI Intelligence
-    docs for the current single-brief rationale."""
+    """Session 020: the platform's one designated 'primary' city — still
+    used as the default/fallback for features that remain genuinely
+    global/singleton: the background scheduler's own warning evaluation and
+    the Early Warnings lifecycle itself (Warning has no city column yet).
+    Toulouse is that city: the platform's original demo city and this
+    hackathon's Track 6 subject (Toulouse Métropole). Falls back to None
+    (today's unscoped global-scan behavior in risk_engine._scope_to_city) if
+    that row is ever missing, rather than erroring out a scheduler tick or a
+    brief refresh — should never happen in practice since seed_geography
+    always creates it.
+
+    Session 022 (user request): the AI Situation Brief is no longer
+    pinned here — it now follows whichever city is selected/rotated to
+    (see `app.services.intelligence_service.generate_situation_brief` and
+    `pick_next_scheduled_city_id`), falling back to this primary city only
+    when no explicit city is given. Making Early Warnings genuinely
+    per-city too (it still isn't) is a separate, larger change — Warning
+    has no city column at all yet."""
     city = db.execute(select(City).where(City.label_en == "Toulouse")).scalar_one_or_none()
     return city.id if city else None
 

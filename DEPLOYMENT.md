@@ -1,10 +1,12 @@
 # Deployment (P5)
 
 Production stack: a reverse proxy (nginx) is the only public entry point,
-terminating HTTPS and routing `/` to the frontend and `/api/` to the
-backend. Postgres and Redis are never exposed outside the internal Docker
-network — same as in the dev stack (`docker-compose.yml`), just now also
-true for the backend and frontend containers themselves.
+routing `/` to the frontend and `/api/` to the backend — normally also
+terminating HTTPS (sections 1 and 3 below), or plain HTTP only when that's
+all you need yet (section 2 — e.g. a demo subdomain before a certificate
+is ready). Postgres and Redis are never exposed outside the internal
+Docker network — same as in the dev stack (`docker-compose.yml`), just
+now also true for the backend and frontend containers themselves.
 
 ```
 Internet ──▶ reverse-proxy (80/443, TLS) ──▶ frontend (static SPA, nginx)
@@ -40,7 +42,59 @@ whatever `DEMO_ADMIN_PASSWORD` you set in `.env.production`.
 comment for why (this repo also has a dev `.env`, and Compose's variable
 interpolation silently picks whichever `.env` it's told to use).
 
-## 2. Real domain + trusted certificate (Let's Encrypt)
+## 2. HTTP-only demo deploy (e.g. a subdomain, no certificate yet)
+
+Use this when you want the real production stack — built images,
+multi-worker backend, no `--reload`, no source bind-mounts, same hardening
+as the TLS path below — reachable over plain HTTP on port 80, with no
+certificate at all. Typical case: a demo subdomain (e.g.
+`oneaquahealth.forkandfry.com` — adjust to whatever subdomain you're
+actually using) that needs to be up quickly, before a certificate is
+issued, or that already sits behind something else terminating TLS (a CDN
+or load balancer in front of this server).
+
+```bash
+cp .env.production.example .env.production
+# edit .env.production: DOMAIN=<your-subdomain>, e.g.
+#   DOMAIN=oneaquahealth.forkandfry.com
+# fill in SECRET_KEY, SECRETS_ENCRYPTION_KEY, POSTGRES_PASSWORD (same
+# generation commands as section 1). LETSENCRYPT_EMAIL isn't used on this
+# path — leave it blank.
+
+docker compose -f docker-compose.prod.yml -f docker-compose.prod.http.yml \
+  --env-file .env.production up -d --build \
+  reverse-proxy backend frontend postgres redis
+```
+
+Point the subdomain's DNS A/AAAA record at this server's public IP
+(propagation can take a few minutes to a few hours), then open
+`http://<your-subdomain>` — no certificate warning, because there is no
+certificate; this is plain HTTP, the same trust model as the local dev
+stack (`docker-compose.yml`).
+
+What `docker-compose.prod.http.yml` changes on top of the base file (see
+that file's own top comment for the full mechanics): the reverse proxy
+serves `deploy/nginx/nginx.http.conf.template` instead of the TLS
+template — plain `listen 80`, no redirect, no HSTS header (that header
+would be actively wrong to send over a connection that isn't actually
+HTTPS) — and the backend's `CORS_ORIGINS` is set to `http://${DOMAIN}`
+instead of `https://${DOMAIN}`, so the frontend's own API calls aren't
+rejected over a scheme mismatch. The `certbot` service from the base file
+is deliberately left out of the `up` command above — it only matters for
+the TLS path.
+
+Port 443 stays published by the base file in this mode (nothing
+overridden there, on purpose — see the override file's own comment);
+harmless, since nothing listens on it with this nginx config, so a
+connection to it is simply refused rather than silently open to anything.
+
+Switching this same deployment to TLS later, once a certificate is ready:
+stop passing `docker-compose.prod.http.yml` and follow section 1 or 3
+instead — same containers, same data (Postgres volume, demo account,
+anything already ingested), no rebuild needed beyond the reverse proxy
+picking up its normal TLS config.
+
+## 3. Real domain + trusted certificate (Let's Encrypt)
 
 Prerequisites: a domain whose DNS A/AAAA record already points at this
 server's public IP (Let's Encrypt's HTTP-01 challenge needs that to
@@ -85,7 +139,7 @@ host running step 4's `exec ... nginx -s reload` command (a hackathon demo
 window is far shorter than the 90-day validity, so this is a "for later"
 concern, not a blocker for submission).
 
-## 3. What's already hardened
+## 4. What's already hardened
 
 - `ENVIRONMENT=production` makes the app refuse to start on the dev-only
   `SECRET_KEY`/`SECRETS_ENCRYPTION_KEY` defaults (`app/core/config.py`) —
@@ -118,7 +172,7 @@ concern, not a blocker for submission).
   old broken healthcheck, the whole production stack would have hung
   forever waiting for a backend that was actually fine.
 
-## 4. What still needs your input before this is a "real" deployment
+## 5. What still needs your input before this is a "real" deployment
 
 - **A production domain** (§12 of the progress tracker) — the quick-start
   above works with `DOMAIN=localhost` in the meantime.
@@ -131,3 +185,11 @@ concern, not a blocker for submission).
   here). Run the quick-start above once on a machine with Docker to confirm
   the live build — flag anything that doesn't match this doc and it'll get
   fixed.
+- Section 2's HTTP-only override (`docker-compose.prod.http.yml`) was
+  verified the same way: `docker compose config` (confirms the merge —
+  `CORS_ORIGINS` correctly becomes `http://${DOMAIN}`, the reverse-proxy
+  volume correctly swaps to the HTTP template) and `nginx -t` against the
+  rendered template (with the Docker-network-only hostnames `backend`/
+  `frontend` swapped for `127.0.0.1` purely for this standalone syntax
+  check — they resolve fine inside the real Compose network). Not yet run
+  end-to-end against a live demo subdomain.

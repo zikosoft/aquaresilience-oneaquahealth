@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
+import BrandLogo from '@/components/branding/BrandLogo.vue'
 import { apiErrorCode, extractApiErrorMessage } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { SUPPORTED_LOCALES, setLocale, type AppLocale } from '@/i18n'
@@ -53,29 +54,11 @@ function onLocaleChange(code: AppLocale): void {
       style="min-height: 100vh"
     >
       <v-container class="d-flex flex-column align-center">
-        <v-menu>
-          <template #activator="{ props: menuProps }">
-            <v-btn
-              v-bind="menuProps"
-              variant="text"
-              class="align-self-end mb-2"
-              prepend-icon="mdi-web"
-            >
-              {{ SUPPORTED_LOCALES.find((l) => l.code === locale)?.label }}
-            </v-btn>
-          </template>
-          <v-list>
-            <v-list-item
-              v-for="opt in SUPPORTED_LOCALES"
-              :key="opt.code"
-              :active="locale === opt.code"
-              @click="onLocaleChange(opt.code)"
-            >
-              <v-list-item-title>{{ opt.label }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
-
+        <!-- Session 022 (user request): the language button used to float
+             above the card, right-aligned, visually detached from both the
+             logo and the form. Moved inside the card's own header row, next
+             to the logo/name, so it reads as one coherent group with the
+             form right below it instead of a stray control above the page. -->
         <v-card
           width="420"
           max-width="94vw"
@@ -83,13 +66,34 @@ function onLocaleChange(code: AppLocale): void {
           elevation="4"
         >
           <v-card-item>
-            <div class="d-flex align-center ga-2 mb-1">
-              <v-icon
-                icon="mdi-water-outline"
-                color="primary"
-                size="32"
+            <div class="d-flex align-center justify-space-between mb-1">
+              <BrandLogo
+                :size="32"
+                text-class="text-h5 font-weight-bold"
               />
-              <span class="text-h5 font-weight-bold">{{ t('common.appName') }}</span>
+              <v-menu>
+                <template #activator="{ props: menuProps }">
+                  <v-btn
+                    v-bind="menuProps"
+                    variant="text"
+                    size="small"
+                    class="text-none"
+                    prepend-icon="mdi-web"
+                  >
+                    {{ SUPPORTED_LOCALES.find((l) => l.code === locale)?.label }}
+                  </v-btn>
+                </template>
+                <v-list>
+                  <v-list-item
+                    v-for="opt in SUPPORTED_LOCALES"
+                    :key="opt.code"
+                    :active="locale === opt.code"
+                    @click="onLocaleChange(opt.code)"
+                  >
+                    <v-list-item-title>{{ opt.label }}</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
             </div>
             <v-card-subtitle class="text-wrap">
               {{ t('auth.login.subtitle') }}

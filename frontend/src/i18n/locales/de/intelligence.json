@@ -21,6 +21,7 @@
     "confidence": "Konfidenz",
     "limitations": "Einschränkungen",
     "generatedBy": "Erstellt von",
+    "generatedInLanguage": "Erstellt auf {language}",
     "triggeredBy": {
       "scheduled": "Geplante Analyse",
       "manual": "Manuelle Aktualisierung",
@@ -28,5 +29,5 @@
     }
   },
   "empty": "Noch kein KI-Lagebericht vorhanden. Konfigurieren Sie einen KI-Anbieter in den Einstellungen, um die geplante Analyse zu aktivieren.",
-  "primaryCityNotice": "Diese Analyse beschreibt derzeit nur {city}, unabhängig von der in der Kopfzeile ausgewählten Stadt."
+  "emptyForCity": "Noch kein KI-Lagebericht für {city}. Klicken Sie auf Jetzt aktualisieren, um einen zu erstellen."
 }

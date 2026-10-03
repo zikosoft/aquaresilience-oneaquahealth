@@ -18,7 +18,8 @@
     "limitedHistory": "Bisher sind nur {available}h Verlaufsdaten erfasst — alle werden angezeigt (Sie haben {requested}h ausgewählt). Die Diagramme füllen sich, sobald mehr Daten erfasst werden."
   },
   "waterLevel": {
-    "title": "Wasserstand — Garonne ({hours}h)"
+    "titleGeneric": "Wasserstand ({hours}h)",
+    "titleWithRiver": "Wasserstand — {river} ({hours}h)"
   },
   "precipitation": {
     "title": "Niederschlag ({hours}h)"
@@ -43,7 +44,10 @@
   },
   "situationBrief": {
     "title": "KI-Lagebericht",
-    "notAvailable": "Es wurde noch kein KI-Lagebericht erstellt."
+    "notAvailable": "Es wurde noch kein KI-Lagebericht erstellt.",
+    "emptyForCity": "Für {city} wurde noch kein KI-Lagebericht erstellt.",
+    "generateNow": "Jetzt generieren",
+    "viewFull": "Vollständige Analyse anzeigen"
   },
   "timeline": {
     "title": "Umweltsignale"

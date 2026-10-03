@@ -21,6 +21,7 @@
     "confidence": "Tillit",
     "limitations": "Begrensninger",
     "generatedBy": "Generert av",
+    "generatedInLanguage": "Generert på {language}",
     "triggeredBy": {
       "scheduled": "Planlagt analyse",
       "manual": "Manuell oppdatering",
@@ -28,5 +29,5 @@
     }
   },
   "empty": "Ingen KI-situasjonsrapport ennå. Konfigurer en KI-leverandør i Innstillinger for å aktivere planlagt analyse.",
-  "primaryCityNotice": "Denne analysen beskriver for øyeblikket kun {city}, uavhengig av byen valgt i toppmenyen."
+  "emptyForCity": "Ingen KI-situasjonsrapport ennå for {city}. Klikk Oppdater nå for å generere en."
 }

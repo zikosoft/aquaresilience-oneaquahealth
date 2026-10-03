@@ -67,8 +67,6 @@ export const useCityStore = defineStore('city', () => {
   }
 
   function selectCity(cityId: string): void {
-    // eslint-disable-next-line no-console -- temporary Session 021 diagnostic, see ResilienceMap.vue
-    console.log('[AQ-DIAG] selectCity() called with', cityId, '— cities loaded:', cities.value.length)
     selectedCityId.value = cityId
     localStorage.setItem(CITY_KEY, cityId)
   }

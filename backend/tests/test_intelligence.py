@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import engine
 from app.core.security import encrypt_secret, hash_password
+from app.models.geography import City
 from app.models.intelligence import SituationBrief
 from app.models.rbac import Role, UserRole
 from app.models.settings import AIProviderConfig
@@ -31,6 +32,7 @@ from app.services.intelligence_service import (
     build_environmental_snapshot,
     can_run_manual_analysis,
     generate_situation_brief,
+    pick_next_scheduled_city_id,
     should_run_scheduled_analysis,
 )
 
@@ -223,6 +225,94 @@ async def test_generate_situation_brief_schema_invalid_json_is_graceful(isolated
     assert isolated_db.query(SituationBrief).count() == 0
 
 
+@pytest.mark.asyncio
+async def test_generate_situation_brief_defaults_to_primary_city_when_omitted(isolated_db, monkeypatch):
+    """Session 022 (user request): omitting city_id (background/legacy
+    callers) must keep the original default — the primary city (Toulouse),
+    never an unscoped/ambiguous row."""
+    _configured_config(isolated_db)
+    monkeypatch.setattr(
+        intelligence_service, "get_provider", lambda *a, **k: _FakeAIProvider(response_text=VALID_BRIEF_JSON)
+    )
+
+    result = await generate_situation_brief(isolated_db, language="en", triggered_by="manual")
+
+    assert result.ok is True
+    toulouse_id = isolated_db.execute(select(City.id).where(City.label_en == "Toulouse")).scalar_one()
+    assert result.brief.city_id == toulouse_id
+
+
+@pytest.mark.asyncio
+async def test_generate_situation_brief_respects_explicit_city_id_and_names_it_in_the_prompt(isolated_db, monkeypatch):
+    """Session 022 (user request): the brief must follow whichever city is
+    passed in, not always Toulouse — and the prompt itself must name that
+    city rather than hardcoding 'Toulouse Métropole', or an Oslo brief would
+    misleadingly claim to describe Toulouse."""
+    _configured_config(isolated_db)
+    oslo_id = isolated_db.execute(select(City.id).where(City.label_en == "Oslo")).scalar_one()
+
+    captured_prompts: list[str] = []
+
+    class _CapturingFakeProvider(_FakeAIProvider):
+        async def generate_json(self, prompt: str, max_output_tokens: int) -> str:
+            captured_prompts.append(prompt)
+            return await super().generate_json(prompt, max_output_tokens)
+
+    monkeypatch.setattr(
+        intelligence_service,
+        "get_provider",
+        lambda *a, **k: _CapturingFakeProvider(response_text=VALID_BRIEF_JSON),
+    )
+
+    result = await generate_situation_brief(isolated_db, language="en", triggered_by="manual", city_id=oslo_id)
+
+    assert result.ok is True
+    assert result.brief.city_id == oslo_id
+    assert len(captured_prompts) == 1
+    assert "Oslo" in captured_prompts[0]
+    assert "Toulouse" not in captured_prompts[0]
+
+
+def test_pick_next_scheduled_city_id_rotates_across_live_cities(isolated_db):
+    """Session 022 (user request): the scheduled slot should go to whichever
+    live city's own brief is most overdue (or has none yet), not always
+    Toulouse — while never touching a non-live city (nothing real to
+    analyze there yet)."""
+    toulouse_id = isolated_db.execute(select(City.id).where(City.label_en == "Toulouse")).scalar_one()
+    oslo = isolated_db.execute(select(City).where(City.label_en == "Oslo")).scalar_one()
+
+    # Only Toulouse is live by default (test_geography.py asserts this same
+    # baseline) -> it's the only candidate.
+    assert pick_next_scheduled_city_id(isolated_db) == toulouse_id
+
+    # Flip Oslo live too (same direct-mutation pattern already used by
+    # test_environmental.py's has_live_data test). Give Toulouse a brief so
+    # Oslo (never analyzed) is unambiguously the more-overdue pick.
+    oslo.has_live_data = True
+    isolated_db.add(
+        SituationBrief(
+            generated_at=datetime.now(timezone.utc),
+            city_id=toulouse_id,
+            language="en",
+            triggered_by="scheduled",
+            situation="low",
+            summary="x",
+            drivers=[],
+            zones_to_watch=[],
+            recommendations=[],
+            confidence=0.5,
+            limitations=[],
+            risk_score_snapshot=0.0,
+            risk_severity_snapshot="LOW",
+            provider="openai",
+            model="gpt-4o-mini",
+        )
+    )
+    isolated_db.commit()
+
+    assert pick_next_scheduled_city_id(isolated_db) == oslo.id
+
+
 def test_should_run_scheduled_analysis_gates(isolated_db):
     now = datetime.now(timezone.utc)
 
@@ -381,6 +471,52 @@ def test_analyze_endpoint_end_to_end_with_fake_provider(client, admin_token, db_
         # The now-current brief is reflected on GET /brief.
         latest = client.get("/api/v1/intelligence/brief", headers=headers)
         assert latest.json()["language"] == "fr"
+    finally:
+        db_session.execute(delete(SituationBrief))
+        db_session.execute(delete(AIProviderConfig))
+        db_session.commit()
+
+
+def test_brief_and_analyze_endpoints_are_scoped_per_city(client, admin_token, db_session, monkeypatch):
+    """Session 022 (user request): both endpoints must follow an explicit
+    city_id end-to-end — triggering an analysis for Oslo must not overwrite
+    or shadow Toulouse's own latest brief, and GET /brief?city_id=<oslo>
+    must return Oslo's, not Toulouse's."""
+    _configured_config(db_session)
+    monkeypatch.setattr(
+        intelligence_service, "get_provider", lambda *a, **k: _FakeAIProvider(response_text=VALID_BRIEF_JSON)
+    )
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    oslo_id = str(db_session.execute(select(City.id).where(City.label_en == "Oslo")).scalar_one())
+
+    try:
+        resp = client.post("/api/v1/intelligence/analyze", headers=headers, json={"language": "en"})
+        assert resp.status_code == 200
+        assert resp.json()["ok"] is True
+        toulouse_brief_id = resp.json()["brief"]["id"]
+
+        # Clear the cooldown directly so Oslo's own manual trigger (a
+        # distinct city, but the same shared daily budget/cooldown) isn't
+        # blocked by the Toulouse call just above.
+        config_row = db_session.execute(select(AIProviderConfig)).scalar_one()
+        config_row.last_analysis_attempt_at = datetime.now(timezone.utc) - timedelta(seconds=1000)
+        db_session.commit()
+
+        resp2 = client.post(
+            "/api/v1/intelligence/analyze", headers=headers, json={"language": "en", "city_id": oslo_id}
+        )
+        assert resp2.status_code == 200
+        assert resp2.json()["ok"] is True
+        assert resp2.json()["brief"]["city_id"] == oslo_id
+
+        # Omitting city_id still defaults to Toulouse's own latest brief,
+        # unaffected by the Oslo trigger that happened after it.
+        toulouse_latest = client.get("/api/v1/intelligence/brief", headers=headers)
+        assert toulouse_latest.json()["id"] == toulouse_brief_id
+
+        oslo_latest = client.get("/api/v1/intelligence/brief", headers=headers, params={"city_id": oslo_id})
+        assert oslo_latest.json()["city_id"] == oslo_id
+        assert oslo_latest.json()["id"] != toulouse_brief_id
     finally:
         db_session.execute(delete(SituationBrief))
         db_session.execute(delete(AIProviderConfig))

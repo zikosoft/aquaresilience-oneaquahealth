@@ -21,6 +21,7 @@
     "confidence": "Confianza",
     "limitations": "Limitaciones",
     "generatedBy": "Generado por",
+    "generatedInLanguage": "Generado en {language}",
     "triggeredBy": {
       "scheduled": "Análisis programado",
       "manual": "Actualización manual",
@@ -28,5 +29,5 @@
     }
   },
   "empty": "Aún no hay un resumen de IA. Configure un proveedor de IA en Configuración para habilitar el análisis programado.",
-  "primaryCityNotice": "Este análisis actualmente describe solo a {city}, sin importar la ciudad seleccionada en la cabecera."
+  "emptyForCity": "Aún no hay un resumen de IA para {city}. Haga clic en Actualizar ahora para generar uno."
 }

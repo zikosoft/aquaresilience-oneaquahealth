@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { fetchIntelligenceStatus, fetchLatestBrief, triggerAnalysis } from '@/services/intelligenceApi'
+import { SUPPORTED_LOCALES } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useCityStore } from '@/stores/city'
 import type { AIIntelligenceStatus, SituationBrief } from '@/types'
@@ -13,21 +14,28 @@ const authStore = useAuthStore()
 const cityStore = useCityStore()
 const canExecute = computed(() => authStore.can('AI_INTELLIGENCE', 'EXECUTE'))
 
-// Session 021 fix (user report): by design (Master Spec §19) the Situation
-// Brief is one shared analysis, not per-city — and since the segment-2 fix
-// it's deliberately pinned to Toulouse server-side (see
-// app/services/city_context.get_primary_city_id) rather than accidentally
-// blending whichever city happens to be selected. That's correct, but this
-// page said nothing about it, so selecting Vienna/Ghent and seeing a brief
-// about Toulouse looked like a bug. Only shown for a non-primary selection,
-// to avoid clutter for the common Toulouse case.
-const cityTracksIntelligence = computed(() => cityStore.selectedCity?.is_primary ?? true)
+// Session 022 (user request): the Situation Brief now follows the header's
+// selected city (see services/intelligenceApi.ts + backend
+// generate_situation_brief's city_id param) instead of always describing
+// Toulouse — the `watch` below reloads it on every city switch, same
+// pattern already used on the main dashboard.
 const cityLabel = computed(() => {
   const city = cityStore.selectedCity
   if (!city) return ''
   const byLocale: Record<string, string> = { en: city.label_en, fr: city.label_fr, es: city.label_es }
   return byLocale[locale.value] ?? city.label_en
 })
+
+// A given city's current brief remembers whichever language it was last
+// (re)generated in — independent viewers can refresh the same city in
+// different languages, so the one on screen may not match the viewer's own
+// active UI language. Surfaced as a small badge rather than silently
+// showing (e.g.) an English summary while browsing in French.
+const briefLanguageLabel = computed(() => {
+  if (!brief.value) return null
+  return SUPPORTED_LOCALES.find((l) => l.code === brief.value?.language)?.label ?? brief.value.language
+})
+const briefLanguageMismatch = computed(() => !!brief.value && brief.value.language !== locale.value)
 
 const status = ref<AIIntelligenceStatus | null>(null)
 const brief = ref<SituationBrief | null>(null)
@@ -44,8 +52,12 @@ let countdownTimer: ReturnType<typeof setInterval> | undefined
 let pollTimer: ReturnType<typeof setInterval> | undefined
 
 async function load(): Promise<void> {
+  loading.value = true
   try {
-    const [statusResp, briefResp] = await Promise.all([fetchIntelligenceStatus(), fetchLatestBrief()])
+    const [statusResp, briefResp] = await Promise.all([
+      fetchIntelligenceStatus(),
+      fetchLatestBrief(cityStore.selectedCityId),
+    ])
     status.value = statusResp
     brief.value = briefResp
   } finally {
@@ -57,7 +69,7 @@ async function handleRefresh(): Promise<void> {
   refreshing.value = true
   refreshMessage.value = null
   try {
-    const result = await triggerAnalysis(locale.value)
+    const result = await triggerAnalysis(locale.value, cityStore.selectedCityId)
     if (result.ok && result.brief) {
       brief.value = result.brief
     } else if (!result.ok) {
@@ -68,6 +80,10 @@ async function handleRefresh(): Promise<void> {
     refreshing.value = false
   }
 }
+
+// Reload when the header's city selector changes — same pattern as the
+// main dashboard (CommandCenterView.vue).
+watch(() => cityStore.selectedCityId, load)
 
 const countdownLabel = computed(() => {
   if (!status.value?.next_analysis_at) return null
@@ -97,16 +113,6 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <v-alert
-      v-if="!cityTracksIntelligence"
-      type="info"
-      variant="tonal"
-      density="compact"
-      class="mb-4"
-    >
-      {{ t('intelligence.primaryCityNotice', { city: cityLabel }) }}
-    </v-alert>
-
     <v-card
       variant="flat"
       border
@@ -210,7 +216,7 @@ onUnmounted(() => {
         class="mb-3"
       />
       <p class="text-body-1 text-medium-emphasis mb-1">
-        {{ t('intelligence.empty') }}
+        {{ status?.is_configured ? t('intelligence.emptyForCity', { city: cityLabel }) : t('intelligence.empty') }}
       </p>
       <v-btn
         v-if="!status?.is_configured"
@@ -239,6 +245,14 @@ onUnmounted(() => {
         <span class="text-caption text-medium-emphasis">
           {{ t('intelligence.brief.confidence') }}: {{ Math.round(brief.confidence * 100) }}%
         </span>
+        <v-chip
+          v-if="briefLanguageMismatch"
+          size="small"
+          variant="outlined"
+          color="medium-emphasis"
+        >
+          {{ t('intelligence.brief.generatedInLanguage', { language: briefLanguageLabel }) }}
+        </v-chip>
       </div>
 
       <p class="text-body-1 mb-4">

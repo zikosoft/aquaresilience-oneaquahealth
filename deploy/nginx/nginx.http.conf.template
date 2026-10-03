@@ -1,0 +1,60 @@
+# AquaResilience — HTTP-only reverse proxy (demo mode, no TLS).
+#
+# Same routing as the default TLS template (nginx.conf.template): `/` goes
+# to the frontend container, `/api/` goes to the backend unchanged. The
+# only difference is this one serves plain HTTP on port 80 directly — no
+# redirect, no certificate, no HSTS header (that header would be actively
+# wrong to send over a connection that isn't actually HTTPS).
+#
+# When to use this instead of the default template: a quick demo
+# deployment on a subdomain before a real certificate is set up, or any
+# deployment where TLS is already terminated upstream of this server (a
+# CDN or load balancer in front of it) so this container only ever needs
+# to speak plain HTTP. See docker-compose.prod.http.yml and DEPLOYMENT.md's
+# "HTTP-only demo deploy" section for the full walkthrough.
+#
+# Template mechanics (same as nginx.conf.template): the official nginx
+# image runs `envsubst` on every file under /etc/nginx/templates/*.template
+# at container start — only ${DOMAIN} is substituted, nginx's own runtime
+# variables ($host, $remote_addr, ...) are left untouched.
+
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    client_max_body_size 10m;
+
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css application/json application/javascript text/javascript image/svg+xml;
+
+    # Nginx's own edge health check — for an external uptime monitor, not
+    # for Docker's internal healthchecks (each container already has its
+    # own, see docker-compose.prod.yml). Answered directly, never proxied.
+    location = /health {
+        default_type text/plain;
+        return 200 "ok";
+    }
+
+    # Backend API — full path forwarded unchanged, same as the TLS template.
+    location /api/ {
+        proxy_pass http://backend:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    # Frontend SPA (static bundle served by its own small nginx container).
+    location / {
+        proxy_pass http://frontend:80;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

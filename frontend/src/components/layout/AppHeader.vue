@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import BrandLogo from '@/components/branding/BrandLogo.vue'
 import { api } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useCityStore } from '@/stores/city'
@@ -94,7 +95,10 @@ async function onLogout(): Promise<void> {
     </template>
 
     <v-app-bar-title class="d-flex align-center ga-2">
-      <span class="font-weight-bold">{{ t('common.appName') }}</span>
+      <!-- Session 022 (user request): same BrandLogo component as the Login
+           page (see components/branding/BrandLogo.vue) — one place to swap
+           in a real logo/name later instead of two independent copies. -->
+      <BrandLogo :size="props.compact ? 20 : 24" />
       <!-- Session 020 (user request): was hardcoded "| Toulouse Métropole" —
            now follows the header's own city selector, same cityLabel()
            helper the dropdown below already uses. Empty until cityStore

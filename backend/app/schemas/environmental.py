@@ -104,6 +104,14 @@ class EnvironmentalSummaryOut(BaseModel):
     fresh_sources: int
     trend_window_hours: int
     water_level: LatestReadingOut | None
+    # Session 022 (user request, live-caught): the Command Center's water
+    # level chart title used to hardcode "Garonne" (Toulouse's own river) for
+    # every city — e.g. still showing "Garonne" while viewing Vienna. The
+    # real river name is already known per-city (Station.river_name — real
+    # for every hydrology connector, see app.services.connectors), just
+    # never surfaced here; None when the selected city has no water-level
+    # station at all (or no river name on file for it).
+    water_level_river_name: str | None
     water_level_trend: list[float]
     water_level_trend_timestamps: list[str]
     precipitation_24h_total_mm: float | None

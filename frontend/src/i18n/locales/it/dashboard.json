@@ -18,7 +18,8 @@
     "limitedHistory": "Finora sono state registrate solo {available}h di cronologia — vengono mostrate tutte (hai selezionato {requested}h). I grafici si popoleranno man mano che verranno acquisiti altri dati."
   },
   "waterLevel": {
-    "title": "Livello dell'Acqua — Garonna ({hours}h)"
+    "titleGeneric": "Livello dell'Acqua ({hours}h)",
+    "titleWithRiver": "Livello dell'Acqua — {river} ({hours}h)"
   },
   "precipitation": {
     "title": "Precipitazioni ({hours}h)"
@@ -43,7 +44,10 @@
   },
   "situationBrief": {
     "title": "Rapporto di Situazione IA",
-    "notAvailable": "Non è stato ancora generato alcun rapporto di situazione IA."
+    "notAvailable": "Non è stato ancora generato alcun rapporto di situazione IA.",
+    "emptyForCity": "Non è stato ancora generato alcun rapporto di situazione IA per {city}.",
+    "generateNow": "Genera ora",
+    "viewFull": "Visualizza analisi completa"
   },
   "timeline": {
     "title": "Segnali Ambientali"

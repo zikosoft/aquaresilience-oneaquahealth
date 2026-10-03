@@ -18,7 +18,8 @@
     "limitedHistory": "Only {available}h of history recorded so far — showing all of it (you selected {requested}h). The charts will fill in as more data is ingested."
   },
   "waterLevel": {
-    "title": "Water Level — Garonne ({hours}h)"
+    "titleGeneric": "Water Level ({hours}h)",
+    "titleWithRiver": "Water Level — {river} ({hours}h)"
   },
   "precipitation": {
     "title": "Precipitation ({hours}h)"
@@ -43,7 +44,10 @@
   },
   "situationBrief": {
     "title": "AI Situation Brief",
-    "notAvailable": "No AI situation brief has been generated yet."
+    "notAvailable": "No AI situation brief has been generated yet.",
+    "emptyForCity": "No AI situation brief has been generated yet for {city}.",
+    "generateNow": "Generate now",
+    "viewFull": "View full analysis"
   },
   "timeline": {
     "title": "Environmental Signals"
