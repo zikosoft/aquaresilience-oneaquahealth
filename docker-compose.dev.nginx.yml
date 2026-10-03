@@ -1,0 +1,39 @@
+# AquaResilience — optional local nginx reverse proxy for the DEV stack
+# (Session 023, user request: "I want my nginx locally too, I don't have
+# it right now"). Apply this ON TOP OF docker-compose.yml to reach the
+# whole dev app on one port (http://localhost), the same shape as
+# production, instead of the frontend (:8080) and backend (:8000) each on
+# their own port.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.nginx.yml \
+#     up -d --build
+#
+# Nothing about the existing dev workflow changes unless you add this
+# second -f: docker-compose.yml alone still works exactly as before
+# (:8080 / :8000 directly), and this override only adds a new
+# `reverse-proxy` service plus one extra env var on `frontend` for Vite's
+# HMR (see vite.config.ts and deploy/nginx/nginx.dev.conf for why).
+#
+# This is dev-only plumbing — a plain unencrypted local proxy for
+# convenience, not a security boundary (unlike docker-compose.prod.yml /
+# docker-compose.prod.http.yml, which are the real deployment paths).
+
+services:
+  frontend:
+    environment:
+      VITE_HMR_CLIENT_PORT: '80'
+
+  reverse-proxy:
+    image: nginx:1.27-alpine
+    container_name: aquaresilience-reverse-proxy-dev
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ./deploy/nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - aquaresilience-internal

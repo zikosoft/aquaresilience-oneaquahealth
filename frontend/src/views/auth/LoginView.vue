@@ -67,10 +67,7 @@ function onLocaleChange(code: AppLocale): void {
         >
           <v-card-item>
             <div class="d-flex align-center justify-space-between mb-1">
-              <BrandLogo
-                :size="32"
-                text-class="text-h5 font-weight-bold"
-              />
+              <BrandLogo :height="44" />
               <v-menu>
                 <template #activator="{ props: menuProps }">
                   <v-btn

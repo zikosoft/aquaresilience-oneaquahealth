@@ -47,6 +47,19 @@ docker compose up -d
 - Backend API docs: http://localhost:8000/docs
 - Health: http://localhost:8000/health/live, http://localhost:8000/health/ready
 
+Prefer everything behind one port, same shape as production? Add the
+optional local reverse proxy:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.nginx.yml up -d --build
+```
+
+Then use http://localhost (port 80) for both the frontend and `/api/` —
+see `docker-compose.dev.nginx.yml`'s own comment for what it changes (just
+an added `reverse-proxy` service + the one env var Vite's hot-reload needs
+to work through it). This is dev-only convenience, not a security
+boundary — see "Production deployment" below for the real thing.
+
 Demo login (admin-only account creation — see `.env`): `DEMO_ADMIN_EMAIL` / `DEMO_ADMIN_PASSWORD`. The demo account is seeded with the **Administrator** role so the full platform (including Settings and Users & Access) is reachable for evaluation. Seed the deterministic demo environmental dataset with `python -m app.seed.seed_environmental` (or `--reset` to rebuild it) so the Command Center and map are never empty — see `docs/DATA_SOURCES.md`.
 
 ## Repository layout

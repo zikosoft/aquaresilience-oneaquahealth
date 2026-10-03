@@ -98,7 +98,7 @@ async function onLogout(): Promise<void> {
       <!-- Session 022 (user request): same BrandLogo component as the Login
            page (see components/branding/BrandLogo.vue) — one place to swap
            in a real logo/name later instead of two independent copies. -->
-      <BrandLogo :size="props.compact ? 20 : 24" />
+      <BrandLogo :height="props.compact ? 26 : 32" />
       <!-- Session 020 (user request): was hardcoded "| Toulouse Métropole" —
            now follows the header's own city selector, same cityLabel()
            helper the dropdown below already uses. Empty until cityStore
