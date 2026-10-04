@@ -112,9 +112,6 @@ def test_stations_endpoint_returns_seeded_stations_with_coordinates(client, admi
 
 
 def test_stations_endpoint_filters_by_city_id(client, admin_token):
-    # Session 020 (user request): "quand on change la ville dans le
-    # dashboard il faut que la map change aussi" — the map now passes the
-    # selected city through to this endpoint.
     headers = {"Authorization": f"Bearer {admin_token}"}
     cities = client.get("/api/v1/geography/cities", headers=headers).json()
     toulouse_id = next(c["id"] for c in cities if c["label_en"] == "Toulouse")
@@ -171,9 +168,6 @@ def test_environmental_summary_endpoint(client, admin_token):
     body = resp.json()
     assert body["monitored_stations"] >= 2
     assert body["water_level"] is not None
-    # Session 022 (user report, live-caught): the water level chart title
-    # used to hardcode "Garonne" for every city — real per-city river name
-    # now comes from the station behind the latest reading.
     assert body["water_level_river_name"] == "Garonne"
     assert body["temperature"] is not None
     assert body["humidity"] is not None
@@ -193,7 +187,7 @@ def test_environmental_summary_endpoint(client, admin_token):
 
 
 def test_environmental_summary_is_honestly_empty_for_a_non_demo_city(client, admin_token, db_session):
-    """Session 018: ?city_id= for a consortium city with no live connector
+    """?city_id= for a consortium city with no live connector
     must not silently return Toulouse's readings under a different city's
     label — see app/services/city_context.py."""
     from sqlalchemy import select
@@ -249,7 +243,7 @@ class _FakeAthensConnector(BaseConnector):
 
 
 def test_environmental_summary_river_name_is_scoped_per_city(client, admin_token, db_session):
-    """Session 022 (user report, live-caught): the water level chart title
+    """The water level chart title
     used to show "Garonne" for every city, including Vienna/Oslo. Ingests a
     real-shaped second city's reading with its own river name and asserts
     the summary endpoint returns ITS river name for that city, while
@@ -312,9 +306,6 @@ def test_environmental_endpoints_require_authentication(client):
     assert client.get("/api/v1/environmental/stations").status_code == 401
     assert client.get("/api/v1/environmental/summary").status_code == 401
 
-
-# --- Session 020: DataSource <-> City association, dynamic has_live_data,
-# and the write-only credentials endpoint ---
 
 
 class _CityScopedConnector(BaseConnector):
@@ -381,17 +372,6 @@ def test_run_connector_flips_city_has_live_data_on_first_success_and_stays_flipp
     db_session.refresh(athens)
     assert athens.has_live_data is True
 
-    # Session 020: conftest's db_session fixture hits the one real,
-    # session-scoped test database with no per-test transaction
-    # rollback (see _prepare_schema) — a commit here is permanent for the
-    # rest of the suite. seed_geography.py used to (accidentally) paper
-    # over that by resetting has_live_data on every reseed; Session 020
-    # fixed that reset because it was also silently reverting Vienna/
-    # Ghent's real dynamically-flipped has_live_data on every container
-    # restart in production (see seed_geography.py's own comment). This
-    # test's own job is only to prove the flip-and-stays-flipped mechanism
-    # — it must clean up its own mutation rather than leaking a
-    # permanently "live" Athens into every test that runs after it.
     athens.has_live_data = False
     db_session.commit()
 

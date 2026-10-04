@@ -1,24 +1,3 @@
-# AquaResilience — optional local nginx reverse proxy for the DEV stack
-# (Session 023, user request: "I want my nginx locally too, I don't have
-# it right now"). Apply this ON TOP OF docker-compose.yml to reach the
-# whole dev app on one port (http://localhost), the same shape as
-# production, instead of the frontend (:8080) and backend (:8000) each on
-# their own port.
-#
-# Usage:
-#   docker compose -f docker-compose.yml -f docker-compose.dev.nginx.yml \
-#     up -d --build
-#
-# Nothing about the existing dev workflow changes unless you add this
-# second -f: docker-compose.yml alone still works exactly as before
-# (:8080 / :8000 directly), and this override only adds a new
-# `reverse-proxy` service plus two env vars on `frontend` (HMR + API base
-# URL — see below).
-#
-# This is dev-only plumbing — a plain unencrypted local proxy for
-# convenience, not a security boundary (unlike docker-compose.prod.yml /
-# docker-compose.prod.http.yml, which are the real deployment paths).
-
 services:
   frontend:
     environment:

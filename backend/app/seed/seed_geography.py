@@ -1,20 +1,8 @@
-"""P1.1 hotfix, extended Session 018 — seed the countries/cities reference
+"""P1.1 hotfix — seed the countries/cities reference
 tables (D016).
 
 Idempotent: each country/city is created only if it doesn't already exist
 (matched on iso2 / (country, label_en)), so re-running this is always safe.
-
-Session 018 (user request): now seeds all 9 OneAquaHealth consortium
-countries (verified live against oneaquahealth.eu/consortium/ — 14
-partners, 9 countries), each with one representative city, so the header's
-city selector has real entries to switch between. Only Toulouse has an
-actual ingested connector (Hub'Eau + Open-Meteo) — `has_live_data=True`.
-The other 8 are real, selectable cities (the map recenters on them, their
-labels are localized) but `has_live_data=False`, so the dashboard shows an
-honest "no live connector yet" state for them rather than reusing
-Toulouse's numbers under a different label. `planned_data_source` notes a
-candidate open hydrology API already identified for that country during
-this research pass, where one was found.
 
 Athens is used as Greece's representative city: ENORA Innovation's exact
 city could not be confirmed from public sources, so the capital is used as
@@ -89,22 +77,6 @@ def run() -> None:
                     )
                 )
             else:
-                # Session 020 fix (live-caught regression): has_live_data is
-                # no longer synced here on every startup. It used to be —
-                # originally to retroactively flip Toulouse's row from the
-                # column's false default right after the has_live_data
-                # migration — but once Vienna/Ghent/Oslo got real connectors,
-                # that same "sync from this static table" logic would silently
-                # flip them straight back to false on every container
-                # restart, because this CITIES list still says false for them
-                # (their true state is False-until-first-successful-ingestion,
-                # exactly like Toulouse originally was). has_live_data is now
-                # purely runtime state owned by ingestion_service.run_connector
-                # (see its own comment: "never un-flipped on a later
-                # failure") — this seed only supplies the honest starting
-                # value the FIRST time a city row is created, same as the
-                # actual live-data honesty pattern intends. planned_data_source
-                # is harmless descriptive text and stays synced.
                 city.planned_data_source = planned_source
         db.commit()
         print(f"Geography seed: OK ({len(CITIES)} cities across {len(COUNTRIES)} countries).", file=sys.stderr)

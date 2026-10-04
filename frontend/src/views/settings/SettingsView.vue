@@ -14,11 +14,6 @@ import { SUPPORTED_LOCALES } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import type { City, SourceHealth } from '@/types'
 
-// Session 021 fix (user report): this dropdown used to hardcode en/fr/es,
-// even though the header's language switcher has offered all 9
-// SUPPORTED_LOCALES since Session 018 — someone picking a language here
-// could only ever see 3 of the 9 the app actually supports. Now sourced
-// from the same single list the header uses, so the two can't drift again.
 const languageOptions = SUPPORTED_LOCALES.map((l) => ({ value: l.code, label: `${l.flag} ${l.label}` }))
 
 const { t, locale } = useI18n()
@@ -91,14 +86,6 @@ function countryDisplayName(iso2: string): string {
   }
 }
 
-// Session 020 (user request): the 'city' select field that used to live
-// here was removed — D016's single seeded "city" setting is dead now that
-// geography.City + the header's city selector (stores/city.ts) are the
-// real, multi-city source of truth (confirmed zero backend reads of this
-// setting's value). The read-only cities reference table further down
-// (still using localizedCityLabel/countryDisplayName) is kept — it's a
-// genuinely useful "what is this platform's own reference data" view, not
-// the dead setting.
 const generalFields = computed(() => [
   { path: 'timezone', label: t('settings.general.timezone'), type: 'text' as const },
   { path: 'date_format', label: t('settings.general.dateFormat'), type: 'text' as const },
@@ -168,18 +155,6 @@ const generalFields = computed(() => [
       </v-window-item>
 
       <v-window-item value="languages">
-        <!-- Session 022 (user request): "Enabled Languages" removed — it
-             never actually restricted anything (the header's language
-             switcher always offers the full fixed SUPPORTED_LOCALES list
-             from src/i18n/index.ts, and the backend's scheduled AI brief
-             only ever reads default_locale — see
-             intelligence_service.get_default_language), so it was a
-             confusing, inert control. The 9 supported languages are a
-             locked set (see SUPPORTED_LOCALES's own comment); this tab now
-             only ever does what it actually can do: choose which one is
-             the default. Any `enabled_locales` value already stored on
-             this setting is left as-is (harmless, unread by anything) —
-             only the editable field is removed. -->
         <GenericSettingCard
           category="languages"
           setting-key="languages"
@@ -247,11 +222,6 @@ const generalFields = computed(() => [
       </v-window-item>
 
       <v-window-item value="ai-provider">
-        <!-- P3: the real scheduling cadence lives here
-             (scheduled_analysis_interval_minutes, on AIProviderConfig) —
-             a separate "Scheduler" tab used to expose a same-labeled but
-             disconnected generic setting nobody read; removed rather than
-             left as a trap (Session 013). -->
         <AIProviderSettings />
       </v-window-item>
 
@@ -274,16 +244,6 @@ const generalFields = computed(() => [
       </v-window-item>
 
       <v-window-item value="alerts">
-        <!-- Session 017: this used to be a GenericSettingCard with a
-             "chips" field bound to a fixed 3-value list and a Save button
-             next to it that saved nothing — the lifecycle is a fixed state
-             machine (app/services/risk_engine.py:evaluate_and_persist_warnings),
-             never user-editable, so an editable-looking card was actively
-             misleading (user report: "je vois un bouton enregistrer mais
-             je ne vois pas ce qu'on peut modifier"). Replaced with a plain
-             read-only reference card — same "no dead settings" precedent
-             as the Session 013 dead Scheduler tab / Session 015 dead
-             layers-placeholder removals. -->
         <v-card
           variant="flat"
           border

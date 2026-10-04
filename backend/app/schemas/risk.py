@@ -25,9 +25,6 @@ class RiskScoreOut(BaseModel):
     factors_available: int
     factors_total: int
     computed_at: datetime
-    # Session 018: False only when a non-demo city (no live connector) was
-    # requested via ?city_id= — see app/services/city_context.py. Always
-    # True for the pre-existing single-city behavior.
     data_available: bool = True
     planned_data_source: str | None = None
 
@@ -54,8 +51,6 @@ class RiskTrajectoryOut(BaseModel):
     trend_rate_mm_per_hour: float | None
     basis: str
     computed_at: datetime
-    # Session 018 city-selector pattern (see city_context.py): False + an
-    # empty `points` list for a non-demo city, same shape either way.
     data_available: bool = True
     planned_data_source: str | None = None
 

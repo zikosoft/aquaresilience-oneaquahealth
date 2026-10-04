@@ -1,4 +1,4 @@
-"""P2.1: read-only geography reference data. Session 018: now returns all
+"""P2.1: read-only geography reference data. Returns all
 9 OneAquaHealth consortium cities (D016 schema, extended), each flagged
 with `has_live_data` so the frontend can distinguish Toulouse (real
 connector) from the other 8 (real, selectable, no connector yet). Gated
@@ -39,10 +39,6 @@ def _list_cities(db: Session) -> list[CityOut]:
     rows = db.execute(
         select(City, Country).join(Country, Country.id == City.country_id).order_by(City.label_en)
     ).all()
-    # Session 020 (user request): cities with a registered connector that
-    # hasn't gone live yet (Oslo/NVE before a key is configured) read as
-    # "pending" rather than "none" in the header's 3-tier selector — derived
-    # from whether a DataSource row exists at all, never hardcoded per-city.
     cities_with_a_connector = set(
         db.execute(select(DataSource.city_id).where(DataSource.city_id.is_not(None)).distinct()).scalars().all()
     )

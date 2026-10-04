@@ -3,24 +3,6 @@
 Adding a new source means writing one `BaseConnector` subclass and adding it
 to this list — nothing else in the ingestion pipeline, API, or frontend
 needs to change (per the P1 "reusable connector interface" requirement).
-
-Session 020 (user request): now DB-aware. NveHydapiConnector (the one
-connector that needs an API key) is registered UNCONDITIONALLY, key or no
-key — its own `fetch()` raises a clear, self-explaining ConnectorError when
-`api_key` is None, which `run_connector` records as a normal failed
-attempt (degraded health, no crash), exactly like any other misconfigured
-source. This is deliberate, not an oversight: a DataSource row only ever
-gets created by `get_or_create_data_source`, which only ever runs for
-connectors THIS function returns — so gating the connector itself on "a
-key already exists" would mean the row (and with it, the /sources page's
-"Add API key" button) could never appear in the first place. The platform
-cannot self-register a key (that needs a human at hydapi.nve.no/Users, see
-the app's own safety rules on account creation); pasting one in via
-`PUT /environmental/sources/{id}/credentials` is what the next tick then
-picks up automatically, no redeploy. Vienna/Ghent's connectors are keyless
-and always fetch successfully-or-not on their own. Oslo's *weather*
-counterpart, unlike its hydrology one, stays gated behind a configured key
-— see the comment below for why.
 """
 from __future__ import annotations
 

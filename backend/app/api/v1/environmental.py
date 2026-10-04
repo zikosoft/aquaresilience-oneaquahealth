@@ -34,11 +34,6 @@ from app.services.risk_engine import scope_measurements_to_city
 
 router = APIRouter()
 
-# Session 020: the one provider whose connector genuinely cannot fetch
-# without a registered key (see NveHydapiConnector) — drives the
-# /sources page's "add API key" prompt. Kept here (not just on the
-# connector class) so this read-only endpoint doesn't need to import and
-# instantiate every connector just to know this one flag.
 _PROVIDERS_REQUIRING_API_KEY = {DataSourceProvider.NVE_HYDAPI.value}
 
 
@@ -147,26 +142,10 @@ def _latest_readings_by_station(db: Session, station_ids: list[uuid.UUID]) -> di
 
 @router.get("/stations", response_model=list[StationOut])
 def list_stations(
-    # Session 020 (user request): "quand on change la ville dans le
-    # dashboard il faut que la map change aussi" — an optional filter so the
-    # map can show only the selected city's own stations rather than a
-    # permanently global list. Omitted, this stays the exact same unfiltered
-    # global query every existing caller already relies on.
     city_id: uuid.UUID | None = Query(default=None),
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("MAP", "VIEW")),
 ) -> list[StationOut]:
-    # Session 021 fix (user-reported regression: map showing zero markers):
-    # this used to filter on the raw city_id directly — an id that doesn't
-    # match any City row (e.g. a browser's cached localStorage selection
-    # left over from before a dev DB reset regenerated city UUIDs) silently
-    # matched zero DataSource rows, i.e. zero stations, zero markers, with
-    # nothing distinguishing that from "this city genuinely has no
-    # stations". Every other city-scoped endpoint (environmental_summary,
-    # compute_risk, simulate_scenario, ...) already goes through
-    # resolve_city, which degrades an unrecognized id to the unscoped
-    # global view rather than erroring or silently returning nothing — this
-    # endpoint now matches that same, already-established convention.
     city, _has_data = resolve_city(db, city_id)
     query = (
         select(Station, DataSource, ST_X(Station.geom), ST_Y(Station.geom))
@@ -238,8 +217,6 @@ def environmental_summary(
     # consistency. Defaults to 48h (the prior hardcoded window) so existing
     # callers/tests that omit it keep the exact previous behavior.
     hours: int = Query(default=48, ge=1, le=168),
-    # Session 018: the header's city selector. Omitted => today's unchanged
-    # single-city behavior (existing callers/tests are unaffected).
     city_id: uuid.UUID | None = Query(default=None),
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("DASHBOARD", "VIEW")),
@@ -282,14 +259,6 @@ def environmental_summary(
             planned_data_source=city.planned_data_source if city else None,
         )
 
-    # Session 020 fix (live-caught correctness bug, same class as
-    # risk_engine.compute_risk before its own Session 020 fix): every query
-    # below used to read globally — ALL sources, ALL stations, ALL cities'
-    # measurements — even after resolving which city was selected. Harmless
-    # while Toulouse was the only city with real data; now that Vienna/Ghent
-    # also ingest real measurements, the entire Command Center (KPI tiles,
-    # the big timeline, all 8 sparklines, Source Freshness) would show the
-    # exact same global numbers for ANY city, never that city's own.
     scope_city_id = city.id if city else None
     sources_query = select(DataSource)
     if scope_city_id is not None:

@@ -1,22 +1,11 @@
 """P1.1 hotfix — countries/cities reference tables.
 
-Schema foundation (D016, decided with the user in Session 004): a `City`
+Schema foundation (D016): a `City`
 carries its own default map center/zoom and EN/FR/ES labels, and `Country`
 carries ISO codes, in the same pattern used elsewhere in the app for label
 localization (English/French/Spanish columns rather than a separate
 translation table, consistent with how the rest of the platform is
 organized around 3 locked locales, not an open-ended set).
-
-Session 018 (user request): the header's city selector now reads these
-tables for real, seeded with the 9 OneAquaHealth consortium countries —
-not just Toulouse. Only Toulouse has an actual ingested data connector
-(Hub'Eau + Open-Meteo), so `has_live_data` distinguishes the one city whose
-dashboard/risk/warnings/AI panels show real computed values from the other
-8, which are real, selectable, map-recenterable cities but show an honest
-"no live connector yet" state rather than silently reusing Toulouse's
-numbers under a different label. `planned_data_source` is an optional,
-human-readable note (e.g. "NVE HydAPI") surfaced in that empty state where
-a candidate open hydrology API was already identified for that country.
 """
 from __future__ import annotations
 
@@ -60,7 +49,6 @@ class City(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     default_lat: Mapped[float] = mapped_column(Float, nullable=False)
     default_zoom: Mapped[int] = mapped_column(Integer, nullable=False, default=11)
 
-    # Session 018: see module docstring. True only for Toulouse today.
     has_live_data: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     planned_data_source: Mapped[str | None] = mapped_column(String(160), nullable=True)
 

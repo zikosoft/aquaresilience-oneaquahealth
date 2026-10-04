@@ -25,10 +25,6 @@ const headers = [
   { title: '', key: 'credentials', sortable: false, width: 1 },
 ]
 
-// Session 020 (user request): group by city instead of a flat list, using
-// the same {code -> label_en/fr/es} localization pattern AppHeader.vue's
-// city selector already uses, so this stays correct for every enabled
-// locale without any per-language code here.
 function cityLabel(city: SourceCityRef): string {
   const byLocale: Record<string, string> = { en: city.label_en, fr: city.label_fr, es: city.label_es }
   return byLocale[locale.value] ?? city.label_en
@@ -71,9 +67,6 @@ async function load(): Promise<void> {
 
 onMounted(load)
 
-// --- Session 020: write-only "add API key" dialog, one source at a time —
-// same encrypted-at-rest, never-echoed-back pattern as the Settings > AI
-// Provider page (components/settings/AIProviderSettings.vue).
 const credentialsDialog = reactive({
   open: false,
   source: null as SourceHealth | null,

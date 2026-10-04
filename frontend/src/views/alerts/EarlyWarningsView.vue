@@ -13,11 +13,6 @@ const { t, locale } = useI18n()
 const authStore = useAuthStore()
 const cityStore = useCityStore()
 
-// Session 021 fix (user report): this page had zero city-awareness — it
-// always listed the single shared Warnings row regardless of the header's
-// city selector, with nothing telling the user that Warnings only actually
-// track one city (see app/services/city_context.get_primary_city_id's
-// docstring). Same is_primary convention as CommandCenterView.vue.
 const cityTracksWarnings = computed(() => cityStore.selectedCity?.is_primary ?? true)
 const cityLabel = computed(() => {
   const city = cityStore.selectedCity

@@ -18,10 +18,6 @@ const authStore = useAuthStore()
 const cityStore = useCityStore()
 const canRun = computed(() => authStore.can('SCENARIOS', 'EXECUTE'))
 
-// Session 019 — WOW #2: same city-selector honesty pattern as the Command
-// Center (see CommandCenterView.vue's own cityHasLiveData/cityLabel). A
-// scenario run against a city with no live connector would otherwise
-// silently project Toulouse's real data under that city's label.
 const cityHasLiveData = computed(() => cityStore.selectedCity?.has_live_data ?? true)
 const cityLabel = computed(() => {
   const city = cityStore.selectedCity
@@ -39,13 +35,6 @@ const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const mapView = ref<'current' | 'projected'>('current')
 
-// Session 019 — WOW #2: one-click scenario presets. Deliberately just a
-// list of RELATIVE % adjustments (fed straight into the same
-// rainfall/riverLevel sliders "Run Simulation" already uses) — no absolute
-// mm thresholds, no city-specific tuning. Whichever city is selected in
-// the header, a preset applies the same relative "what if" to that city's
-// own current baseline, so this list never needs touching when another
-// city gets a live connector later (per the user's explicit request).
 interface ScenarioPreset {
   key: string
   icon: string
@@ -181,10 +170,6 @@ const mapRiskOverride = computed<RiskScore | null>(() => {
       {{ errorMessage }}
     </v-alert>
 
-    <!-- Session 019 — WOW #2: same honesty banner as the Command Center
-         (see common.city.noLiveData) — a non-demo city has no real data
-         to run a scenario against, so the controls are disabled rather
-         than silently projecting Toulouse's numbers under its name. -->
     <v-alert
       v-if="!cityHasLiveData"
       type="info"
@@ -216,10 +201,6 @@ const mapRiskOverride = computed<RiskScore | null>(() => {
             {{ t('scenarios.title') }}
           </v-card-title>
 
-          <!-- Session 019 — WOW #2: one-click presets. Same relative %
-               adjustments regardless of the selected city (see
-               SCENARIO_PRESETS' comment above) — clicking one sets both
-               sliders and runs the simulation immediately. -->
           <div class="text-caption text-medium-emphasis mb-1">
             {{ t('scenarios.presets.title') }}
           </div>

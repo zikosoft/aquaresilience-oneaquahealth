@@ -31,9 +31,6 @@ def test_map_tile_provider_setting_roundtrip(client, admin_token):
 
 
 def test_cities_endpoint_returns_the_seeded_toulouse_default(client, admin_token):
-    # Session 018: the seed now covers all 9 OneAquaHealth consortium
-    # cities, ordered by label_en — find Toulouse by name rather than
-    # assuming it's the only (or first) entry.
     headers = {"Authorization": f"Bearer {admin_token}"}
     resp = client.get("/api/v1/geography/cities", headers=headers)
     assert resp.status_code == 200
@@ -48,23 +45,12 @@ def test_cities_endpoint_returns_the_seeded_toulouse_default(client, admin_token
     others_with_live_data = [c for c in cities if c["label_en"] != "Toulouse" and c["has_live_data"]]
     assert others_with_live_data == []
 
-    # Session 020: the 3-tier connector_status the header's city selector
-    # now reads — live (Toulouse) and none (Barcelona: no connector was
-    # ever built for it). "pending" is covered separately below: its
-    # DataSource row is normally only created by the background scheduler's
-    # first tick (disabled under pytest), not by this seed.
     assert toulouse["connector_status"] == "live"
     barcelona = next(c for c in cities if c["label_en"] == "Barcelona")
     assert barcelona["connector_status"] == "none"
 
 
 def test_cities_endpoint_reports_pending_for_a_registered_but_keyless_connector(client, admin_token, db_session):
-    # Session 020: Oslo/NVE is registered unconditionally (see
-    # app/services/connectors/__init__.py's module docstring) precisely so
-    # its DataSource row — and with it this "pending" status — can exist
-    # before an API key is ever configured. That row is normally only
-    # created by the scheduler's first tick, so this test creates it the
-    # same way `run_connector`/the scheduler would.
     from app.services.connectors.nve_hydapi import NveHydapiConnector
     from app.services.ingestion_service import get_or_create_data_source
 
@@ -120,7 +106,6 @@ def test_map_config_folds_tile_provider_into_a_map_view_gated_endpoint(client, a
     assert resp.status_code == 200
     body = resp.json()
     assert body["tile_provider"] == "carto_light"
-    # Session 018: 9 consortium cities now seeded, not just Toulouse.
     assert len(body["cities"]) == 9
     assert any(c["label_en"] == "Toulouse" for c in body["cities"])
 

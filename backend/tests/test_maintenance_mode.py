@@ -1,4 +1,4 @@
-"""Session 017 — maintenance-mode gate.
+"""Maintenance-mode gate.
 
 Settings > System > Maintenance mode has existed since P0 (stored, shown
 and saved in the UI) but nothing ever read it (real-machine user report:

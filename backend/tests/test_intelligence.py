@@ -227,7 +227,7 @@ async def test_generate_situation_brief_schema_invalid_json_is_graceful(isolated
 
 @pytest.mark.asyncio
 async def test_generate_situation_brief_defaults_to_primary_city_when_omitted(isolated_db, monkeypatch):
-    """Session 022 (user request): omitting city_id (background/legacy
+    """Omitting city_id (background/legacy
     callers) must keep the original default — the primary city (Toulouse),
     never an unscoped/ambiguous row."""
     _configured_config(isolated_db)
@@ -244,7 +244,7 @@ async def test_generate_situation_brief_defaults_to_primary_city_when_omitted(is
 
 @pytest.mark.asyncio
 async def test_generate_situation_brief_respects_explicit_city_id_and_names_it_in_the_prompt(isolated_db, monkeypatch):
-    """Session 022 (user request): the brief must follow whichever city is
+    """The brief must follow whichever city is
     passed in, not always Toulouse — and the prompt itself must name that
     city rather than hardcoding 'Toulouse Métropole', or an Oslo brief would
     misleadingly claim to describe Toulouse."""
@@ -274,7 +274,7 @@ async def test_generate_situation_brief_respects_explicit_city_id_and_names_it_i
 
 
 def test_pick_next_scheduled_city_id_rotates_across_live_cities(isolated_db):
-    """Session 022 (user request): the scheduled slot should go to whichever
+    """The scheduled slot should go to whichever
     live city's own brief is most overdue (or has none yet), not always
     Toulouse — while never touching a non-live city (nothing real to
     analyze there yet)."""
@@ -428,11 +428,9 @@ def test_viewer_can_view_but_not_trigger_analysis(client, db_session):
 
 @pytest.mark.parametrize("language", ["en", "fr", "es", "pt", "no", "el", "de", "it", "nl"])
 def test_analyze_endpoint_accepts_all_9_ui_languages(client, admin_token, db_session, language):
-    """Session 019: found while wiring WOW #2 (Scenario Simulator) —
-    session 018 added 6 more UI languages but this endpoint's `language`
-    field validation was never updated, so a manual analysis request from
-    one of those 6 UI languages was rejected outright (422) instead of
-    degrading gracefully. Not configuring an AI provider here on purpose:
+    """This endpoint's `language` field must accept all 9 UI languages: a manual
+    analysis request from any of them has to be accepted (never 422) rather
+    than rejected outright. Not configuring an AI provider here on purpose:
     the point is that the request is *accepted* (never 422), regardless of
     whether the deterministic ok=False "not configured" path follows."""
     headers = {"Authorization": f"Bearer {admin_token}"}
@@ -478,7 +476,7 @@ def test_analyze_endpoint_end_to_end_with_fake_provider(client, admin_token, db_
 
 
 def test_brief_and_analyze_endpoints_are_scoped_per_city(client, admin_token, db_session, monkeypatch):
-    """Session 022 (user request): both endpoints must follow an explicit
+    """Both endpoints must follow an explicit
     city_id end-to-end — triggering an analysis for Oslo must not overwrite
     or shadow Toulouse's own latest brief, and GET /brief?city_id=<oslo>
     must return Oslo's, not Toulouse's."""

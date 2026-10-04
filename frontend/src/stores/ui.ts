@@ -17,12 +17,6 @@ export const useUiStore = defineStore('ui', () => {
   const themeMode = ref<ThemeMode>(readStoredTheme())
   const monitoringFullscreen = ref(false)
   const widgetFullscreenId = ref<string | null>(null)
-  // Session 017: flipped by the api.ts response interceptor the moment any
-  // request comes back with the MAINTENANCE_MODE error code, so the whole
-  // app can show one consistent banner instead of every call site having
-  // to special-case this error individually. Cleared back to false as soon
-  // as a write succeeds again (e.g. an Administrator having just turned it
-  // back off) — see the interceptor for both sides of this.
   const maintenanceModeActive = ref(false)
 
   const isDark = computed(() => themeMode.value === 'dark')

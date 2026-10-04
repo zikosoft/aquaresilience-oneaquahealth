@@ -46,14 +46,6 @@ LANGUAGE_INSTRUCTIONS = {
     "en": "Respond in English.",
     "fr": "Réponds en français.",
     "es": "Responde en español.",
-    # Session 019: found while wiring WOW #2 (Scenario Simulator presets) —
-    # session 018 added 6 more UI languages (pt/no/el/de/it/nl) but this
-    # dict, and `ScenarioSimulateRequest.language`'s validation pattern,
-    # were never updated to match. Every AI call (P3 brief, P4 scenario
-    # explanation) was silently degrading those 6 languages to English, and
-    # the Scenario Simulator's `language` field would outright reject them
-    # (422) since its regex only allowed en/fr/es. Fixed at both call
-    # sites — see ScenarioSimulateRequest.language's pattern.
     "pt": "Responde em português.",
     "no": "Svar på norsk.",
     "el": "Απάντησε στα ελληνικά.",
@@ -96,15 +88,7 @@ def get_default_language(db: Session) -> str:
 def build_environmental_snapshot(db: Session, now: datetime, city_id: uuid.UUID | None = None) -> dict:
     """Structured, JSON-serializable snapshot of "what's happening right
     now" — the only input the AI ever sees. Every value here is read from
-    already-ingested/-computed data, nothing is invented for the prompt.
-
-    Session 020 fix: `city_id` scopes the risk score and readings to one
-    city's own stations — see `risk_engine.scope_measurements_to_city`.
-    `generate_situation_brief` always passes Toulouse's id
-    (`get_primary_city_id`): the prompt below already names Toulouse
-    Métropole explicitly, so this closes a real gap where, once Vienna/
-    Ghent also had live measurements, an unscoped scan could blend their
-    readings into what the AI was told was Toulouse's own situation."""
+    already-ingested/-computed data, nothing is invented for the prompt."""
     risk = compute_risk(db, now, city_id=city_id)
     warning = evaluate_and_persist_warnings(db, risk)
 
@@ -251,14 +235,6 @@ def should_run_scheduled_analysis(config: AIProviderConfig, now: datetime) -> bo
     return elapsed_minutes >= config.scheduled_analysis_interval_minutes
 
 
-# Session 017: the Settings > AI Provider "Event-triggered analysis" toggle
-# has existed since P3 (stored on AIProviderConfig, shown in the UI) but
-# nothing ever read it — flipping it changed nothing (user report). Wired
-# here: an "event" is the risk crossing into HIGH/CRITICAL (not the lower
-# MODERATE bar that merely opens a warning — that would fire far too often
-# to be a meaningful "event"), gated by the exact same cooldown/daily
-# ceiling as a human-requested manual refresh, so an event can never bypass
-# the same budget a person is held to.
 EVENT_TRIGGER_SEVERITIES = {"HIGH", "CRITICAL"}
 
 
@@ -274,7 +250,7 @@ def should_run_event_triggered_analysis(
 
 
 def pick_next_scheduled_city_id(db: Session) -> uuid.UUID | None:
-    """Session 022: which city the next *scheduled* tick should analyze.
+    """Which city the next *scheduled* tick should analyze.
 
     The shared daily budget (`AIProviderConfig.daily_request_ceiling`,
     default 6/day — Master Spec §19) stays completely unchanged: this just
@@ -331,14 +307,6 @@ async def generate_situation_brief(
     """Never raises. Every failure path records `last_analysis_error` on the
     shared config and returns ok=False instead — callers (scheduler tick,
     manual endpoint) must never let this take down anything else.
-
-    Session 022 (user request): `city_id` is the city this brief analyzes —
-    omitting it (background/legacy callers) falls back to the platform's
-    primary city (Toulouse), preserving the original default. The shared
-    daily budget (`config.daily_request_ceiling`) is still charged exactly
-    once per call regardless of which city it's for — see
-    `pick_next_scheduled_city_id` for how the scheduler spends that budget
-    across cities instead of multiplying it by them.
     """
     config = get_or_create_ai_config(db)
     now = datetime.now(timezone.utc)

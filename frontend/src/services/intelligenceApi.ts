@@ -1,11 +1,6 @@
 import { api } from '@/services/api'
 import type { AIIntelligenceStatus, SituationBrief, TriggerAnalysisResult } from '@/types'
 
-// Session 022 (user request): the Situation Brief now follows the viewer's
-// selected city instead of always being about Toulouse — `cityId` degrades
-// gracefully server-side (omitted/unrecognized both fall back to the
-// primary city, same default as before this param existed), same pattern
-// as every other city-scoped endpoint in this app.
 export function fetchLatestBrief(cityId?: string | null) {
   return api.get<SituationBrief | null>('/intelligence/brief', { params: cityId ? { city_id: cityId } : {} }).then((r) => r.data)
 }

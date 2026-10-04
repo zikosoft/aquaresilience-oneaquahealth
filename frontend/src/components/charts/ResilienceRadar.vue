@@ -5,17 +5,6 @@ import { useI18n } from 'vue-i18n'
 
 import ChartShell from '@/components/charts/ChartShell.vue'
 
-// Session 019 — WOW #3: Resilience Radar. Deliberately generic, the same
-// way FactorContribution.vue already is: this component knows nothing
-// about Toulouse, the Garonne, or any specific city. It only plots
-// whatever `items` it's handed — the caller (CommandCenterView.vue) builds
-// those straight from the already city-scoped `RiskScore.factors` array
-// (`fetchCurrentRisk(cityStore.selectedCityId)`), so switching the header's
-// city selector re-renders this radar automatically through normal Vue
-// reactivity. Nothing here needs touching to "support" another city later
-// — the day a second city gets a live connector, its own factor values
-// flow straight through with zero changes to this component (per the
-// user's explicit request: "dynamique pour ne pas le refaire").
 export interface ResilienceRadarItem {
   factor: string
   // 0..100 — the factor's OWN normalized severity (RiskFactor.normalized_value

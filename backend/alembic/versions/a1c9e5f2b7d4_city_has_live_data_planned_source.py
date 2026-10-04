@@ -3,12 +3,6 @@
 Revision ID: a1c9e5f2b7d4
 Revises: fb7c98e7340a
 Create Date: 2026-09-25 00:00:00.000000
-
-Session 018 (user request): the header's city selector needs to know
-which city actually has a live data connector (Toulouse, today) versus
-which are real, selectable, map-recenterable cities with no connector yet
-— so the dashboard can show an honest "no live data" state instead of
-silently reusing Toulouse's numbers under a different city's label.
 """
 from typing import Sequence, Union
 

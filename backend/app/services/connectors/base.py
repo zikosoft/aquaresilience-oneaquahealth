@@ -58,9 +58,6 @@ class BaseConnector(ABC):
     # freshness computation in `ingestion_service.compute_source_health`.
     expected_interval_seconds: int = 900
     stale_after_seconds: int = 3600
-    # Session 020: whether fetch() is expected to fail without a configured
-    # API key (drives the /sources page's "add API key" prompt and the
-    # get_connectors() registration gate — see app/services/connectors/__init__.py).
     requires_api_key: bool = False
     # City this connector's readings belong to — must match a seeded
     # City.label_en exactly (app/models/geography.py) so

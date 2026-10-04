@@ -36,11 +36,6 @@ api.interceptors.response.use(
     const status = error.response?.status
     const authStore = useAuthStore()
 
-    // Session 017: Settings > System > Maintenance mode is now a real,
-    // cross-cutting write-blocking gate (see backend
-    // app/core/maintenance.py) — surface it as one consistent app-wide
-    // banner (DefaultLayout.vue) instead of every mutating call site having
-    // to special-case this error individually.
     const uiStore = useUiStore()
     if (status === 503 && error.response?.data?.error?.code === 'MAINTENANCE_MODE') {
       uiStore.setMaintenanceModeActive(true)

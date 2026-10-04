@@ -49,8 +49,6 @@ def _warning_out(w: Warning) -> WarningOut:
 
 @router.get("/current", response_model=RiskScoreOut)
 def get_current_risk(
-    # Session 018: the header's city selector. Omitted => today's unchanged
-    # single-city behavior (existing callers/tests are unaffected).
     city_id: uuid.UUID | None = Query(default=None),
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("DASHBOARD", "VIEW")),
@@ -67,11 +65,6 @@ def get_current_risk(
             data_available=False,
             planned_data_source=city.planned_data_source if city else None,
         )
-    # Session 020 fix (live-caught correctness bug): this used to call
-    # compute_risk(db) unscoped even after resolving which city was
-    # selected — harmless while Toulouse was the only city with real data,
-    # but once Vienna/Ghent/Oslo also ingest real measurements, every city
-    # flagged has_live_data would show the exact same blended global score.
     result = compute_risk(db, city_id=city.id if city else None)
     # Early Warnings has no per-city column yet (see get_primary_city_id's
     # docstring) — it stays keyed to Toulouse specifically regardless of
@@ -102,7 +95,6 @@ def get_current_risk(
 
 @router.get("/trajectory", response_model=RiskTrajectoryOut)
 def get_risk_trajectory(
-    # Session 018 city-selector pattern, same as GET /risk/current.
     city_id: uuid.UUID | None = Query(default=None),
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("DASHBOARD", "VIEW")),
@@ -124,7 +116,6 @@ def get_risk_trajectory(
             data_available=False,
             planned_data_source=city.planned_data_source if city else None,
         )
-    # Session 020 fix — same city-scoping correctness fix as GET /current.
     trajectory = compute_risk_trajectory(db, now, city_id=city.id if city else None)
     return RiskTrajectoryOut(
         current_score=trajectory.current.score,

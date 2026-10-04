@@ -33,9 +33,6 @@ class SourceHealthOut(BaseModel):
     last_success_at: datetime | None
     consecutive_failures: int
     last_error_message: str | None
-    # Session 020 (user request): dynamic city association (was previously
-    # only a free-text string on Station) + credential status, so /sources
-    # can group by city and prompt for a missing key without a second call.
     city: SourceCityRef | None = None
     requires_api_key: bool = False
     is_key_configured: bool = False
@@ -104,13 +101,6 @@ class EnvironmentalSummaryOut(BaseModel):
     fresh_sources: int
     trend_window_hours: int
     water_level: LatestReadingOut | None
-    # Session 022 (user request, live-caught): the Command Center's water
-    # level chart title used to hardcode "Garonne" (Toulouse's own river) for
-    # every city — e.g. still showing "Garonne" while viewing Vienna. The
-    # real river name is already known per-city (Station.river_name — real
-    # for every hydrology connector, see app.services.connectors), just
-    # never surfaced here; None when the selected city has no water-level
-    # station at all (or no river name on file for it).
     water_level_river_name: str | None
     water_level_trend: list[float]
     water_level_trend_timestamps: list[str]
@@ -136,7 +126,5 @@ class EnvironmentalSummaryOut(BaseModel):
     uv_index: LatestReadingOut | None
     uv_index_trend: list[float]
     uv_index_trend_timestamps: list[str]
-    # Session 018: same convention as RiskScoreOut — see
-    # app/services/city_context.py.
     data_available: bool = True
     planned_data_source: str | None = None

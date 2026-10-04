@@ -1,4 +1,4 @@
-"""Session 017 — event-triggered AI.
+"""Event-triggered AI.
 
 Settings > AI Provider's "Event-triggered analysis" toggle has existed
 since P3 (stored on AIProviderConfig, shown and saved in the UI) but the

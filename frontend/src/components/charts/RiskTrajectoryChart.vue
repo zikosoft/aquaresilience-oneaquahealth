@@ -25,10 +25,6 @@ const props = withDefaults(
 
 const { t } = useI18n()
 
-// Session 018 (WOW #4 — Predictive Risk Trajectory). Same 4-band palette
-// RiskGauge.vue already uses, kept as raw hex here (not utils/risk.ts's
-// severityColor, which returns Vuetify color tokens for components, not
-// canvas-usable CSS colors for ECharts).
 const SEVERITY_HEX: Record<RiskSeverity, string> = {
   LOW: '#2E9E5B',
   MODERATE: '#E0A31D',
@@ -103,12 +99,6 @@ const option = computed<EChartsOption | null>(() => {
   }
 })
 
-// Session 018: a short, honest caption explaining WHY the line looks the
-// way it does — "rising_trend" (a real extrapolated rise),
-// "flat_or_falling" (no rising trend observed, so the honest projection is
-// flat) or "insufficient_data" — mirrors the backend's own `basis` field
-// (see risk_engine.compute_risk_trajectory's docstring) rather than letting
-// the chart imply a forecast the data doesn't support.
 const basisCaption = computed<string | null>(() => {
   const traj = props.trajectory
   if (!traj) return null

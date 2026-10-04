@@ -10,13 +10,6 @@ scheduler (or a prior manual trigger) already produced, satisfying the P3
 gate "no unnecessary LLM call on dashboard load". Only `POST /analyze`
 calls out, and it is rate-limited by `can_run_manual_analysis` (cooldown +
 daily ceiling) independently of the scheduler's own interval gate.
-
-Session 022 (user request): `city_id` on `GET /brief` and `POST /analyze`
-lets the brief follow the viewer's selected city instead of always being
-about Toulouse — see `app.services.intelligence_service.
-generate_situation_brief`. `resolve_city` degrades an unrecognized/stale id
-the same way every other city-scoped endpoint does; omitting it keeps the
-original default (the primary city).
 """
 from __future__ import annotations
 

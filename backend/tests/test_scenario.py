@@ -429,7 +429,7 @@ def test_scenario_simulate_endpoint_can_skip_ai_explanation(client, admin_token,
 
 
 def test_scenario_simulate_is_honestly_empty_for_a_non_demo_city(client, admin_token, db_session):
-    """Session 019 — WOW #2: the one-click presets are pure relative %
+    """The one-click presets are pure relative %
     adjustments (see the frontend's SCENARIO_PRESETS), so they carry no
     per-city assumption — but the endpoint must still refuse to silently
     project Toulouse's real data under a different city's label, same as
@@ -465,11 +465,9 @@ def test_scenario_simulate_is_honestly_empty_for_a_non_demo_city(client, admin_t
 
 @pytest.mark.parametrize("language", ["en", "fr", "es", "pt", "no", "el", "de", "it", "nl"])
 def test_scenario_simulate_accepts_all_9_ui_languages(client, admin_token, db_session, language):
-    """Session 019: found while wiring WOW #2 — session 018 added 6 more UI
-    languages but this field's validation pattern was never updated, so a
-    scenario run from e.g. the Portuguese UI was rejected outright (422)
-    rather than degrading gracefully. See intelligence_service.py's
-    LANGUAGE_INSTRUCTIONS for the matching fix."""
+    """This field's validation pattern must accept all 9 UI languages: a scenario
+    run from e.g. the Portuguese UI has to be accepted (never 422). See
+    intelligence_service.py's LANGUAGE_INSTRUCTIONS."""
     headers = {"Authorization": f"Bearer {admin_token}"}
     resp = client.post(
         "/api/v1/scenario/simulate",

@@ -68,13 +68,6 @@ class OpenMeteoConnector(BaseConnector):
         self.lat = lat
         self.city = city
         self._timeout = timeout_seconds
-        # Session 020 (user request): Open-Meteo needs zero new connector
-        # code per city (global gridded model, no key) — but source_code/
-        # source_name were fixed class attributes hardcoded to Toulouse, so
-        # a second instance for another city would have silently reused (and
-        # overwritten the identity of) the same DataSource row. Overriding
-        # them as instance attributes here is what actually makes "just
-        # instantiate OpenMeteoConnector(city=...)" safe for a new city.
         if city != "Toulouse":
             self.source_code = f"open_meteo_{city.lower()}"
             self.source_name = f"Open-Meteo — {city}"

@@ -33,8 +33,6 @@ const { t, locale } = useI18n()
 const authStore = useAuthStore()
 const cityStore = useCityStore()
 
-// Session 018 (user request): the header's city selector drives the whole
-// dashboard.
 const cityHasLiveData = computed(() => cityStore.selectedCity?.has_live_data ?? true)
 const cityLabel = computed(() => {
   const city = cityStore.selectedCity
@@ -42,12 +40,6 @@ const cityLabel = computed(() => {
   const byLocale: Record<string, string> = { en: city.label_en, fr: city.label_fr, es: city.label_es }
   return byLocale[locale.value] ?? city.label_en
 })
-// Session 020 fix: Warnings have no city dimension in the backend yet (see
-// app/services/city_context.get_primary_city_id's docstring — deliberately
-// scoped to Toulouse only for this pass), so this must check `is_primary`,
-// NOT `has_live_data` — Vienna/Ghent are also live now but are not what the
-// one shared Warning row tracks. Without this distinction, selecting Vienna
-// would show Toulouse's real warning under Vienna's label.
 const cityTracksWarnings = computed(() => cityStore.selectedCity?.is_primary ?? true)
 
 const loading = ref(true)
@@ -57,21 +49,10 @@ const sources = ref<SourceHealth[]>([])
 // P2: deterministic risk score + early warnings (D008 — reused Settings >
 // Risk Engine weights/thresholds; see backend `app.services.risk_engine`).
 const risk = ref<RiskScore | null>(null)
-// Session 018 — WOW #4: Predictive Risk Trajectory (deterministic
-// extrapolation of the Risk Engine's own trend factor, see
-// risk_engine.compute_risk_trajectory). Fetched alongside the current
-// score; never blocks or fails the rest of the dashboard load.
 const trajectory = ref<RiskTrajectory | null>(null)
 const warnings = ref<EarlyWarning[]>([])
 const warningActionLoading = ref(false)
 
-// Session 022 (user request): the AI Situation Brief widget now follows the
-// selected city (see services/intelligenceApi.ts + backend
-// generate_situation_brief) instead of a hardcoded empty card. Loaded and
-// errored independently from the rest of the dashboard (`load()` below) —
-// Master Spec §19's "if AI fails: dashboard works" gate means a brief
-// fetch/generation problem must never surface as the dashboard's own
-// errorMessage or block its other widgets.
 const brief = ref<SituationBrief | null>(null)
 const briefLoading = ref(true)
 const briefGenerating = ref(false)
@@ -146,13 +127,6 @@ const trendsLoading = ref(false)
 // chart titles never claim a range before the matching data has arrived.
 const effectiveHours = computed(() => summary.value?.trend_window_hours ?? selectedHours.value)
 
-// Session 022 (user report, live-caught): this chart's title used to
-// hardcode "Garonne" (Toulouse's own river) regardless of the selected
-// city — still showing "Garonne" while viewing Vienna, say. The real river
-// name now comes from the backend (summary.water_level_river_name, read
-// from the actual station behind the latest reading — see
-// app/api/v1/environmental.py), falling back to a river-less generic title
-// only when the selected city genuinely has none on file.
 const waterLevelChartTitle = computed(() => {
   const river = summary.value?.water_level_river_name
   return river
@@ -160,20 +134,6 @@ const waterLevelChartTitle = computed(() => {
     : t('dashboard.waterLevel.titleGeneric', { hours: effectiveHours.value })
 })
 
-// Session 017: user report — "quand on change de 48h/72h/96h/120h ils ne
-// changent pas". The duration selector and its refetch were already
-// correct (see onHoursChange below); the real cause was that the demo seed
-// only backfilled 48h of history — until the deployment had been running
-// past that point, a 72h/96h/120h request legitimately returned the exact
-// same rows as 48h. Fixed at the source: BACKFILL_HOURS in
-// seed_environmental.py now matches the selector's own longest option
-// (120h), so all 4 buttons show genuinely distinct data out of the box.
-// This notice stays as a general safety net regardless — e.g. right after
-// a fresh install/reset if BACKFILL_HOURS is ever tuned down again, or in
-// a real (non-demo) deployment before live ingestion has accumulated a
-// full window yet — computing the actual span of history available (from
-// the earliest timestamp any trend series returned) and saying so plainly
-// whenever it's shorter than what was selected.
 const actualDataSpanHours = computed<number | null>(() => {
   const allTimestamps = [
     ...(summary.value?.water_level_trend_timestamps ?? []),
@@ -295,23 +255,6 @@ onMounted(async () => {
 const openWarning = computed(() => warnings.value.find((w) => w.status !== 'RESOLVED') ?? null)
 const openWarningsCount = computed(() => warnings.value.filter((w) => w.status !== 'RESOLVED').length)
 
-// --- KPI cards ---
-// monitoredZones/dataSources are real, P1-backed numbers. The other four
-// (resilience score, environmental risk, active warnings, AI monitoring)
-// are deliberately deterministic-risk/AI concepts that P1 does not own —
-// they stay as an honest "—" placeholder until P2/P3 implement them, rather
-// than fabricating a number this block has no basis to compute.
-// "Monitored Zones" tooltip: built from the sources already fetched for
-// this same view (no extra API call) so it always stays consistent with
-// the number actually shown — e.g. "2" -> "Hub'Eau Hydrométrie — Garonne à
-// Toulouse, Open-Meteo — Toulouse" (user request, P1.1 hotfix).
-// Session 020 fix: `sources` comes from fetchSources(), which — unlike
-// summary/risk/trajectory — is deliberately global (it backs the Settings >
-// Data Sources page, grouped by city, not this view). Filtering to the
-// selected city here is what keeps this tooltip's list of names consistent
-// with `summary.monitored_stations`, the number it's actually describing —
-// without this filter it would list every city's sources under any city's
-// KPI tile.
 const citySources = computed(() => sources.value.filter((s) => s.city?.id === cityStore.selectedCityId))
 const monitoredZonesTooltip = computed(() =>
   citySources.value.length
@@ -369,12 +312,6 @@ const kpis = computed(() => [
   {
     key: 'aiMonitoring',
     icon: 'mdi-creation-outline',
-    // Session 022 (user report): this tile used to be a permanent "—
-    // Available from P3" stub, never wired up once P3 actually shipped.
-    // `aiStatus` (is_configured) is global/shared across every city — see
-    // its own comment above — but `brief` is this city's own latest
-    // analysis, so "last analysis" genuinely reflects the selected city,
-    // not whichever city happened to be analyzed most recently overall.
     value: briefLoading.value ? null : t(aiStatus.value?.is_configured ? 'intelligence.status.active' : 'intelligence.status.disabled'),
     caption: !briefLoading.value && aiStatus.value?.is_configured && brief.value
       ? new Date(brief.value.generated_at).toLocaleString()
@@ -448,13 +385,6 @@ const factorContributionItems = computed(() =>
     : null,
 )
 
-// Session 019 — WOW #3: Resilience Radar. Built from the exact same
-// risk.value.factors this same view already fetches per-city (see the
-// `load()`/`watch(cityStore.selectedCityId, load)` pair above) — no
-// separate fetch, no city-specific code, so it stays correct for whichever
-// city is selected without ever needing to be touched again (per the
-// user's explicit request). See ResilienceRadar.vue's own docstring for
-// why this uses normalized_value rather than contribution.
 const resilienceRadarItems = computed(() =>
   risk.value
     ? risk.value.factors.map((f) => ({
@@ -478,11 +408,6 @@ const openWarningMessage = computed(() => {
   })
 })
 
-// Session 021 fix (user report): "no active warnings" used to read the same
-// whether Warnings genuinely had nothing to report for this city, or the
-// city simply isn't one Warnings track at all yet (Vienna/Ghent — see
-// cityTracksWarnings above). Distinguishing the two here so the panel never
-// silently implies "all clear" for a city Warnings can't actually see.
 const currentWarningEmptyText = computed(() =>
   cityTracksWarnings.value ? t('dashboard.currentWarning.none') : t('dashboard.currentWarning.primaryCityOnly', { city: cityLabel.value })
 )
@@ -500,10 +425,6 @@ const currentWarningEmptyText = computed(() =>
       {{ errorMessage }}
     </v-alert>
 
-    <!-- Session 018 (user request): the header's city selector lets an
-         operator preview any of the 9 OneAquaHealth consortium cities, but
-         only Toulouse has a live connector — this banner replaces silently
-         showing Toulouse's numbers under another city's name. -->
     <v-alert
       v-if="!loading && !cityHasLiveData"
       type="info"

@@ -48,18 +48,13 @@ from app.models.settings import AppSetting
 
 
 def scope_measurements_to_city(query: Select, city_id: uuid.UUID | None) -> Select:
-    """Session 020 fix (live-caught correctness bug): every normalizer below
-    used to query Measurement with no station/city filter at all. That was
-    harmless while Toulouse was the only city with real ingested data, but
-    now that Vienna/Ghent (and soon Oslo) also ingest real measurements into
-    this same shared table, an unscoped scan silently blends multiple
-    cities' river levels/rainfall into one meaningless number — the
-    Dashboard, Map, Scenario Simulator and AI brief would all show that same
-    blended score for ANY city flagged has_live_data, not that city's own
-    reading. city_id=None (the default, and every call site before this
-    fix) preserves the exact old global-scan behavior byte-for-byte, so
-    existing tests/callers are unaffected; passing it scopes the query
-    through Station -> DataSource to that one city's own stations only."""
+    """Scope a Measurement query to one city's own stations.
+
+    Without a filter, a scan blends every city's river levels/rainfall into
+    one meaningless number once more than one city ingests real
+    measurements. `city_id=None` (the default) keeps the global scan
+    unchanged; passing it scopes the query through Station -> DataSource to
+    that one city's own stations only."""
     if city_id is None:
         return query
     return (
@@ -303,12 +298,7 @@ def _combine_factors(
 
 def compute_risk(db: Session, now: datetime | None = None, city_id: uuid.UUID | None = None) -> RiskResult:
     """Deterministic: reads only stored measurements + Settings, no
-    randomness, no external calls, no AI. Same DB state -> same result.
-
-    Session 020 fix: `city_id` scopes every normalizer to one city's own
-    stations (see `scope_measurements_to_city`). Defaulted to None so every existing
-    caller keeps its exact prior (global-scan) behavior unless it opts in —
-    see app/api/v1/risk.py for the one that now does."""
+    randomness, no external calls, no AI. Same DB state -> same result."""
     now = now or datetime.now(timezone.utc)
     config = _get_risk_engine_settings(db)
     weights = config["weights"]

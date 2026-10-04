@@ -13,11 +13,6 @@ nothing extra and gives "last analysis" a real audit trail for free,
 matching the same append-only pattern already used for
 `Measurement`/`Warning`.
 
-Session 022 (user request): widened from a single Toulouse-only row to one
-per city — see `app.services.intelligence_service.generate_situation_brief`
-and `pick_next_scheduled_city_id` for how the shared daily budget is now
-rotated across cities instead of multiplied by them.
-
 Scheduling/usage-control state (last run, last error, today's request count)
 lives on `AIProviderConfig` itself (see `app.models.settings`) rather than
 here, since that state describes *the job*, not any one brief — the same
@@ -47,11 +42,6 @@ class SituationBrief(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "situation_briefs"
 
     generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
-    # Session 022: nullable only to keep any pre-migration row (generated
-    # before this column existed) valid — every row created from here on
-    # always sets it (see generate_situation_brief). ON DELETE SET NULL
-    # rather than CASCADE: a city record going away should never silently
-    # delete the AI's own audit history.
     city_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("cities.id", ondelete="SET NULL"), nullable=True, index=True
     )

@@ -54,15 +54,6 @@ function onLocaleChange(code: AppLocale): void {
       style="min-height: 100vh"
     >
       <v-container class="d-flex flex-column align-center">
-        <!-- Session 022 (user request): the language button used to float
-             above the card, right-aligned, visually detached from both the
-             logo and the form. Moved inside the card's own header row, next
-             to the logo/name, so it reads as one coherent group with the
-             form right below it instead of a stray control above the page.
-             Session 023 (user request): split into two rows now that the
-             logo is a real image — row 1 is the logo alone (125px tall,
-             centered), row 2 is the tagline (left) + language picker
-             (right), instead of logo and language sharing the top row. -->
         <v-card
           width="420"
           max-width="94vw"

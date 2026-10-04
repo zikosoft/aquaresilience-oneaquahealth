@@ -59,14 +59,6 @@ def get_or_create_data_source(db: Session, connector: BaseConnector) -> DataSour
         db.add(source)
         db.flush()
 
-    # Session 020 (user request): keep DataSource.city_id in sync with the
-    # connector's own declared `.city` on every call, not just at creation —
-    # the same "idempotent update, not just idempotent insert" pattern
-    # seed_geography.py already uses for has_live_data/planned_data_source.
-    # This is what makes the city association genuinely dynamic: adding a
-    # new city's connector needs zero migration/backfill code, it just
-    # needs a City row whose label_en matches connector.city, and the very
-    # next ingestion tick wires it up on its own.
     connector_city = getattr(connector, "city", None)
     if connector_city and source.city_id is None:
         city = db.execute(select(City).where(City.label_en == connector_city)).scalar_one_or_none()
@@ -174,17 +166,6 @@ def run_connector(db: Session, connector: BaseConnector, is_backfill: bool = Fal
     source.last_error_message = None
     source.last_success_at = now
 
-    # Session 020 (user request): the header's city selector / dashboard
-    # honesty gate (`app.services.city_context.resolve_city`) reads
-    # City.has_live_data — flipping it here, the moment a city's first
-    # ingestion genuinely succeeds, is what makes "integrate a new city"
-    # need zero manual flag-flipping anywhere: every dynamic UI built
-    # against resolve_city (dashboard, risk trajectory, resilience radar,
-    # scenario presets) picks the new city up automatically on its very
-    # next load. Never flips it back to False on a later failure — a
-    # transient outage shouldn't make the honesty gate lie about a city
-    # that has genuinely been live before (same "fresh/stale/degraded"
-    # philosophy as compute_source_health, not a hard on/off).
     if source.city_id is not None:
         city = source.city
         if city is not None and not city.has_live_data:

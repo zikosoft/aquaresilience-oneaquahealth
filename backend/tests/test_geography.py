@@ -1,4 +1,4 @@
-"""P1.1 hotfix, extended Session 018 — countries/cities reference tables
+"""P1.1 hotfix — countries/cities reference tables
 (D016), now seeded with all 9 OneAquaHealth consortium countries. Verifies
 the seed is correct and idempotent (mirrors the pattern already used for
 the environmental seed), and that only Toulouse is flagged has_live_data."""

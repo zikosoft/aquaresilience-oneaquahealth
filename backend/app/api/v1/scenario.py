@@ -55,12 +55,6 @@ async def simulate(
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("SCENARIOS", "EXECUTE")),
 ) -> ScenarioSimulateResponse:
-    # Session 019 — WOW #2: same city-selector honesty pattern as
-    # GET /risk/current (see app/services/city_context.py). The one-click
-    # presets themselves are pure relative % adjustments (see the
-    # frontend's SCENARIO_PRESETS) — they need no per-city code at all;
-    # only the underlying data this endpoint projects from must stay
-    # honest for a city with no live connector.
     city, has_data = resolve_city(db, payload.city_id)
     if not has_data:
         empty = RiskScoreOut(

@@ -1,4 +1,4 @@
-"""Session 020 — parsing/behavior tests for the 3 new consortium-city
+"""Parsing/behavior tests for the 3 new consortium-city
 connectors (Vienna/eHYD, Ghent/Waterinfo.be, Oslo/NVE HydAPI). None of
 these hit the real network: each connector's own `_get`/`_get_items`
 HTTP method is monkeypatched with realistic canned payloads, the same

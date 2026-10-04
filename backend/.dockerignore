@@ -1,8 +1,3 @@
-# Session 016 (P5 hardening): this file never existed, so `COPY . .` in the
-# Dockerfile was copying the local 135MB .venv/ (pointless — the image does
-# its own `pip install`) and the real dev .env (with locally-generated
-# secrets) straight into the image and its layer history. Neither belongs
-# in a container image.
 .venv/
 __pycache__/
 *.pyc

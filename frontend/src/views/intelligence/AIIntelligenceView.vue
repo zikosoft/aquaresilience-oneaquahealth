@@ -14,11 +14,6 @@ const authStore = useAuthStore()
 const cityStore = useCityStore()
 const canExecute = computed(() => authStore.can('AI_INTELLIGENCE', 'EXECUTE'))
 
-// Session 022 (user request): the Situation Brief now follows the header's
-// selected city (see services/intelligenceApi.ts + backend
-// generate_situation_brief's city_id param) instead of always describing
-// Toulouse — the `watch` below reloads it on every city switch, same
-// pattern already used on the main dashboard.
 const cityLabel = computed(() => {
   const city = cityStore.selectedCity
   if (!city) return ''

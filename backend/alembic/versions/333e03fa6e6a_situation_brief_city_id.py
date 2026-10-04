@@ -20,11 +20,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Session 022 (user request): the AI Situation Brief now follows the
-    # selected city instead of always analyzing Toulouse (see
-    # app.services.intelligence_service.generate_situation_brief). Nullable
-    # so any pre-existing brief row (generated before this column existed)
-    # stays valid; every row created from here on always sets it.
     op.add_column("situation_briefs", sa.Column("city_id", postgresql.UUID(as_uuid=True), nullable=True))
     op.create_index(op.f("ix_situation_briefs_city_id"), "situation_briefs", ["city_id"])
     op.create_foreign_key(

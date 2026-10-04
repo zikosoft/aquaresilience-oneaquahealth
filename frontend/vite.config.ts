@@ -18,17 +18,6 @@ export default defineConfig({
     host: true,
     port: 5173,
     strictPort: true,
-    // Session 023 (user request): local nginx reverse proxy in front of the
-    // dev stack (see docker-compose.dev.nginx.yml), so the whole app is
-    // reachable on one port (80) like production, instead of juggling
-    // :8080 (frontend) / :8000 (backend) separately. Vite's HMR client
-    // otherwise targets this server's own configured port (5173) directly
-    // from the browser — fine when hitting the frontend container's
-    // published host port straight on, but wrong once the page is loaded
-    // through a proxy on a different port, since the websocket would try
-    // to reach a port nginx never published. VITE_HMR_CLIENT_PORT lets the
-    // nginx-fronted compose override point it at port 80 instead; left
-    // unset, this is a no-op and HMR behaves exactly as before.
     hmr: process.env.VITE_HMR_CLIENT_PORT
       ? { clientPort: Number(process.env.VITE_HMR_CLIENT_PORT) }
       : undefined,

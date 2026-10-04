@@ -4,17 +4,6 @@ Revision ID: c2f4a9b81e03
 Revises: a1c9e5f2b7d4
 Create Date: 2026-09-25 10:30:00.000000
 
-Session 020 (user request): DataSource rows need a real, dynamic FK to
-geography.City (previously only Station had a free-text city string) so
-the /sources page can group by city and the dashboard's city selector can
-be driven from real ingestion state rather than a hand-maintained flag.
-`encrypted_api_key` mirrors AIProviderConfig.encrypted_api_key
-(app/models/settings.py) — same Fernet encrypt_secret/decrypt_secret
-write-only-secret pattern, reused here instead of inventing a second
-storage mechanism (or a .env var per city, which would need a redeploy
-for every new city/rotated key — see the credentials endpoint added in
-this same session for why DB storage was chosen).
-
 The two pre-existing sources (Hub'Eau + Open-Meteo, both Toulouse) are
 backfilled to Toulouse's City row here for immediate correctness;
 `ingestion_service.get_or_create_data_source` also self-heals this same

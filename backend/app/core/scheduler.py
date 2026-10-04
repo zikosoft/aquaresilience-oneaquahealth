@@ -52,40 +52,9 @@ def _tick() -> None:
             if due:
                 run_connector(db, connector)
 
-        # P2: re-evaluate the deterministic risk score and warning lifecycle
-        # on every tick too, so warnings escalate/auto-resolve on their own
-        # even if nobody has the Command Center open (GET /risk/current does
-        # the same idempotent evaluation on demand — see app.api.v1.risk).
-        # Session 020: explicitly scoped to Toulouse (get_primary_city_id) —
-        # Warning has no per-city column yet, so this background tick must
-        # keep evaluating the one city it has always meant, not an
-        # unscoped blend across every now-live city's measurements.
         risk_result = compute_risk(db, now, city_id=get_primary_city_id(db))
         warning = evaluate_and_persist_warnings(db, risk_result)
 
-        # P3: shared scheduled AI Situation Brief (Master Spec §19 — default
-        # every 4h, 6 analyses/day total, never a per-load LLM call).
-        # `should_run_scheduled_analysis` is the interval/ceiling gate — it
-        # still governs the exact same shared daily budget, unchanged.
-        # `generate_situation_brief` never raises on its own (every failure
-        # mode is caught and recorded on the shared config), but this call
-        # is still inside the tick's own try/except as defense in depth —
-        # an AI outage must never affect ingestion/risk above.
-        #
-        # Session 022 (user request): each scheduled slot now analyzes one
-        # live city at a time, chosen by `pick_next_scheduled_city_id`
-        # (whichever live city's own brief is most overdue) — over several
-        # ticks every live city gets its own refreshed brief, at the same
-        # total LLM-call cost as the old single-Toulouse-only behavior.
-        #
-        # Session 017: event-triggered AI, checked only when the scheduled
-        # cadence isn't already due this tick — a HIGH/CRITICAL warning is
-        # treated as an "event" worth an unscheduled refresh (see
-        # should_run_event_triggered_analysis's own docstring for the gate).
-        # This stays scoped to the primary city (Toulouse): the risk/warning
-        # evaluation just above is itself still Toulouse-only (Warning has
-        # no per-city column yet — see get_primary_city_id's docstring), so
-        # there is no other city's "event" to react to here yet.
         ai_config = get_or_create_ai_config(db)
         if should_run_scheduled_analysis(ai_config, now):
             asyncio.run(

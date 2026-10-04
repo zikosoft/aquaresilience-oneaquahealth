@@ -177,24 +177,7 @@ async function resolveMapConfig(): Promise<{ style: string | StyleSpecification;
     const provider = loadStoredProvider() ?? config.tile_provider
     activeProvider.value = provider
     const style = RASTER_STYLES[provider] ?? RASTER_STYLES.osm
-    // Session 018: honor the header's city selector (already loaded by
-    // AppHeader by the time this mounts in practice; config.cities[0]
-    // remains the fallback if the store hasn't resolved yet for some
-    // reason, same as before this change).
     const city = cityStore.selectedCity ?? config.cities[0]
-    // Session 021 fix (user report: "ça se remet toujours sur Toulouse" —
-    // every city switch flew back to the exact same point). envCenterLon/
-    // Lat/Zoom are a deployment-level escape hatch for when there's no
-    // resolved city at all to center on (see FALLBACK_CENTER, used in the
-    // catch branch below and when configuredStyleUrl is set) — .env ships
-    // them set to Toulouse's own coordinates as that safety-net default.
-    // This used to prefer the env vars with `envCenterLon ?? city.default_lon`
-    // even when `city` WAS resolved, so a real, successfully-loaded city
-    // never got a say: the map always centered on the env var's point
-    // (Toulouse) no matter which city was actually selected. Once a city is
-    // resolved, its own coordinates are what "honor the city selector"
-    // means — the env override now only kicks in via FALLBACK_CENTER/ZOOM,
-    // when city resolution itself fails.
     const center: [number, number] = city
       ? [city.default_lon, city.default_lat]
       : [envCenterLon ?? FALLBACK_CENTER[0], envCenterLat ?? FALLBACK_CENTER[1]]
@@ -401,14 +384,6 @@ async function addStationMarkers(): Promise<void> {
   if (!map) return
   clearStationMarkers()
   try {
-    // Best-effort: a failed risk fetch must never keep station markers from
-    // rendering at all — the map degrades to exactly its pre-P2.1 look.
-    // P4: a non-null riskOverride (Scenario Simulator) skips the network
-    // call entirely and uses the already-computed projected/current score
-    // the caller passed in.
-    // Session 020 (user request): city-scoped, same honesty convention as
-    // the dashboard/scenario simulator — only the selected city's own
-    // stations/risk are shown, never another city's data under its name.
     const cityId = cityStore.selectedCityId
     const [stations, risk] = await Promise.all([
       fetchStations(cityId),
@@ -484,13 +459,6 @@ async function initMap(): Promise<void> {
       clearLoadTimeout()
       initialStyleLoaded = true
       loading.value = false
-      // Session 017 (live-verified bug): MapLibre can fire 'error' for a
-      // single blocked/slow tile *before* 'load' resolves on the very first
-      // paint (race, not a real failure — the style itself loads fine right
-      // after). The 'error' handler below sets error.value on that first hit,
-      // but nothing ever cleared it again, so a map that went on to load
-      // successfully was left permanently hidden behind "Map style
-      // unavailable". A successful load always supersedes an earlier error.
       error.value = null
       void addStationMarkers()
     })
@@ -554,41 +522,11 @@ watch(
   },
 )
 
-// Session 018 (user request): fly to the newly selected city.
-// Session 020 (user request, live-caught gap): now that Vienna/Ghent (and
-// soon Oslo) have real stations too, this used to only recenter the camera
-// — the markers/risk ring underneath stayed whichever city loaded first,
-// so switching to e.g. Vienna still showed Toulouse's risk score. Markers
-// are now re-fetched city-scoped on every change (see addStationMarkers),
-// same honesty convention as the dashboard/scenario simulator: a city with
-// no connector yet just shows no markers, never another city's data under
-// its name.
 watch(
   () => cityStore.selectedCityId,
   () => {
     const city = cityStore.selectedCity
     if (!map || !city) return
-    // Session 021 fix (user report, confirmed via diagnostic logging: the
-    // city/station data pipeline was already 100% correct — selectCity(),
-    // this watcher, and fetchStations() all fired with the right city and
-    // the right station count every time). The one thing never visibly
-    // moved: the camera itself. Root cause — MapLibre/Mapbox GL's flyTo()
-    // (and easeTo()) is a silent no-op, no animation AND no instant jump,
-    // whenever the OS/browser's prefers-reduced-motion is set, UNLESS
-    // `essential: true` is passed. On a machine with that accessibility
-    // setting on, every city switch was updating the markers correctly but
-    // leaving the viewport exactly where it was — so a newly selected
-    // city's markers could easily be off-screen entirely, looking exactly
-    // like "the map never updates / stays on the previous city".
-    //
-    // Session 021 fix #2 (same report, next symptom): the animation now
-    // ran, but always landed on the exact same point — `city` here is
-    // guaranteed non-null (guarded above), yet `envCenterLon ?? city...`
-    // meant the deployment-escape-hatch env vars (set in .env to Toulouse's
-    // own coordinates, see resolveMapConfig's comment above) always won
-    // over the real, resolved, non-Toulouse city. Once `city` is known —
-    // which it always is here — its own coordinates are the destination,
-    // full stop.
     map.flyTo({
       center: [city.default_lon, city.default_lat],
       zoom: city.default_zoom,
@@ -746,17 +684,6 @@ watch(
   and a `scoped` rule would silently never match them.
 -->
 <style>
-/* Session 017: MapLibre's popup chrome always has a white background
-   (maplibre-gl.css hardcodes `.maplibregl-popup-content { background:
-   #fff; }`, regardless of the app's own light/dark theme) — but its text
-   was left to inherit the app's own (theme-dependent) color, which in
-   dark mode is a near-white color cascaded down from Vuetify. Result:
-   near-white text on Maplibre's always-white popup, i.e. invisible until
-   you select it (user report: "je viens de les voir mais faut changer la
-   couleur"). Forcing a guaranteed-dark, always-legible color on the
-   popup's own content box (not just `.aq-station-popup`, so this also
-   covers MapLibre's own close button, a sibling of that div) fixes it in
-   both app themes, since the white background here never changes anyway. */
 .maplibregl-popup-content {
   color: #1a1a1a;
 }

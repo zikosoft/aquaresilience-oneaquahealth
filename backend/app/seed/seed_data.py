@@ -52,18 +52,8 @@ VIEWER_GRANTS_MODULES = ["DASHBOARD", "MAP", "ALERTS", "AI_INTELLIGENCE", "SCENA
 VIEWER_GRANTS_PERMISSIONS = ["VIEW"]
 
 DEFAULT_APP_SETTINGS = [
-    # Session 020: "city" dropped from this blob — it was a pre-multi-city
-    # placeholder (D016: one seeded city) never read anywhere server-side,
-    # now genuinely superseded by geography.City + the header's city
-    # selector (app/stores/city.ts). A pre-existing install's stored JSONB
-    # may still carry a harmless leftover "city" key; nothing reads it.
     ("GENERAL", "general", {"timezone": "Europe/Paris", "date_format": "YYYY-MM-DD"},
      "General platform configuration."),
-    # Session 021 fix (user report): was frozen to 3 locales while the
-    # header's language switcher (frontend/src/i18n/index.ts's
-    # SUPPORTED_LOCALES) has offered all 9 consortium locales since Session
-    # 018 — Settings > Languages' "enabled" chips and default-locale dropdown
-    # now start from the same full list.
     ("LANGUAGES", "languages", {
         "default_locale": "en",
         "enabled_locales": ["en", "fr", "es", "pt", "no", "el", "de", "it", "nl"],
@@ -212,19 +202,6 @@ def run() -> None:
     finally:
         db.close()
 
-    # P1.1 hotfix: countries/cities reference tables (D016) — schema
-    # foundation only, seeded with all 9 consortium cities (idempotent).
-    #
-    # Session 020: this MUST run before seed_environmental below —
-    # get_or_create_data_source (called by seed_environmental's own
-    # backfill) auto-links each DataSource to its City by label_en the
-    # moment the row is first created. Seeding environmental data first,
-    # while no City rows exist yet, left every DataSource permanently
-    # city-less in a fresh install (a live deployment's scheduler ticks
-    # again a few seconds later and self-heals it — see
-    # ingestion_service.get_or_create_data_source — but a test session's
-    # scheduler never runs at all, so the gap was caught by a failing test
-    # instead of surfacing on the /sources page).
     from app.seed.seed_geography import run as seed_geography_run
 
     seed_geography_run()

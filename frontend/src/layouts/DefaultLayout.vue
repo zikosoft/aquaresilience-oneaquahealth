@@ -24,12 +24,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     <AppSidebar v-if="!uiStore.monitoringFullscreen" />
     <AppHeader :compact="uiStore.monitoringFullscreen" />
     <v-main>
-      <!-- Session 017: Settings > System > Maintenance mode is now a real
-           write-blocking gate (app/core/maintenance.py) — this banner is
-           the one place that says so, set by the api.ts response
-           interceptor the moment any write comes back MAINTENANCE_MODE,
-           rather than every form/action across the app showing its own
-           raw English error text. -->
       <v-alert
         v-if="uiStore.maintenanceModeActive"
         type="warning"

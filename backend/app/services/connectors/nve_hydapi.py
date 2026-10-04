@@ -107,21 +107,6 @@ class NveHydapiConnector(BaseConnector):
         if not isinstance(stations, list) or not stations:
             raise ConnectorError(f"NVE HydAPI returned no stations for CouncilName={self.council_name}")
 
-        # Prefer a station that actually exposes a water-level series —
-        # some active stations only carry e.g. groundwater or snow depth.
-        #
-        # Session 022 fix (user report, live-caught on the map): a
-        # municipality ("CouncilName") can be a large administrative area —
-        # Oslo kommune reaches well past downtown into Groruddalen/Ellingsrud
-        # — so "the first active, water-level-capable station NVE happens to
-        # list" could be a real gauge many km from the city's own reference
-        # point (self.default_lon/lat, what the weather point uses), making
-        # the two markers on the map look like two unrelated cities. The
-        # reading itself was never wrong — just an arbitrary pick among
-        # several equally-valid real stations. Now picks the closest such
-        # station to the city's own point instead of the first one in
-        # whatever order the API returned them, still a real, unmodified
-        # station — never fabricated or moved.
         candidates = [
             s
             for s in stations

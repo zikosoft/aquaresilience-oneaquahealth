@@ -18,9 +18,6 @@ class ScenarioSimulateRequest(BaseModel):
     # a slider is being dragged) without spending an AI call every time —
     # only "Run Simulation" itself sends true.
     include_ai_explanation: bool = True
-    # Session 019: same city-selector honesty pattern as GET /risk/current —
-    # see app/services/city_context.py. Omitted => today's unchanged
-    # single-city (Toulouse) behavior.
     city_id: uuid.UUID | None = None
 
 

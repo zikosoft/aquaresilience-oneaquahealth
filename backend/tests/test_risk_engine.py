@@ -36,7 +36,7 @@ def isolated_db():
     at the end of the test, via the standard SQLAlchemy nested-SAVEPOINT
     pattern — needed here because most of these tests never pass a
     city_id, so the risk engine's queries run in their default global-scan
-    mode (Session 020: `city_id` now lets a caller scope to one city's own
+    mode (`city_id` lets a caller scope to one city's own
     stations — see `test_compute_risk_is_scoped_to_the_requested_city`
     below — but the default/omitted behavior stays the original unscoped
     scan, which is what most tests here rely on). The shared session-scoped
@@ -319,7 +319,7 @@ def test_risk_current_endpoint_requires_dashboard_view(client, admin_token):
 
 
 def test_risk_current_is_honestly_empty_for_a_non_demo_city(client, admin_token, db_session):
-    """Session 018: ?city_id= for a consortium city with no live connector
+    """?city_id= for a consortium city with no live connector
     (e.g. Oslo) must not silently return Toulouse's numbers under a
     different label — see app/services/city_context.py."""
     from sqlalchemy import select
@@ -431,8 +431,7 @@ def test_warnings_endpoints_and_actions(client, admin_token, db_session):
 
 
 def test_compute_risk_is_scoped_to_the_requested_city(isolated_db):
-    """Session 020 regression test for a live-caught correctness bug:
-    compute_risk used to scan Measurement globally with no station/city
+    """Regression test: compute_risk used to scan Measurement globally with no station/city
     filter at all. Harmless while only Toulouse had real data, but once a
     second city also has real ingested measurements, an unscoped scan
     blends both cities' water levels into one meaningless number — every

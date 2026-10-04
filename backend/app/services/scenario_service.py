@@ -100,13 +100,7 @@ def simulate_scenario(
 ) -> ScenarioResult:
     """Pure, deterministic, synchronous — no network call, no AI, safe to
     call as often as the UI wants (same reliability property as
-    `GET /risk/current`).
-
-    Session 020 fix: `city_id` (default None, unchanged global-scan
-    behavior) scopes both the risk computation and this module's own
-    water-level/precipitation readouts to one city — see
-    `app.services.risk_engine.scope_measurements_to_city` for why this matters now
-    that more than one city has real ingested measurements."""
+    `GET /risk/current`)."""
     now = now or datetime.now(timezone.utc)
     current = compute_risk(db, now, city_id=city_id)
     projected = compute_projected_risk(

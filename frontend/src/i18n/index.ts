@@ -10,13 +10,6 @@ import nl from './locales/nl'
 import no from './locales/no'
 import pt from './locales/pt'
 
-// Session 018 (user request): one language per OneAquaHealth consortium
-// country that doesn't already have one (Spain=es, France=fr were already
-// covered) — Portugal/Coimbra, Norway/Oslo, Greece, Austria/Vienna (German),
-// Italy/Naples, Belgium/Ghent (Dutch, the language of Flanders where Ghent
-// sits — French already covers Wallonia/Brussels). Hebrew (Israel) is
-// deliberately excluded: it needs RTL layout support, a materially bigger
-// change than adding another LTR JSON locale — a separate follow-up.
 export type AppLocale = 'en' | 'fr' | 'es' | 'pt' | 'no' | 'el' | 'de' | 'it' | 'nl'
 
 // Flags are a visual affordance per the user's request ("plus vendeur") —

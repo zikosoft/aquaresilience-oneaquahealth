@@ -71,7 +71,7 @@ mocked test.
 Every AI Provider configuration carries a `daily_request_ceiling` and a
 `cooldown_seconds`, enforced by the backend regardless of trigger source —
 a scheduled tick, a human clicking "refresh now", or an automatic
-event-triggered analysis (added Session 017, fires only on a HIGH/CRITICAL
+event-triggered analysis (fires only on a HIGH/CRITICAL
 warning, gated by the exact same budget a human manual refresh is held to,
 so an automated event can never spend more than a person could). This
 protects both API cost and against a runaway trigger loop.

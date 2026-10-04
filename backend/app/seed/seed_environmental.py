@@ -19,19 +19,6 @@ surfaced to the frontend as a LIVE/CACHED/REPLAY-style badge.
 Run with:
     python -m app.seed.seed_environmental          # seed only if empty
     python -m app.seed.seed_environmental --reset   # wipe + reseed
-
-Session 020 (user request): deliberately NOT extended to the 3 new
-consortium-city connectors (Vienna/eHYD, Ghent/Waterinfo.be, Oslo/NVE
-HydAPI, see app/services/connectors/) the way Hub'Eau/Open-Meteo are
-here. Those 3 discover their real station identity (external_code,
-name, coordinates) dynamically at fetch time — unlike Hub'Eau's fixed
-`station_code="O200004001"` — so there is no station identity to seed a
-synthetic backfill against without risking a duplicate "fake" station
-next to whatever the live connector later actually finds (exactly what
-this module's own backfill design otherwise guarantees never happens).
-Those cities go live from real ingested readings only; `City.has_live_data`
-flips automatically the moment that first succeeds (see
-`ingestion_service.run_connector`), and stays honestly False until then.
 """
 from __future__ import annotations
 
@@ -49,13 +36,6 @@ from app.services.connectors.hubeau import HubeauHydrometrieConnector
 from app.services.connectors.open_meteo import OpenMeteoConnector
 from app.services.ingestion_service import get_or_create_data_source
 
-# Session 017 (user request): the dashboard's duration selector offers
-# 48h/72h/96h/120h, so the backfill window is now 120h (5 days) — the
-# longest of those options — so every one of the 4 buttons shows genuinely
-# distinct data instead of 72h/96h/120h all silently repeating the same 48h
-# of history. The dashboard's own "limited history" notice
-# (CommandCenterView.vue, also added this session) stays in place as a
-# safety net for any window still wider than what's actually backfilled.
 BACKFILL_HOURS = 120
 DEMO_SEED = 20260921  # arbitrary but fixed: today's date at design time
 

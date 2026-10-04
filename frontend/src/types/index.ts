@@ -62,12 +62,6 @@ export interface AppSetting {
   description: string
 }
 
-// P2.1: read-only geography reference data (D016). Session 018: now 9
-// OneAquaHealth consortium cities, not just Toulouse — `ResilienceMap.vue`,
-// the Settings > Map tab and the header's city selector (`stores/city.ts`)
-// all read this. Session 020: several more cities have real connectors now
-// (Vienna/Ghent live, Oslo pending a key), so `has_live_data` alone is no
-// longer "Toulouse vs. the rest" — see `connector_status` below.
 export interface City {
   id: string
   label_en: string
@@ -79,15 +73,7 @@ export interface City {
   default_zoom: number
   has_live_data: boolean
   planned_data_source: string | null
-  // Session 020: 3-tier signal for the header's city selector — 'live'
-  // (real ingested data), 'pending' (a connector is registered but hasn't
-  // gone live yet, e.g. Oslo awaiting its API key), or 'none' (no connector
-  // has ever run for this city). Computed server-side, never inferred here.
   connector_status: 'live' | 'pending' | 'none'
-  // Session 020 fix: true only for Toulouse — the one city Early Warnings
-  // and the shared AI Situation Brief actually track (neither has a
-  // per-city column yet). Distinct from has_live_data: Vienna/Ghent are
-  // live too but are NOT what those two features describe.
   is_primary: boolean
 }
 
@@ -139,8 +125,6 @@ export interface ApiErrorEnvelope {
 
 export type SourceHealthStatus = 'fresh' | 'stale' | 'degraded'
 
-// Session 020: minimal city reference for grouping the /sources page —
-// mirrors app/schemas/environmental.py's SourceCityRef.
 export interface SourceCityRef {
   id: string
   label_en: string
@@ -238,7 +222,6 @@ export interface EnvironmentalSummary {
   uv_index: LatestReading | null
   uv_index_trend: number[]
   uv_index_trend_timestamps: string[]
-  // Session 018: same convention as RiskScore — see `stores/city.ts`.
   data_available: boolean
   planned_data_source: string | null
 }
@@ -263,8 +246,6 @@ export interface RiskScore {
   factors_available: number
   factors_total: number
   computed_at: string
-  // Session 018: false only when a non-demo city (no live connector) was
-  // requested — see `stores/city.ts` and `app/services/city_context.py`.
   data_available: boolean
   planned_data_source: string | null
 }
@@ -295,9 +276,6 @@ export interface EarlyWarning {
   updated_at: string
 }
 
-// Session 018 — WOW #4: Predictive Risk Trajectory. Deterministic
-// extrapolation of the Risk Engine's own trend factor (never a second
-// model) — see `app/services/risk_engine.py::compute_risk_trajectory`.
 export interface TrajectoryPoint {
   hours_ahead: number
   projected_at: string
@@ -378,8 +356,6 @@ export interface ScenarioSimulateRequest {
   river_level_adjustment_pct: number
   language?: string
   include_ai_explanation?: boolean
-  // Session 019 — WOW #2: same city-selector honesty pattern as
-  // GET /risk/current. Omitted => today's unchanged single-city behavior.
   city_id?: string | null
 }
 

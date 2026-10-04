@@ -41,21 +41,7 @@ class AIIntelligenceStatusOut(BaseModel):
 
 
 class TriggerAnalysisRequest(BaseModel):
-    # Defaults to the deployment's default locale when omitted (see
-    # app.api.v1.intelligence) — a scheduled/background run has no "current
-    # user" to take a UI language from, but a manual click does, so the
-    # frontend passes its own active locale here (Master Spec §19: "active
-    # UI language passed to the AI").
-    # Session 019: widened to all 9 UI languages — was still en|fr|es only
-    # from before session 018 added pt/no/el/de/it/nl, which meant a manual
-    # analysis request from one of those 6 UI languages was rejected (422)
-    # rather than degrading gracefully. See intelligence_service.py's
-    # LANGUAGE_INSTRUCTIONS for the matching fix.
     language: str | None = Field(default=None, pattern="^(en|fr|es|pt|no|el|de|it|nl)$")
-    # Session 022 (user request): which city to analyze — defaults to the
-    # platform's primary city (Toulouse) server-side when omitted, same as
-    # before this field existed. The frontend always sends the viewer's
-    # currently selected city explicitly.
     city_id: uuid.UUID | None = None
 
 
