@@ -1,18 +1,18 @@
 # AquaResilience
 
-AI-assisted urban freshwater resilience intelligence platform — OneAquaHealth IEEE Global Hackathon 2026, **Track 6: Resilience Informatics** ("Enable early warning & resilience planning... predictive dashboards, alerts, and resilience tools"). Demo geography: Toulouse / Toulouse Métropole.
+AI-assisted urban freshwater resilience intelligence platform — OneAquaHealth IEEE Global Hackathon 2026, **Track 6: Resilience Informatics** ("Enable early warning & resilience planning... predictive dashboards, alerts, and resilience tools"). Multi-city platform, with Toulouse as the default demo city.
 
 AquaResilience combines real environmental and hydrological data to detect emerging risk, explain its drivers, issue early warnings, brief an AI-generated situation summary, and let an operator simulate future rainfall/river scenarios on an interactive map for resilience planning — all while keeping risk calculation deterministic and explainable, with the AI strictly as an interpretive layer on top (see `docs/RESPONSIBLE_AI.md`).
 
 ## What's implemented
 
-- **Real environmental data**: two free, key-less public sources (Hub'Eau hydrometry, Open-Meteo weather) with scheduled ingestion, idempotent storage, and fresh/stale/degraded provenance — see `docs/DATA_SOURCES.md`.
-- **Command Center**: real-time KPIs, an interactive Toulouse map (hero component), an environmental signals timeline, and source-health visibility.
+- **Real environmental data**: free public hydrology and weather sources (Hub'Eau, Open-Meteo, plus other national hydrology APIs such as NVE HydAPI for Oslo, which needs a free API key) with scheduled ingestion, idempotent storage, and fresh/stale/degraded provenance — see `docs/DATA_SOURCES.md`.
+- **Command Center**: real-time KPIs, an interactive map (hero component), an environmental signals timeline, and source-health visibility.
 - **Explainable Risk Engine**: a deterministic 0–100 score from 4 configurable weighted factors (rainfall, hydrology, environmental, trend) — same inputs always give the same score, and every factor's contribution is stored so the dashboard can answer "why is risk 71/100?".
 - **Early Warning**: automatic warnings on configured risk thresholds, with a simple ACTIVE → ACKNOWLEDGED → RESOLVED lifecycle, contributing factors and a recommended response.
 - **AI Resilience Intelligence**: a scheduled (and now event-triggered) structured Situation Brief — summary, drivers, zones to watch, recommendations, confidence, limitations — from a configurable OpenAI/Anthropic provider, with graceful degradation if the AI is unavailable.
 - **Scenario Simulator**: rainfall/river-level "what-if" controls drive a deterministic projected risk (reusing the exact same Risk Engine — never a second model), synchronizing the Risk Gauge, the map (Current/Projected toggle), the factor breakdown and the trend charts, plus an optional AI explanation.
-- **Platform**: authentication, relational RBAC (with per-user permission overrides), full EN/FR/ES internationalization, light/dark theme, collapsible sidebar and monitoring fullscreen, and a production reverse-proxy/HTTPS Docker Compose stack.
+- **Platform**: authentication, relational RBAC (with per-user permission overrides), internationalization (9 languages), light/dark theme, collapsible sidebar and monitoring fullscreen, and a production reverse-proxy/HTTPS Docker Compose stack.
 
 Full functional history and current completion status: `AquaResilience_Development_Progress_Priority_Blocks.md` (live tracker). Architecture rationale: `docs/ARCHITECTURE.md`.
 
@@ -30,37 +30,75 @@ More in `docs/screenshots/`. *Captured in an isolated development sandbox whose 
 
 ## Stack
 
-- **Frontend:** Vue 3 + TypeScript + Vite + Vuetify, Pinia, Vue Router, vue-i18n (EN/FR/ES), MapLibre GL JS, Apache ECharts
+- **Frontend:** Vue 3 + TypeScript + Vite + Vuetify, Pinia, Vue Router, vue-i18n (9 languages), MapLibre GL JS, Apache ECharts
 - **Backend:** FastAPI, Pydantic, SQLAlchemy, Alembic
 - **Data:** PostgreSQL + PostGIS, Redis
 - **Runtime:** Docker Compose (single command startup)
 
-## Quick start
+## Quick start (for testers)
+
+Requirements: Docker with Docker Compose v2. Everything below runs from the repository root.
+
+First, create your environment file (needed for every option):
 
 ```bash
 cp .env.example .env
 # Edit .env: set SECRET_KEY, SECRETS_ENCRYPTION_KEY, POSTGRES_PASSWORD, DEMO_ADMIN_PASSWORD.
-docker compose up -d
 ```
 
-- Frontend: http://localhost:8080
-- Backend API docs: http://localhost:8000/docs
+Then pick **one** of the following.
+
+### Option A: simplest, no reverse proxy (recommended for a quick look)
+
+```bash
+docker compose up -d --build
+```
+
+- App: http://localhost:8080
+- API docs: http://localhost:8000/docs
 - Health: http://localhost:8000/health/live, http://localhost:8000/health/ready
 
-Prefer everything behind one port, same shape as production? Add the
-optional local reverse proxy:
+### Option B: everything behind one port, with the reverse proxy
+
+Same stack as Option A plus an nginx reverse proxy that serves the app and `/api/` from a single address (port 80 must be free):
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.nginx.yml up -d --build
 ```
 
-Then use http://localhost (port 80) for both the frontend and `/api/` —
-see `docker-compose.dev.nginx.yml`'s own comment for what it changes (just
-an added `reverse-proxy` service + the one env var Vite's hot-reload needs
-to work through it). This is dev-only convenience, not a security
-boundary — see "Production deployment" below for the real thing.
+- App and API: http://localhost
 
-Demo login (admin-only account creation — see `.env`): `DEMO_ADMIN_EMAIL` / `DEMO_ADMIN_PASSWORD`. The demo account is seeded with the **Administrator** role so the full platform (including Settings and Users & Access) is reachable for evaluation. Seed the deterministic demo environmental dataset with `python -m app.seed.seed_environmental` (or `--reset` to rebuild it) so the Command Center and map are never empty — see `docs/DATA_SOURCES.md`.
+### Option C: production-like stack (built images, reverse proxy, no hot reload)
+
+This is the stack used for the live demo. The reverse proxy is part of it and starts automatically. Fill in `.env.production` first (see [`DEPLOYMENT.md`](DEPLOYMENT.md) for details, including a real domain and HTTPS):
+
+```bash
+cp .env.production.example .env.production
+# Edit .env.production: SECRET_KEY, SECRETS_ENCRYPTION_KEY, POSTGRES_PASSWORD, DEMO_ADMIN_PASSWORD.
+# Keep DOMAIN=localhost for a local test.
+
+# Plain HTTP on port 80 (no certificate):
+docker compose -f docker-compose.prod.yml -f docker-compose.prod.http.yml \
+  --env-file .env.production up -d --build reverse-proxy backend frontend postgres redis
+```
+
+- App and API: http://localhost
+
+For HTTPS with a self-signed or Let's Encrypt certificate, follow `DEPLOYMENT.md` sections 1 and 3.
+
+### Useful commands
+
+```bash
+docker compose ps          # status of all containers (use the same -f files as above)
+docker compose logs -f     # follow logs
+docker compose down        # stop (add -v to also wipe the database)
+```
+
+### Demo login
+
+Sign in with `DEMO_ADMIN_EMAIL` / `DEMO_ADMIN_PASSWORD` from your env file (default email: `admin@aquaresilience.demo`). This account has the **Administrator** role, so the whole platform, including Settings and Users & Access, is reachable. Accounts can only be created by an admin. The demo environmental dataset is seeded automatically at startup, so the Command Center and the map are never empty (see `docs/DATA_SOURCES.md`).
+
+Optional settings in the env file: `GA_MEASUREMENT_ID` (Google Analytics 4, empty = disabled) and `LOCK_DEMO_ADMIN=true` (the demo admin and the Administrator role cannot be edited or deleted).
 
 ## Repository layout
 

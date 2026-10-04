@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import type { StyleSpecification } from 'maplibre-gl'
-import { Map as MapLibreMap, Marker, NavigationControl, Popup } from 'maplibre-gl'
+import {
+  Map as MapLibreMap,
+  Marker,
+  NavigationControl,
+  Popup,
+  setWorkerUrl,
+} from 'maplibre-gl'
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -13,6 +20,13 @@ import { useUiStore } from '@/stores/ui'
 import type { MapTileProvider, RiskScore, SourceHealthStatus, Station } from '@/types'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
+
+// maplibre-gl builds its web worker URL at runtime, which the bundler cannot
+// see, so the worker would never be emitted into dist/ (the browser would get
+// index.html back and refuse it: MIME type text/html). Importing it with
+// `?worker&url` makes Vite bundle it (with its shared module) and hand back
+// the hashed URL.
+setWorkerUrl(maplibreWorkerUrl)
 
 const props = withDefaults(
   defineProps<{
@@ -455,13 +469,22 @@ async function initMap(): Promise<void> {
       attributionControl: { compact: true },
     })
     instance.addControl(new NavigationControl({ visualizePitch: false }), 'top-right')
-    instance.on('load', () => {
+    // Ready = the map is usable. Reached from 'load', from 'idle' (every
+    // time rendering settles, which also recovers from an earlier false
+    // alarm) or from the timeout below when the style is already in place.
+    let markersRequested = false
+    const markReady = (): void => {
       clearLoadTimeout()
       initialStyleLoaded = true
       loading.value = false
       error.value = null
-      void addStationMarkers()
-    })
+      if (!markersRequested) {
+        markersRequested = true
+        void addStationMarkers()
+      }
+    }
+    instance.on('load', markReady)
+    instance.on('idle', markReady)
     // 'style.load' fires on the initial load AND again after every
     // setStyle() (the on-map base layer picker) — unlike the DOM marker
     // overlays, the risk layer is a real style source/layer and does not
@@ -472,6 +495,11 @@ async function initMap(): Promise<void> {
     instance.on('error', (e) => {
       console.error('MapLibre error', e?.error)
       if (initialStyleLoaded) return // see initialStyleLoaded comment above
+      // A single tile/source failure (the tile server rate-limiting or
+      // dropping one request) is routine and must not blank a working map;
+      // only a failure of the style itself is fatal.
+      const detail = e as unknown as { tile?: unknown; sourceId?: string }
+      if (detail.tile || detail.sourceId) return
       clearLoadTimeout()
       error.value = t('map.styleUnavailable')
       loading.value = false
@@ -482,10 +510,15 @@ async function initMap(): Promise<void> {
     resizeObserver.observe(mapContainer.value)
 
     loadTimeoutId = setTimeout(() => {
-      if (loading.value) {
-        error.value = t('map.loadTimeout')
-        loading.value = false
+      if (!loading.value) return
+      if (instance.isStyleLoaded()) {
+        // Style is in and tiles are still arriving (slow tile server or an
+        // extra proxy hop): keep the map, don't cover it with an error.
+        markReady()
+        return
       }
+      error.value = t('map.loadTimeout')
+      loading.value = false
     }, MAP_LOAD_TIMEOUT_MS)
   } catch {
     error.value = t('map.styleUnavailable')
