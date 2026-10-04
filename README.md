@@ -4,6 +4,13 @@ AI-assisted urban freshwater resilience intelligence platform — OneAquaHealth 
 
 AquaResilience combines real environmental and hydrological data to detect emerging risk, explain its drivers, issue early warnings, brief an AI-generated situation summary, and let an operator simulate future rainfall/river scenarios on an interactive map for resilience planning — all while keeping risk calculation deterministic and explainable, with the AI strictly as an interpretive layer on top (see `docs/RESPONSIBLE_AI.md`).
 
+## Demo and presentation
+
+- **Demo video (YouTube):** https://youtu.be/PrntIN5RiJs
+- **Pitch deck:** [`docs/AquaResilience_Pitch_Deck.pptx`](docs/AquaResilience_Pitch_Deck.pptx)
+- **Architecture animation:** [`docs/AquaResilience_Architecture_Stack_Animation.html`](docs/AquaResilience_Architecture_Stack_Animation.html) (download the file and open it in a browser; it plays by itself)
+- **Live demo:** https://aquaresilience.starscake.com (login required; test credentials are provided to the judges in the Devpost "Testing instructions")
+
 ## What's implemented
 
 - **Real environmental data**: free public hydrology and weather sources (Hub'Eau, Open-Meteo, plus other national hydrology APIs such as NVE HydAPI for Oslo, which needs a free API key) with scheduled ingestion, idempotent storage, and fresh/stale/degraded provenance — see `docs/DATA_SOURCES.md`.
@@ -146,6 +153,9 @@ testing or recording a demo.
 - [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) — Hub'Eau and Open-Meteo: what's ingested, license, provenance.
 - [`docs/RESPONSIBLE_AI.md`](docs/RESPONSIBLE_AI.md) — what the AI layer is and isn't allowed to do, and how the platform degrades gracefully without it.
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — production reverse-proxy/HTTPS deployment guide.
+- [`docs/AquaResilience_Pitch_Deck.pptx`](docs/AquaResilience_Pitch_Deck.pptx) — hackathon pitch deck.
+- [`docs/AquaResilience_Architecture_Stack_Animation.html`](docs/AquaResilience_Architecture_Stack_Animation.html) — animated architecture and technology stack.
+- Demo video: https://youtu.be/PrntIN5RiJs
 
 ## Security notes
 
@@ -155,6 +165,10 @@ testing or recording a demo.
 - PostgreSQL and Redis are never published to the host in either the dev or the production Compose stack.
 - Production deployment terminates HTTPS at a dedicated reverse proxy (nginx), with Postgres/Redis/backend/frontend all internal-only — see `DEPLOYMENT.md`.
 - `.env` is git-ignored; `.env.example` contains no real secrets.
+
+## License
+
+Copyright (c) 2026 Zakaria ABIDI. All rights reserved. This repository is public for the OneAquaHealth IEEE Global Hackathon 2026 evaluation only; see [`LICENSE`](LICENSE). Third-party components remain under their own licenses.
 
 ## Roadmap
 
