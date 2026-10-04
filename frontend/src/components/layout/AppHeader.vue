@@ -18,6 +18,8 @@ const authStore = useAuthStore()
 const uiStore = useUiStore()
 const cityStore = useCityStore()
 
+const logoHeight = computed(() => (props.compact ? 26 : 50))
+
 const systemOnline = ref(true)
 let healthTimer: ReturnType<typeof setInterval> | undefined
 
@@ -89,33 +91,43 @@ async function onLogout(): Promise<void> {
       />
     </template>
 
-    <v-app-bar-title class="d-flex align-center ga-2">
-      <div class="d-flex align-center">
-        <BrandLogo
-          variant="header"
-          :height="props.compact ? 26 : 50"
-        />
-      </div>
+    <v-app-bar-title>
       <div
-        v-if="cityStore.selectedCity"
-        class="text-medium-emphasis d-none d-sm-block"
+        class="app-header-brand"
+        :style="{ '--header-block-height': `${logoHeight}px` }"
       >
-        | {{ cityLabel(cityStore.selectedCity) }}
+        <div class="app-header-logo">
+          <BrandLogo
+            variant="header"
+            :height="logoHeight"
+          />
+        </div>
+        <div class="app-header-context">
+          <template v-if="cityStore.selectedCity">
+            <div class="app-header-sep text-medium-emphasis d-none d-sm-flex">
+              |
+            </div>
+            <div class="app-header-city text-medium-emphasis d-none d-sm-flex">
+              {{ cityLabel(cityStore.selectedCity) }}
+            </div>
+          </template>
+          <div class="app-header-status">
+            <v-chip
+              size="small"
+              :color="systemOnline ? 'success' : 'error'"
+              variant="flat"
+              data-testid="system-status-chip"
+            >
+              <v-icon
+                start
+                icon="mdi-circle"
+                size="10"
+              />
+              {{ systemOnline ? t('common.status.ok') : t('common.status.degraded') }}
+            </v-chip>
+          </div>
+        </div>
       </div>
-      <v-chip
-        size="small"
-        :color="systemOnline ? 'success' : 'error'"
-        variant="flat"
-        class="ml-2"
-        data-testid="system-status-chip"
-      >
-        <v-icon
-          start
-          icon="mdi-circle"
-          size="10"
-        />
-        {{ systemOnline ? t('common.status.ok') : t('common.status.degraded') }}
-      </v-chip>
     </v-app-bar-title>
 
     <template #append>
@@ -235,3 +247,40 @@ async function onLogout(): Promise<void> {
     </template>
   </v-app-bar>
 </template>
+
+<style scoped>
+/* One single, non-wrapping row: [logo] [ | city  status ]. Every block shares
+   the same height (--header-block-height, = the logo's height) and is
+   centered on it, so nudging one block (padding/margin) never moves the others. */
+.app-header-brand {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  height: var(--header-block-height);
+  white-space: nowrap;
+}
+
+.app-header-logo,
+.app-header-context {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  height: var(--header-block-height);
+}
+
+.app-header-context {
+  gap: 8px;
+  margin-left: 12px;
+}
+
+.app-header-sep,
+.app-header-city,
+.app-header-status {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  height: 100%;
+  line-height: 1;
+}
+</style>
