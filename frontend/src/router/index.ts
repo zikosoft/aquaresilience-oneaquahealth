@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 
+import { trackPageView } from '@/services/analytics'
 import { useAuthStore } from '@/stores/auth'
 
 declare module 'vue-router' {
@@ -107,6 +108,11 @@ router.beforeEach(async (to) => {
   }
 
   return true
+})
+
+router.afterEach((to, _from, failure) => {
+  if (failure) return
+  trackPageView(to.path, String(to.name ?? to.path))
 })
 
 export default router

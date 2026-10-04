@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import BrandLogo from '@/components/branding/BrandLogo.vue'
 import { apiErrorCode, extractApiErrorMessage } from '@/services/api'
+import { trackEvent } from '@/services/analytics'
 import { useAuthStore } from '@/stores/auth'
 import { SUPPORTED_LOCALES, setLocale, type AppLocale } from '@/i18n'
 
@@ -26,10 +27,12 @@ async function onSubmit(): Promise<void> {
   loading.value = true
   try {
     await authStore.login(email.value, password.value)
+    trackEvent('login_success')
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
     router.push(redirect)
   } catch (err) {
     const code = apiErrorCode(err)
+    trackEvent('login_failed', { reason: code ?? 'unknown' })
     if (code === 'RATE_LIMITED') {
       errorMessage.value = t('auth.login.rateLimited')
     } else if (code === 'UNAUTHORIZED') {

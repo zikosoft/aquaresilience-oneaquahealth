@@ -115,6 +115,10 @@ services:
       # for any domain this gets deployed to, no rebuild needed per-domain.
     container_name: aquaresilience-frontend
     restart: unless-stopped
+    environment:
+      # Google Analytics 4 id (G-XXXXXXXXXX), read when the container starts
+      # (no rebuild needed to change it). Empty = analytics disabled.
+      GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-}
     networks:
       - aquaresilience-internal
     healthcheck:

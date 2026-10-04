@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { trackEvent } from '@/services/analytics'
 import { useUiStore } from '@/stores/ui'
 
 const props = withDefaults(
@@ -30,6 +31,7 @@ const isFullscreen = computed(() => uiStore.widgetFullscreenId === props.widgetI
 
 function toggleFullscreen(): void {
   uiStore.toggleWidgetFullscreen(props.widgetId)
+  trackEvent('widget_fullscreen', { widget: props.widgetId, open: uiStore.widgetFullscreenId === props.widgetId })
 }
 </script>
 

@@ -13,6 +13,7 @@ import WidgetCard from '@/components/common/WidgetCard.vue'
 import ResilienceMap from '@/components/map/ResilienceMap.vue'
 import { SUPPORTED_LOCALES } from '@/i18n'
 import { extractApiErrorMessage } from '@/services/api'
+import { trackEvent } from '@/services/analytics'
 import { fetchEnvironmentalSummary, fetchSources } from '@/services/environmentalApi'
 import { fetchIntelligenceStatus, fetchLatestBrief, triggerAnalysis } from '@/services/intelligenceApi'
 import { acknowledgeWarning, fetchCurrentRisk, fetchRiskTrajectory, fetchWarnings, resolveWarning } from '@/services/riskApi'
@@ -93,6 +94,7 @@ async function onGenerateBrief(): Promise<void> {
   briefMessage.value = null
   try {
     const result = await triggerAnalysis(locale.value, cityStore.selectedCityId)
+    trackEvent('ai_brief_refresh', { ok: result.ok })
     if (result.ok && result.brief) {
       brief.value = result.brief
     } else if (!result.ok) {
@@ -189,6 +191,7 @@ watch(() => cityStore.selectedCityId, loadBrief)
 async function onHoursChange(hours: number | undefined): Promise<void> {
   if (hours === undefined || hours === selectedHours.value) return
   selectedHours.value = hours
+  trackEvent('time_range_changed', { hours })
   try {
     localStorage.setItem(HOURS_STORAGE_KEY, String(hours))
   } catch {
@@ -221,6 +224,7 @@ async function onAcknowledgeWarning(id: string): Promise<void> {
   errorMessage.value = null
   try {
     await acknowledgeWarning(id)
+    trackEvent('warning_acknowledged')
     await reloadRisk()
   } catch (e) {
     errorMessage.value = extractApiErrorMessage(e, t('common.status.error'))
@@ -234,6 +238,7 @@ async function onResolveWarning(id: string): Promise<void> {
   errorMessage.value = null
   try {
     await resolveWarning(id)
+    trackEvent('warning_resolved')
     await reloadRisk()
   } catch (e) {
     errorMessage.value = extractApiErrorMessage(e, t('common.status.error'))

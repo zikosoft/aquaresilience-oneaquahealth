@@ -16,6 +16,7 @@ from app.models.user import User
 from app.schemas.common import MessageResponse
 from app.schemas.rbac import RolePermissionCell, RoleOut, UserPermissionsOut, UserPermissionToggle
 from app.schemas.user import UserCreate, UserOut, UserPasswordUpdate, UserUpdate
+from app.services.demo_lock import ensure_user_not_locked
 from app.services.rbac_service import set_user_permission
 
 router = APIRouter()
@@ -69,6 +70,7 @@ def update_user(
     user = db.get(User, user_id)
     if user is None:
         raise NotFoundError(message="User not found")
+    ensure_user_not_locked(user)
 
     if payload.full_name is not None:
         user.full_name = payload.full_name
@@ -98,6 +100,7 @@ def set_user_password(
     user = db.get(User, user_id)
     if user is None:
         raise NotFoundError(message="User not found")
+    ensure_user_not_locked(user)
     user.hashed_password = hash_password(payload.password)
     db.commit()
     return MessageResponse(message="Password updated")
@@ -115,6 +118,7 @@ def update_user_permission(
     user = db.get(User, user_id)
     if user is None:
         raise NotFoundError(message="User not found")
+    ensure_user_not_locked(user)
 
     role = set_user_permission(db, user, payload.module_id, payload.permission_id, payload.granted)
     grants = db.execute(select(RolePermission).where(RolePermission.role_id == role.id)).scalars().all()
@@ -138,6 +142,7 @@ def delete_user(
     user = db.get(User, user_id)
     if user is None:
         raise NotFoundError(message="User not found")
+    ensure_user_not_locked(user)
     db.delete(user)
     db.commit()
     return MessageResponse(message="User deleted")

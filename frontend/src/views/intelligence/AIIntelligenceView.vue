@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import { trackEvent } from '@/services/analytics'
 import { fetchIntelligenceStatus, fetchLatestBrief, triggerAnalysis } from '@/services/intelligenceApi'
 import { SUPPORTED_LOCALES } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
@@ -65,6 +66,7 @@ async function handleRefresh(): Promise<void> {
   refreshMessage.value = null
   try {
     const result = await triggerAnalysis(locale.value, cityStore.selectedCityId)
+    trackEvent('ai_brief_refresh', { ok: result.ok })
     if (result.ok && result.brief) {
       brief.value = result.brief
     } else if (!result.ok) {

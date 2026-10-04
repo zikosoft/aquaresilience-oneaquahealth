@@ -169,3 +169,56 @@ def test_only_administration_admin_can_toggle_user_permissions(client, db_sessio
         json={"module_id": module_id, "permission_id": permission_id, "granted": True},
     )
     assert resp.status_code == 403
+
+
+# --- Optional lock on the shared demo administrator account (LOCK_DEMO_ADMIN) ---
+
+
+def _demo_admin_id(client, admin_token) -> str:
+    from app.core.config import settings
+
+    users = client.get("/api/v1/users", headers={"Authorization": f"Bearer {admin_token}"}).json()
+    return next(u["id"] for u in users if u["email"] == settings.demo_admin_email.lower())
+
+
+def test_demo_admin_is_protected_when_locked(client, admin_token, db_session, monkeypatch):
+    from app.core.config import settings
+
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    admin_id = _demo_admin_id(client, admin_token)
+    module_id, permission_id = _ids(db_session, "ALERTS", "EDIT")
+    monkeypatch.setattr(settings, "lock_demo_admin", True)
+
+    assert client.patch(f"/api/v1/users/{admin_id}", headers=headers, json={"is_active": False}).status_code == 403
+    assert client.put(f"/api/v1/users/{admin_id}/password", headers=headers, json={"password": "Another!Pass2026"}).status_code == 403
+    # deleting yourself is already refused (409) before the lock applies; either way it is blocked
+    assert client.delete(f"/api/v1/users/{admin_id}", headers=headers).status_code in (403, 409)
+    toggle = {"module_id": module_id, "permission_id": permission_id, "granted": False}
+    assert client.patch(f"/api/v1/users/{admin_id}/permissions", headers=headers, json=toggle).status_code == 403
+
+    admin_role = db_session.execute(select(Role).where(Role.code == "ADMINISTRATOR")).scalar_one()
+    assert client.put("/api/v1/rbac/matrix", headers=headers, json={"role_id": str(admin_role.id), "grants": []}).status_code == 403
+
+
+def test_other_users_and_roles_stay_editable_when_locked(client, admin_token, db_session, monkeypatch):
+    from app.core.config import settings
+
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    monkeypatch.setattr(settings, "lock_demo_admin", True)
+    target = _create_viewer_user(db_session, f"viewer-{uuid.uuid4().hex[:8]}@aquaresilience.demo", "ViewerPass!2026")
+
+    assert client.patch(f"/api/v1/users/{target.id}", headers=headers, json={"full_name": "Renamed"}).status_code == 200
+    assert client.put(f"/api/v1/users/{target.id}/password", headers=headers, json={"password": "NewViewer!2026"}).status_code == 200
+    viewer_role = db_session.execute(select(Role).where(Role.code == "VIEWER")).scalar_one()
+    current = client.get("/api/v1/rbac/matrix", headers=headers).json()
+    grants = [g for g in current["grants"] if g["role_id"] == str(viewer_role.id)]
+    resp = client.put("/api/v1/rbac/matrix", headers=headers, json={"role_id": str(viewer_role.id), "grants": grants})
+    assert resp.status_code == 200
+    assert client.delete(f"/api/v1/users/{target.id}", headers=headers).status_code == 200
+
+
+def test_demo_admin_is_editable_when_not_locked(client, admin_token):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    admin_id = _demo_admin_id(client, admin_token)
+    resp = client.patch(f"/api/v1/users/{admin_id}", headers=headers, json={"full_name": "Demo Administrator"})
+    assert resp.status_code == 200

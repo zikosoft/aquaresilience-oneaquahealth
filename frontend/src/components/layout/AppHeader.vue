@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 
 import BrandLogo from '@/components/branding/BrandLogo.vue'
 import { api } from '@/services/api'
+import { trackEvent } from '@/services/analytics'
 import { useAuthStore } from '@/stores/auth'
 import { useCityStore } from '@/stores/city'
 import { useUiStore } from '@/stores/ui'
@@ -45,6 +46,8 @@ function cityLabel(city: { label_en: string; label_fr: string; label_es: string 
 
 function onCityChange(cityId: string): void {
   cityStore.selectCity(cityId)
+  const city = cityStore.cities.find((c) => c.id === cityId)
+  trackEvent('city_changed', { city: city?.label_en })
 }
 
 const CITY_STATUS_DOT: Record<'live' | 'pending' | 'none', string> = {
@@ -71,6 +74,7 @@ function onLocaleChange(code: AppLocale): void {
 }
 
 async function onLogout(): Promise<void> {
+  trackEvent('logout')
   await authStore.logout()
   router.push({ name: 'login' })
 }

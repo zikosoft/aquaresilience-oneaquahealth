@@ -6,6 +6,7 @@ import FactorContribution from '@/components/charts/FactorContribution.vue'
 import RiskGauge from '@/components/charts/RiskGauge.vue'
 import ScenarioComparison from '@/components/charts/ScenarioComparison.vue'
 import ResilienceMap from '@/components/map/ResilienceMap.vue'
+import { trackEvent } from '@/services/analytics'
 import { fetchCurrentRisk } from '@/services/riskApi'
 import { simulateScenario } from '@/services/scenarioApi'
 import { useAuthStore } from '@/stores/auth'
@@ -94,6 +95,7 @@ async function runSimulation(): Promise<void> {
     })
     currentRisk.value = result.value.current
     mapView.value = 'projected'
+    trackEvent('scenario_run', { rainfall_pct: rainfall.value, river_level_pct: riverLevel.value })
   } catch {
     errorMessage.value = t('scenarios.errorPrefix')
   } finally {
@@ -107,6 +109,7 @@ async function runSimulation(): Promise<void> {
 async function applyPreset(preset: ScenarioPreset): Promise<void> {
   rainfall.value = preset.rainfallPct
   riverLevel.value = preset.riverPct
+  trackEvent('scenario_preset_selected', { preset: preset.key })
   await runSimulation()
 }
 

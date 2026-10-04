@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { extractApiErrorMessage } from '@/services/api'
+import { trackEvent } from '@/services/analytics'
 import { acknowledgeWarning, fetchWarnings, resolveWarning } from '@/services/riskApi'
 import { useAuthStore } from '@/stores/auth'
 import { useCityStore } from '@/stores/city'
@@ -64,6 +65,7 @@ async function onAcknowledge(id: string): Promise<void> {
   errorMessage.value = null
   try {
     await acknowledgeWarning(id)
+    trackEvent('warning_acknowledged')
     await load()
   } catch (e) {
     errorMessage.value = extractApiErrorMessage(e, t('common.status.error'))
@@ -77,6 +79,7 @@ async function onResolve(id: string): Promise<void> {
   errorMessage.value = null
   try {
     await resolveWarning(id)
+    trackEvent('warning_resolved')
     await load()
   } catch (e) {
     errorMessage.value = extractApiErrorMessage(e, t('common.status.error'))

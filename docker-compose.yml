@@ -95,6 +95,8 @@ services:
       VITE_MAP_DEFAULT_LON: ${VITE_MAP_DEFAULT_LON:-}
       VITE_MAP_DEFAULT_LAT: ${VITE_MAP_DEFAULT_LAT:-}
       VITE_MAP_DEFAULT_ZOOM: ${VITE_MAP_DEFAULT_ZOOM:-}
+      # Google Analytics 4 measurement id (G-XXXXXXXXXX); empty = disabled.
+      VITE_GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-}
     depends_on:
       - backend
     ports:

@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_MAP_DEFAULT_LON: string
   readonly VITE_MAP_DEFAULT_LAT: string
   readonly VITE_MAP_DEFAULT_ZOOM: string
+  readonly VITE_GA_MEASUREMENT_ID?: string
 }
 
 interface ImportMeta {

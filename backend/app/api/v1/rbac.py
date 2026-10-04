@@ -10,6 +10,7 @@ from app.core.database import get_db
 from app.models.rbac import Module, Permission, Role
 from app.models.user import User
 from app.schemas.rbac import ModuleOut, PermissionMatrixOut, PermissionMatrixUpdate, PermissionOut, RoleOut
+from app.services.demo_lock import ensure_role_not_locked
 from app.services.rbac_service import get_permission_matrix, replace_role_grants
 
 router = APIRouter()
@@ -53,6 +54,7 @@ def update_matrix(
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("ADMINISTRATION", "ADMIN")),
 ) -> PermissionMatrixOut:
+    ensure_role_not_locked(db.get(Role, payload.role_id))
     grants = [(g.module_id, g.permission_id) for g in payload.grants]
     replace_role_grants(db, payload.role_id, grants)
     return get_permission_matrix(db)

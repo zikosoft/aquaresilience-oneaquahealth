@@ -1,5 +1,7 @@
 import { createI18n } from 'vue-i18n'
 
+import { trackEvent } from '@/services/analytics'
+
 import de from './locales/de'
 import el from './locales/el'
 import en from './locales/en'
@@ -47,6 +49,7 @@ export const i18n = createI18n({
 })
 
 export function setLocale(locale: AppLocale): void {
+  trackEvent('language_changed', { locale })
   i18n.global.locale.value = locale
   localStorage.setItem(STORAGE_KEY, locale)
   document.documentElement.setAttribute('lang', locale)

@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
+import { trackEvent } from '@/services/analytics'
+
 type ThemeMode = 'light' | 'dark'
 
 const SIDEBAR_KEY = 'aquaresilience.sidebar_collapsed'
@@ -34,6 +36,7 @@ export const useUiStore = defineStore('ui', () => {
 
   function toggleTheme(): void {
     themeMode.value = themeMode.value === 'dark' ? 'light' : 'dark'
+    trackEvent('theme_changed', { mode: themeMode.value })
   }
 
   function enterMonitoringFullscreen(): void {

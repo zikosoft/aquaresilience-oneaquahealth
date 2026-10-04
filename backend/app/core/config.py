@@ -75,6 +75,7 @@ class Settings(BaseSettings):
     seed_demo_user: bool = Field(default=True, alias="SEED_DEMO_USER")
     demo_admin_email: str = Field(default="admin@aquaresilience.demo", alias="DEMO_ADMIN_EMAIL")
     demo_admin_password: str = Field(default="ChangeMe!2026", alias="DEMO_ADMIN_PASSWORD")
+    lock_demo_admin: bool = Field(default=False, alias="LOCK_DEMO_ADMIN")
 
     @field_validator("secrets_encryption_key")
     @classmethod
