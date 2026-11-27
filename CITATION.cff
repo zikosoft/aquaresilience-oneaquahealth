@@ -1,9 +1,9 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "AquaResilience: open-source urban flood early-warning platform with a causal historical backtest"
-version: v1.1.1
+version: v1.1.2
 date-released: 2026-11-27
-doi: 10.5281/zenodo.24587762
+doi: 10.5281/zenodo.24588307
 license: MIT
 repository-code: "https://github.com/zikosoft/aquaresilience-oneaquahealth"
 authors:
