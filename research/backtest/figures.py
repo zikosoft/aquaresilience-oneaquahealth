@@ -1,5 +1,6 @@
 """Manuscript figures (PDF for the paper, PNG for review) and summary tables.
 
+Fig. 0  Architecture: live platform and backtest share the risk-factor code.
 Fig. 1  January 2022 flood at Toulouse: water level and S1-S3, V0 and V2c
         scores with their thresholds and alert periods (budget 1/yr).
 Fig. 2  Per-event lead time on the Toulouse test floods (S1): B1 vs V2c.
@@ -46,6 +47,59 @@ def save(fig, name: str) -> None:
         fig.savefig(FIG / f"{name}.{ext}")
     plt.close(fig)
     R.log(f"    wrote figures/{name}.pdf/.png")
+
+
+def fig0_architecture() -> None:
+    from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+
+    fig, ax = plt.subplots(figsize=(7.6, 4.2))
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0.7, 7.1)
+    ax.axis("off")
+    w, h = 3.25, 0.82
+
+    def box(x, y, text, width=w, height=h, face="white", edge=MUTED, style="-", bold=False):
+        ax.add_patch(FancyBboxPatch((x, y - height / 2), width, height, boxstyle="round,pad=0.02,rounding_size=0.08",
+                                    facecolor=face, edgecolor=edge, linewidth=1.1, linestyle=style))
+        ax.text(x + width / 2, y, text, ha="center", va="center", fontsize=6.6, color=INK,
+                fontweight="bold" if bold else "normal", linespacing=1.35)
+
+    def arrow(p, q, text=None):
+        ax.add_patch(FancyArrowPatch(p, q, arrowstyle="-|>", mutation_scale=9, color=MUTED, linewidth=1.0,
+                                     shrinkA=2, shrinkB=2))
+        if text:
+            ax.text((p[0] + q[0]) / 2, (p[1] + q[1]) / 2 + 0.14, text, ha="center", va="bottom",
+                    fontsize=6.3, color=MUTED, style="italic")
+
+    lx = 0.15
+    rx = 10 - lx - w
+    rows = (6.0, 4.8, 3.6, 2.4, 1.2)
+    ax.text(lx + w / 2, 6.85, "Live platform", ha="center", fontsize=8.5, fontweight="bold", color=INK)
+    ax.text(rx + w / 2, 6.85, "Historical backtest", ha="center", fontsize=8.5,
+            fontweight="bold", color=INK)
+    left = ("Open data APIs\nHub'Eau · NVE HydAPI · Open-Meteo",
+            "Scheduled ingestion\nPostgreSQL / PostGIS, provenance",
+            "risk_engine.py\ndatabase windows → score 0–100",
+            "Early warnings · dashboard\nscenario simulator",
+            "Language-model explanation\nreads the score, never computes it")
+    right = ("Historical archives\ndata.gouv.fr · NVE HydAPI · ERA5",
+             "Loaders\nhourly series, completeness report",
+             "replay.py\nstrictly causal hour-by-hour replay",
+             "events.py · scoring\nflood catalogue, scoring at\nmatched false-alarm budget",
+             "robustness.py · figures.py\nsign test, bootstrap, Morris screening")
+    for i, (yl, a, b) in enumerate(zip(rows, left, right)):
+        box(lx, yl, a, style="--" if i == 4 else "-")
+        box(rx, yl, b)
+        if i < 4:
+            arrow((lx + w / 2, yl - h / 2), (lx + w / 2, rows[i + 1] + h / 2))
+            arrow((rx + w / 2, yl - h / 2), (rx + w / 2, rows[i + 1] + h / 2))
+    cw, ch, cy = 2.1, 1.4, 3.6
+    cx = 5 - cw / 2
+    box(cx, cy, "risk_factors.py\nshared pure functions\nrainfall · hydrology\nsoil moisture · trend",
+        width=cw, height=ch, face="#fde3d3", edge=COLORS["V2c"], bold=False)
+    arrow((lx + w, rows[2]), (cx, cy), "imports")
+    arrow((rx, rows[2]), (cx + cw, cy), "imports")
+    save(fig, "fig0_architecture")
 
 
 def fig1_event(inputs, sig, events, periods) -> None:
@@ -245,6 +299,7 @@ def main_table() -> pd.DataFrame:
 
 
 def run() -> None:
+    fig0_architecture()
     R.log("Figures")
     table = main_table()
     inputs, factors, sig, events, periods = load("toulouse_pontneuf")
