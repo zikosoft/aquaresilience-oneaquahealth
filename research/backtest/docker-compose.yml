@@ -1,0 +1,10 @@
+services:
+  backtest:
+    build: .
+    env_file: .env
+    environment:
+      PYTHONPATH: /backend:/work
+    volumes:
+      - ./:/work
+      - ../../backend:/backend:ro
+    working_dir: /work

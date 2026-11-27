@@ -56,3 +56,9 @@ frontend/*.tsbuildinfo
 Claude outputs/
 208442a6-AquaResilience_Master_Spec_Priority_Blocks.md
 fda3f576-AquaResilience_Development_Progress_Priority_Blocks.md
+
+# Backtest: re-downloadable data and local secrets
+research/backtest/data/
+research/backtest/.env
+research/backtest/results/
+research/backtest/figures/
