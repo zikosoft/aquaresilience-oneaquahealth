@@ -140,7 +140,8 @@ trade-off for a hackathon-scale platform.
 
 ## 6. Internationalization
 
-`vue-i18n`, English/French/Spanish, zero hard-coded user-facing strings in
+`vue-i18n`, 9 languages (English, French, Spanish, German, Italian, Dutch,
+Portuguese, Greek, Norwegian), zero hard-coded user-facing strings in
 core screens. Backend values stay language-neutral (`LOW`, `MODERATE`,
 `HIGH`, `CRITICAL`, `ACTIVE`, `ACKNOWLEDGED`, `RESOLVED`) and are translated
 client-side, so language switching works at runtime with no
@@ -177,7 +178,7 @@ covering authentication/RBAC, environmental ingestion/idempotency, the Risk
 Engine's determinism, the Early Warning lifecycle, AI Situation Brief
 generation (including simulated provider failure), the Scenario Simulator,
 event-triggered AI gating, and the maintenance-mode write-blocking gate —
-88 tests, all passing. Frontend: `vue-tsc` (strict type-check), ESLint, and
+141 tests, all passing. Frontend: `vue-tsc` (strict type-check), ESLint, and
 a production `vite build`, all clean. Beyond automated tests, every
 user-facing fix in this project has been **live-verified** with a real
 running dev stack and, where visual, real screenshots — not just code

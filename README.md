@@ -168,7 +168,7 @@ testing or recording a demo.
 
 ## License
 
-Copyright (c) 2026 Zakaria ABIDI. All rights reserved. This repository is public for the OneAquaHealth IEEE Global Hackathon 2026 evaluation only; see [`LICENSE`](LICENSE). Third-party components remain under their own licenses.
+Released under the MIT License, copyright (c) 2026 Zakaria ABIDI; see [`LICENSE`](LICENSE). Third-party components remain under their own licenses.
 
 ## Roadmap
 

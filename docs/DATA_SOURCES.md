@@ -38,6 +38,20 @@ decision log: "2-3 strong real sources, not six unfinished integrations").
   separate from measured history
 - **Connector:** `backend/app/services/connectors/open_meteo.py`
 
+## Other national hydrology connectors
+
+Besides Hub'Eau, the platform ships connectors for three other national
+water-level services, one per additional city:
+
+| Connector | Service | City | Access | Status |
+| --- | --- | --- | --- | --- |
+| `nve_hydapi.py` | NVE HydAPI (Norway) | Oslo | free API key, NLOD licence | used live and in the historical backtest |
+| `ehyd.py` | eHYD / data.gv.at (Austria) | Vienna | no key, CC BY 4.0 | best effort, response fields not yet confirmed live |
+| `waterinfo_be.py` | Waterinfo.be KiWIS (Flanders) | Ghent | no key (optional token) | best effort, base URL not yet confirmed live |
+
+Each module's docstring records what was and was not confirmed against the
+live service.
+
 ## How ingestion works
 
 A shared APScheduler background job (`backend/app/core/scheduler.py`)
