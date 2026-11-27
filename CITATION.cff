@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "AquaResilience: open-source urban flood early-warning platform with a causal historical backtest"
+version: v1.1.1
+date-released: 2026-11-27
+doi: 10.5281/zenodo.24587762
+license: MIT
+repository-code: "https://github.com/zikosoft/aquaresilience-oneaquahealth"
+authors:
+  - family-names: "Abidi"
+    given-names: "Zakaria"
+    orcid: "https://orcid.org/0009-0001-8692-4575"
+    affiliation: "Independent Researcher"
+keywords:
+  - flood early warning
+  - composite risk index
+  - backtesting
+  - open data
+  - urban flooding
+  - reproducible software
