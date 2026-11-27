@@ -45,6 +45,17 @@ from sqlalchemy.orm import Session
 from app.models.environmental import DataSource, Measurement, MeasurementVariable, Station
 from app.models.risk import Warning, WarningStatus
 from app.models.settings import AppSetting
+from app.services.risk_factors import (  # noqa: F401 - constants re-exported for existing importers
+    HYDROLOGY_LOOKBACK_DAYS,
+    RAINFALL_REFERENCE_MM_24H,
+    TREND_REFERENCE_MM_PER_HOUR,
+    TREND_WINDOW_HOURS,
+    environmental_factor,
+    hydrology_factor,
+    rainfall_factor,
+    trend_factor,
+    trend_rate_mm_per_hour,
+)
 
 
 def scope_measurements_to_city(query: Select, city_id: uuid.UUID | None) -> Select:
@@ -62,12 +73,6 @@ def scope_measurements_to_city(query: Select, city_id: uuid.UUID | None) -> Sele
         .join(DataSource, DataSource.id == Station.data_source_id)
         .where(DataSource.city_id == city_id)
     )
-
-# --- Documented fallback reference constants (see module docstring) ---
-RAINFALL_REFERENCE_MM_24H = 40.0
-TREND_REFERENCE_MM_PER_HOUR = 50.0
-TREND_WINDOW_HOURS = 6
-HYDROLOGY_LOOKBACK_DAYS = 90
 
 DEFAULT_RISK_ENGINE_SETTINGS = {
     "weights": {"rainfall": 0.3, "hydrology": 0.3, "environmental": 0.2, "trend": 0.2},
@@ -131,10 +136,7 @@ def _normalize_rainfall(
         Measurement.observed_at >= since,
     )
     total = db.execute(scope_measurements_to_city(query, city_id)).scalar_one_or_none()
-    if total is None:
-        return None
-    adjusted = max(0.0, total * multiplier)
-    return max(0.0, min(adjusted / RAINFALL_REFERENCE_MM_24H, 1.0))
+    return rainfall_factor(total, multiplier)
 
 
 def _latest_water_level_mm(db: Session, city_id: uuid.UUID | None = None) -> float | None:
@@ -155,18 +157,15 @@ def _normalize_hydrology(
     latest = _latest_water_level_mm(db, city_id)
     if latest is None:
         return None
-    adjusted_latest = max(0.0, latest * multiplier)
     since = now - timedelta(days=HYDROLOGY_LOOKBACK_DAYS)
     query = select(func.min(Measurement.value), func.max(Measurement.value)).where(
         Measurement.variable == MeasurementVariable.WATER_LEVEL_MM.value,
         Measurement.observed_at >= since,
     )
     lo, hi = db.execute(scope_measurements_to_city(query, city_id)).one()
-    if lo is None or hi is None or hi <= lo:
-        # Flat/degenerate range (e.g. a single reading so far): not enough
-        # signal yet to place the current level on a relative scale.
-        return None
-    return max(0.0, min((adjusted_latest - lo) / (hi - lo), 1.0))
+    # A flat/degenerate range (e.g. a single reading so far) yields None:
+    # not enough signal yet to place the current level on a relative scale.
+    return hydrology_factor(latest, lo, hi, multiplier)
 
 
 def _normalize_environmental(db: Session, city_id: uuid.UUID | None = None) -> float | None:
@@ -177,9 +176,7 @@ def _normalize_environmental(db: Session, city_id: uuid.UUID | None = None) -> f
         .limit(1)
     )
     latest = db.execute(scope_measurements_to_city(query, city_id)).scalar_one_or_none()
-    if latest is None:
-        return None
-    return max(0.0, min(latest, 1.0))
+    return environmental_factor(latest)
 
 
 def _trend_window_rows(db: Session, now: datetime, city_id: uuid.UUID | None = None) -> list | None:
@@ -215,12 +212,7 @@ def _normalize_trend(
         return None
     first_value, first_ts = rows[0]
     last_value, last_ts = rows[-1]
-    adjusted_last_value = max(0.0, last_value * level_multiplier)
-    hours_elapsed = (last_ts - first_ts).total_seconds() / 3600.0
-    if hours_elapsed <= 0:
-        return None
-    rate = (adjusted_last_value - first_value) / hours_elapsed
-    return max(0.0, min(rate / TREND_REFERENCE_MM_PER_HOUR, 1.0))
+    return trend_factor(first_value, first_ts, last_value, last_ts, level_multiplier)
 
 
 def _trend_rate_mm_per_hour(db: Session, now: datetime, city_id: uuid.UUID | None = None) -> float | None:
@@ -235,10 +227,7 @@ def _trend_rate_mm_per_hour(db: Session, now: datetime, city_id: uuid.UUID | Non
         return None
     first_value, first_ts = rows[0]
     last_value, last_ts = rows[-1]
-    hours_elapsed = (last_ts - first_ts).total_seconds() / 3600.0
-    if hours_elapsed <= 0:
-        return None
-    return (last_value - first_value) / hours_elapsed
+    return trend_rate_mm_per_hour(first_value, first_ts, last_value, last_ts)
 
 
 def _severity_for_score(score: float, thresholds: dict) -> str:
