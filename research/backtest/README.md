@@ -47,7 +47,8 @@ docker compose run --rm backtest python robustness.py
 ```
 
 Writes `results/robust_budget.csv`, `results/robust_rules.csv`,
-`results/morris_v2c.csv` and `results/morris_runs.csv`.
+`results/morris_v2c.csv`, `results/morris_runs.csv` and `results/diagnostic_v0.csv`
+(factor values of the shipped engine during its alert hours).
 
 ## Step 5 — figures and main table
 

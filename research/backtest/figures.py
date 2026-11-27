@@ -27,7 +27,7 @@ from robustness import load, operate  # noqa: E402
 FIG = R.ROOT / "figures"
 FIG.mkdir(parents=True, exist_ok=True)
 
-COLORS = {"B1": "#257de0", "V2c": "#f47230", "V0": "#00b894", "V2ab": "#f2a600"}
+COLORS = {"B1": "#1f5fa8", "V2c": "#2e8b3e", "V0": "#8cc63f", "V2ab": "#5aa9e6"}
 LABELS = {"B1": "B1 water level only", "V0": "V0 engine as shipped",
           "V2ab": "V2ab corrected engine", "V2c": "V2c corrected + upstream rain"}
 INK, MUTED, GRID = "#191919", "#666666", "#e6e6e6"
@@ -96,7 +96,7 @@ def fig0_architecture() -> None:
     cw, ch, cy = 2.1, 1.4, 3.6
     cx = 5 - cw / 2
     box(cx, cy, "risk_factors.py\nshared pure functions\nrainfall · hydrology\nsoil moisture · trend",
-        width=cw, height=ch, face="#fde3d3", edge=COLORS["V2c"], bold=False)
+        width=cw, height=ch, face="#e3f1e5", edge=COLORS["V2c"], bold=False)
     arrow((lx + w, rows[2]), (cx, cy), "imports")
     arrow((rx, rows[2]), (cx + cw, cy), "imports")
     save(fig, "fig0_architecture")

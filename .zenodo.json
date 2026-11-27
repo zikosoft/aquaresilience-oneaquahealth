@@ -1,0 +1,20 @@
+{
+  "title": "AquaResilience: open-source urban flood early-warning platform with a causal historical backtest",
+  "upload_type": "software",
+  "description": "Open-source urban flood early-warning platform (FastAPI, PostgreSQL/PostGIS, Vue 3) whose deterministic risk engine and historical backtest harness (research/backtest) share the same factor code. Archived version accompanying the article 'Test before you trust: causal backtesting of composite flood-risk indices in an open-source early-warning platform'.",
+  "creators": [
+    {
+      "name": "Abidi, Zakaria",
+      "orcid": "0009-0001-8692-4575"
+    }
+  ],
+  "license": "mit",
+  "keywords": [
+    "flood early warning",
+    "composite risk index",
+    "backtesting",
+    "open data",
+    "urban flooding",
+    "reproducible software"
+  ]
+}

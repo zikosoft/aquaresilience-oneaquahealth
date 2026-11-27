@@ -193,6 +193,24 @@ def part_c(inputs, factors, sig, events, periods) -> tuple[pd.DataFrame, pd.Data
     return pd.DataFrame(rows).sort_values("POD_mu_star", ascending=False), pd.DataFrame(runs)
 
 
+def part_d(data) -> pd.DataFrame:
+    """Shipped engine (V0) at its warning threshold 25: mean factor values on the test period,
+    over all hours and over alert hours, and the mean weighted contribution in score points."""
+    rows = []
+    for name, (inputs, factors, sig, events, (c0, c1, t0, t1)) in data.items():
+        test = sig.index >= t0
+        alert = test & (sig["V0"] >= 25).to_numpy()
+        for k in R.FACTORS:
+            w = R.DEFAULT_WEIGHTS[k]
+            rows.append({"station": name, "factor": k,
+                         "mean_test": round(float(factors.loc[test, k].mean()), 3),
+                         "mean_alert_hours": round(float(factors.loc[alert, k].mean()), 3),
+                         "points_test": round(100 * w * float(factors.loc[test, k].mean()), 1),
+                         "points_alert_hours": round(100 * w * float(factors.loc[alert, k].mean()), 1),
+                         "alert_hours_pct": round(100 * float(alert.sum()) / float(test.sum()), 2)})
+    return pd.DataFrame(rows)
+
+
 def run() -> None:
     log("Loading Toulouse and Oslo Alna")
     data = {n: load(n) for n in ("toulouse_pontneuf", "oslo_alna")}
@@ -217,6 +235,10 @@ def run() -> None:
     c.to_csv(R.RESULTS / "morris_v2c.csv", index=False)
     runs.to_csv(R.RESULTS / "morris_runs.csv", index=False)
     print(c.to_string(index=False))
+    log("D. Shipped engine diagnostic (V0 at threshold 25, test period)")
+    d = part_d(data)
+    d.to_csv(R.RESULTS / "diagnostic_v0.csv", index=False)
+    print(d.to_string(index=False))
     log("Robustness finished")
 
 
